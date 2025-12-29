@@ -1,0 +1,221 @@
+# Data Model — RAGDesk
+
+> 目标：支持多租户、RAG 知识库、会话流转与统计分析。所有核心业务表均必须带 `tenant_id`。
+
+---
+
+## 1. 核心实体关系（ER 概览）
+```mermaid
+erDiagram
+TENANT ||--o{ USER : has
+TENANT ||--o{ BOT : owns
+TENANT ||--o{ KNOWLEDGE_BASE : owns
+TENANT ||--o{ API_KEY : owns
+TENANT ||--o{ CHAT_SESSION : owns
+TENANT ||--o{ TICKET : owns
+
+USER }o--o{ ROLE : assigned
+ROLE }o--o{ PERMISSION : grants
+
+KNOWLEDGE_BASE ||--o{ DOCUMENT : contains
+DOCUMENT ||--o{ DOCUMENT_VERSION : versions
+DOCUMENT_VERSION ||--o{ DOC_CHUNK : splits
+DOC_CHUNK ||--o{ EMBEDDING : vectors
+
+CHAT_SESSION ||--o{ CHAT_MESSAGE : has
+CHAT_SESSION ||--o{ SESSION_EVENT : has
+TICKET ||--o{ TICKET_EVENT : has
+
+BOT ||--o{ CHAT_SESSION : serves
+API_KEY ||--o{ API_USAGE_LOG : logs
+```
+
+---
+
+## 2. 表设计（核心字段）
+
+### 2.1 多租户 / 权限
+**tenant**
+- `id` (PK)
+- `name`
+- `plan` (free/pro/enterprise)
+- `status` (active/suspended)
+- `created_at`
+
+**user**
+- `id` (PK)
+- `tenant_id` (FK)
+- `email` / `phone`
+- `name`
+- `status` (active/disabled)
+- `created_at`
+
+**role**
+- `id` (PK)
+- `tenant_id`
+- `name`
+
+**permission**
+- `id` (PK)
+- `code` (string, e.g. `knowledge.read`)
+
+**user_role**
+- `user_id`
+- `role_id`
+
+---
+
+### 2.2 机器人
+**bot**
+- `id` (PK)
+- `tenant_id`
+- `name`
+- `description`
+- `status` (active/disabled)
+- `config_json` (prompt/阈值/策略)
+
+---
+
+### 2.3 知识库与文档
+**knowledge_base**
+- `id` (PK)
+- `tenant_id`
+- `name`
+- `description`
+
+**document**
+- `id` (PK)
+- `tenant_id`
+- `kb_id`
+- `title`
+- `source_type` (pdf/doc/md/url)
+- `status` (uploaded/processing/ready/failed)
+- `created_at`
+
+**document_version**
+- `id` (PK)
+- `document_id`
+- `version` (int)
+- `raw_path` (object storage)
+- `parsed_path`
+- `created_at`
+
+**doc_chunk**
+- `id` (PK)
+- `document_version_id`
+- `chunk_index`
+- `content`
+- `tokens`
+- `metadata_json`
+
+**embedding**
+- `id` (PK)
+- `chunk_id`
+- `vector` (pgvector)
+- `model`
+- `created_at`
+
+---
+
+### 2.4 会话与消息
+**chat_session**
+- `id` (PK)
+- `tenant_id`
+- `bot_id`
+- `user_external_id` (对外系统用户 id)
+- `status` (bot/agent/closed)
+- `created_at`
+- `closed_at`
+
+**chat_message**
+- `id` (PK)
+- `session_id`
+- `sender` (user/bot/agent)
+- `content`
+- `refs_json` (引用来源)
+- `confidence`
+- `created_at`
+
+**session_event**
+- `id` (PK)
+- `session_id`
+- `event_type` (handoff/start/close)
+- `payload_json`
+- `created_at`
+
+---
+
+### 2.5 工单 / 人工客服
+**ticket**
+- `id` (PK)
+- `tenant_id`
+- `session_id`
+- `status` (open/processing/closed)
+- `agent_id`
+- `created_at`
+
+**ticket_event**
+- `id` (PK)
+- `ticket_id`
+- `event_type` (assign/transfer/resolve)
+- `payload_json`
+- `created_at`
+
+---
+
+### 2.6 API 管理
+**api_key**
+- `id` (PK)
+- `tenant_id`
+- `name`
+- `key_hash`
+- `status` (active/disabled)
+- `quota_daily`
+- `qps_limit`
+- `created_at`
+
+**api_usage_log**
+- `id` (PK)
+- `api_key_id`
+- `path`
+- `status_code`
+- `latency_ms`
+- `created_at`
+
+---
+
+### 2.7 统计
+**analytics_daily**
+- `id` (PK)
+- `tenant_id`
+- `bot_id`
+- `date`
+- `hit_rate`
+- `handoff_rate`
+- `avg_latency`
+- `p95_latency`
+
+---
+
+## 3. 关键索引与约束
+- `tenant_id` 必须建联合索引（如 `tenant_id + created_at`）
+- `document_id + version` 唯一索引
+- `api_key.key_hash` 唯一索引
+- 向量库索引：HNSW / IVFFlat
+- `chat_session (tenant_id, status)` 用于筛选转人工队列
+
+---
+
+## 4. 多租户隔离策略
+- **强制 tenant_id filter**：DAO 层必须注入
+- **RBAC**：角色-权限映射
+- **平台管理员**：只读审计 + 最高权限
+
+---
+
+## 5. 事件埋点建议
+- `message_received`
+- `rag_hit` / `rag_miss`
+- `handoff_triggered`
+- `ticket_closed`
+- `doc_ingestion_failed`

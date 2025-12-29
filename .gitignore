@@ -21,8 +21,7 @@ profile.cov
 # vendor/
 
 # Go workspace file
-go.work
-go.work.sum
+# (tracked for monorepo)
 
 # env file
 .env
@@ -30,3 +29,18 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Frontend env
+.env.local
+.env.*.local
+
+# Local docker data
+deploy/data/
