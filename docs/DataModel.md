@@ -12,7 +12,6 @@ TENANT ||--o{ BOT : owns
 TENANT ||--o{ KNOWLEDGE_BASE : owns
 TENANT ||--o{ API_KEY : owns
 TENANT ||--o{ CHAT_SESSION : owns
-TENANT ||--o{ TICKET : owns
 
 USER }o--o{ ROLE : assigned
 ROLE }o--o{ PERMISSION : grants
@@ -24,7 +23,6 @@ DOC_CHUNK ||--o{ EMBEDDING : vectors
 
 CHAT_SESSION ||--o{ CHAT_MESSAGE : has
 CHAT_SESSION ||--o{ SESSION_EVENT : has
-TICKET ||--o{ TICKET_EVENT : has
 
 BOT ||--o{ CHAT_SESSION : serves
 API_KEY ||--o{ API_USAGE_LOG : logs
@@ -123,14 +121,14 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `tenant_id`
 - `bot_id`
 - `user_external_id` (对外系统用户 id)
-- `status` (bot/agent/closed)
+- `status` (bot/closed)
 - `created_at`
 - `closed_at`
 
 **chat_message**
 - `id` (PK)
 - `session_id`
-- `sender` (user/bot/agent)
+- `sender` (user/bot)
 - `content`
 - `refs_json` (引用来源)
 - `confidence`
@@ -139,31 +137,13 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 **session_event**
 - `id` (PK)
 - `session_id`
-- `event_type` (handoff/start/close)
+- `event_type` (start/close)
 - `payload_json`
 - `created_at`
 
 ---
 
-### 2.5 工单 / 人工客服
-**ticket**
-- `id` (PK)
-- `tenant_id`
-- `session_id`
-- `status` (open/processing/closed)
-- `agent_id`
-- `created_at`
-
-**ticket_event**
-- `id` (PK)
-- `ticket_id`
-- `event_type` (assign/transfer/resolve)
-- `payload_json`
-- `created_at`
-
----
-
-### 2.6 API 管理
+### 2.5 API 管理
 **api_key**
 - `id` (PK)
 - `tenant_id`
@@ -184,14 +164,13 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 ---
 
-### 2.7 统计
+### 2.6 统计
 **analytics_daily**
 - `id` (PK)
 - `tenant_id`
 - `bot_id`
 - `date`
 - `hit_rate`
-- `handoff_rate`
 - `avg_latency`
 - `p95_latency`
 
@@ -202,7 +181,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `document_id + version` 唯一索引
 - `api_key.key_hash` 唯一索引
 - 向量库索引：HNSW / IVFFlat
-- `chat_session (tenant_id, status)` 用于筛选转人工队列
+- `chat_session (tenant_id, status)` 用于筛选会话状态
 
 ---
 
@@ -216,6 +195,4 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 ## 5. 事件埋点建议
 - `message_received`
 - `rag_hit` / `rag_miss`
-- `handoff_triggered`
-- `ticket_closed`
 - `doc_ingestion_failed`

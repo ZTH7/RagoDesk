@@ -18,9 +18,9 @@
 - **RAG Engine**
   - Query Embedding → 向量检索 → 重排 → Prompt → LLM
   - 引用来源 + 置信度
-- **Conversation & Handoff**
-  - 会话状态机（机器人 → 人工 → 关闭）
-  - 工单/转人工逻辑
+- **Conversation**
+  - 会话状态机（机器人 → 关闭）
+  - 会话与消息记录
 - **Analytics**
   - 指标聚合、日报/周报、看板
 - **API Management**
@@ -37,9 +37,49 @@
 
 ---
 
-## 2. 关键流程
+## 2. 组件交互与边界
 
-### 2.1 文档处理流程（Ingestion）
+> 目标：清晰描述“谁调用谁、数据怎么流动、哪些是同步/异步”。
+
+### 2.1 模块职责与交互
+- **API Layer**
+  - 对外：`/api/v1/*`
+  - 管理后台：`/admin/v1/*`
+  - 统一鉴权（API Key/JWT）、限流、审计日志
+- **IAM / Tenant**
+  - 生产/消费 `tenant_id` 上下文
+  - 为所有模块提供租户与权限校验能力
+- **Knowledge & Ingestion**
+  - Admin API 触发上传
+  - 写 `document` / `document_version`
+  - 异步任务：清洗、切分、向量化、入向量库
+- **RAG Engine**
+  - 消费 `chat_message` 输入
+  - 调用向量库召回 + 可选重排
+  - 输出 `answer + refs + confidence`
+- **Conversation**
+  - 维护会话状态机
+  - 会话与消息记录
+  - 低置信度时采用保守答复或拒答策略
+- **Analytics**
+  - 接收事件（会话、召回）
+  - 实时指标 + 离线聚合写入日报
+- **API Management**
+  - Key 生成、配额、限流
+  - 调用日志审计
+- **Observability**
+  - Trace 链路贯穿所有模块
+  - 关键操作记录审计日志
+
+### 2.2 同步与异步边界
+- **同步路径**：用户请求 → RAG → 回复（要求低延迟）
+- **异步路径**：文档处理 / 统计聚合（高吞吐、可重试）
+
+---
+
+## 3. 关键流程
+
+### 3.1 文档处理流程（Ingestion）
 ```mermaid
 flowchart LR
 A[上传文档] --> B[入库 document]
@@ -51,7 +91,7 @@ F --> G[向量库入库]
 G --> H[状态更新]
 ```
 
-### 2.2 对话流程（RAG + Handoff）
+### 3.2 对话流程（RAG）
 ```mermaid
 sequenceDiagram
 participant Client
@@ -59,7 +99,6 @@ participant API
 participant RAG
 participant VectorDB
 participant LLM
-participant Handoff
 
 Client->>API: POST /message
 API->>RAG: query embedding
@@ -69,43 +108,36 @@ RAG->>LLM: prompt + chunks
 LLM-->>RAG: answer
 RAG->>API: answer + confidence + refs
 API-->>Client: reply
-
-alt confidence < threshold
-  API->>Handoff: create handoff request
-  Handoff-->>Client: status=handoff
-end
 ```
 
-### 2.3 统计分析流程
-- 事件写入：会话/消息/召回/转人工
+### 3.3 统计分析流程
+- 事件写入：会话/消息/召回
 - 实时指标：Redis + Prometheus
 - 离线聚合：定时作业写入 `analytics_daily`
 
 ---
 
-## 3. 系统边界与演进
+## 4. 系统边界与演进
 
-### 3.1 模块化单体划分
+### 4.1 模块化单体划分
 建议按 **领域包/模块** 划分，确保边界清晰：
 - `iam`（租户与权限）
 - `knowledge`（文档与知识库）
 - `rag`（召回与生成）
-- `conversation`（会话与工单）
-- `handoff`（人工客服接入）
+- `conversation`（会话与消息）
 - `analytics`（统计）
 - `apimgmt`（API Key 与限流）
 - `platform`（系统管理）
 
-### 3.2 未来微服务演进方向
+### 4.2 未来微服务演进方向
 可按吞吐和职责拆分：
 - **Doc Processing Service**（异步处理）
 - **RAG Service**（高并发推理）
 - **Analytics Service**（批处理/流处理）
-- **Handoff Service**（客服系统）
 
 ---
 
-## 4. 安全与隔离设计
+## 5. 安全与隔离设计
 - 所有表强制 `tenant_id`
 - Query 层统一 `tenant filter`
 - API Key + HMAC 签名（可选）
@@ -113,21 +145,21 @@ end
 
 ---
 
-## 5. 可观测性
+## 6. 可观测性
 - **日志**：请求、响应、错误、审计
-- **指标**：QPS、P95、转人工率、命中率
+- **指标**：QPS、P95、命中率
 - **Trace**：对话链路、RAG 召回链路
 
 ---
 
-## 6. 部署与可用性
+## 7. 部署与可用性
 - 单体部署（Docker + k8s）
 - Redis / MySQL / VectorDB 独立部署
 - 消息队列保障异步任务稳定
 
 ---
 
-## 7. SLA 与性能目标
+## 8. SLA 与性能目标
 - P95 响应时间 < 2s
 - 召回 TopK < 200ms
 - 文档处理成功率 > 98%

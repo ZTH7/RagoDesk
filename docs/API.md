@@ -83,39 +83,14 @@
     "confidence": 0.78,
     "references": [
       {"doc_id": "doc_12", "chunk_id": "ck_99", "score": 0.82}
-    ],
-    "handoff": false
+    ]
   }
 }
 ```
 
 ---
 
-### 2.3 触发转人工
-`POST /api/v1/handoff`
-
-**Request**
-```json
-{
-  "session_id": "sess_abc",
-  "reason": "user_request"
-}
-```
-
-**Response**
-```json
-{
-  "code": 0,
-  "data": {
-    "ticket_id": "t_001",
-    "status": "open"
-  }
-}
-```
-
----
-
-### 2.4 获取会话状态
+### 2.3 获取会话状态
 `GET /api/v1/session/{id}`
 
 **Response**
@@ -131,7 +106,7 @@
 
 ---
 
-### 2.5 用户反馈（用于优化）
+### 2.4 用户反馈（用于优化）
 `POST /api/v1/feedback`
 
 **Request**
@@ -170,16 +145,9 @@
 ### 3.4 统计看板
 - `GET /admin/v1/analytics/overview`
 - `GET /admin/v1/analytics/latency`
-- `GET /admin/v1/analytics/handoff`
 
 ---
 
-## 4. Webhook（可选）
-- `POST /webhook/handoff`
-- `POST /webhook/ticket_update`
-
----
-
-## 5. 安全与审计
+## 4. 安全与审计
 - 请求必须记录：租户 ID、API Key、调用 IP、耗时
 - 重要操作需审计日志（创建/删除 API Key）

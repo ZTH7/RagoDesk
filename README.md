@@ -22,7 +22,6 @@ internal/
   knowledge/
   rag/
   conversation/
-  handoff/
   analytics/
   apimgmt/
   platform/
@@ -57,6 +56,7 @@ npm run dev
 
 ## Documentation
 - [PRD](docs/PRD.md)
+- [Development Plan](docs/DevelopmentPlan.md)
 - [Architecture](docs/Architecture.md)
 - [Modules](docs/Modules.md)
 - [Data Model](docs/DataModel.md)

@@ -5,7 +5,6 @@ import (
 	analyticsdata "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/data"
 	apimgmtdata "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/data"
 	conversationdata "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/data"
-	handoffdata "github.com/ZTH7/RAGDesk/apps/server/internal/handoff/data"
 	iamdata "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
 	knowledgedata "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
 	platformdata "github.com/ZTH7/RAGDesk/apps/server/internal/platform/data"
@@ -18,11 +17,9 @@ import (
 // ProviderSet is data providers.
 var ProviderSet = wire.NewSet(
 	NewData,
-	NewGreeterRepo,
 	analyticsdata.ProviderSet,
 	apimgmtdata.ProviderSet,
 	conversationdata.ProviderSet,
-	handoffdata.ProviderSet,
 	iamdata.ProviderSet,
 	knowledgedata.ProviderSet,
 	platformdata.ProviderSet,

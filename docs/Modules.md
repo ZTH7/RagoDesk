@@ -46,17 +46,14 @@
 
 ---
 
-## 4. Conversation & Handoff
+## 4. Conversation
 **职责**
 - 会话管理
-- 转人工策略
-- 工单流转
+- 消息记录
 
 **核心能力**
 - `SessionService`
 - `MessageService`
-- `HandoffService`
-- `TicketService`
 
 ---
 
