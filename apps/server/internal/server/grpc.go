@@ -13,6 +13,10 @@ func NewGRPCServer(c *conf.Server, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
+			ErrorMiddleware(),
+			TracingMiddleware(),
+			LoggingMiddleware(),
+			AuthMiddleware(),
 		),
 	}
 	if c.Grpc.Network != "" {

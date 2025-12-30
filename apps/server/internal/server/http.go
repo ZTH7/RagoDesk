@@ -13,6 +13,10 @@ func NewHTTPServer(c *conf.Server, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
+			ErrorMiddleware(),
+			TracingMiddleware(),
+			LoggingMiddleware(),
+			AuthMiddleware(),
 		),
 	}
 	if c.Http.Network != "" {

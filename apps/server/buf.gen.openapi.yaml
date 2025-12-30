@@ -1,0 +1,5 @@
+version: v1
+plugins:
+  - plugin: openapi
+    out: .
+    opt: fq_schema_naming=true,default_response=false

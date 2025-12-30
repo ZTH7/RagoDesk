@@ -15,6 +15,7 @@
 - **Knowledge & Ingestion**
   - 文档上传、清洗、分片、版本
   - 异步任务、向量化
+  - 维护机器人与知识库的关联（bot_kb）
 - **RAG Engine**
   - Query Embedding → 向量检索 → 重排 → Prompt → LLM
   - 引用来源 + 置信度
@@ -32,7 +33,7 @@
 - **MySQL**：业务核心数据
 - **Redis**：会话、限流、缓存、分布式锁
 - **向量库**：Qdrant / pgvector
-- **消息队列**：异步文档处理 / 统计聚合
+- **消息队列（RabbitMQ）**：异步文档处理 / 统计聚合
 - **对象存储**：原始文档 / 处理结果
 
 ---
@@ -53,8 +54,10 @@
   - Admin API 触发上传
   - 写 `document` / `document_version`
   - 异步任务：清洗、切分、向量化、入向量库
+  - 维护 `bot_kb` 关联关系
 - **RAG Engine**
   - 消费 `chat_message` 输入
+  - 通过 `bot_kb` 解析可用知识库
   - 调用向量库召回 + 可选重排
   - 输出 `answer + refs + confidence`
 - **Conversation**
@@ -155,7 +158,7 @@ API-->>Client: reply
 ## 7. 部署与可用性
 - 单体部署（Docker + k8s）
 - Redis / MySQL / VectorDB 独立部署
-- 消息队列保障异步任务稳定
+- RabbitMQ 保障异步任务稳定
 
 ---
 

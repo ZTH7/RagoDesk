@@ -18,6 +18,7 @@ endif
 .PHONY: init
 # init env
 init:
+	go install github.com/bufbuild/buf/cmd/buf@latest
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/go-kratos/kratos/cmd/kratos/v2@latest
@@ -26,23 +27,19 @@ init:
 	go install github.com/google/wire/cmd/wire@latest
 
 .PHONY: config
-# generate internal proto
+# generate internal proto (buf)
 config:
-	protoc --proto_path=./internal \
-	       --proto_path=./third_party \
- 	       --go_out=paths=source_relative:./internal \
-	       $(INTERNAL_PROTO_FILES)
+	buf generate --template buf.gen.internal.yaml --path internal/conf/conf.proto
 
 .PHONY: api
-# generate api proto
+# generate api proto (buf)
 api:
-	protoc --proto_path=./api \
-	       --proto_path=./third_party \
- 	       --go_out=paths=source_relative:./api \
- 	       --go-http_out=paths=source_relative:./api \
- 	       --go-grpc_out=paths=source_relative:./api \
-	       --openapi_out=fq_schema_naming=true,default_response=false:. \
-	       $(API_PROTO_FILES)
+ifneq ($(strip $(API_PROTO_FILES)),)
+	buf generate --template buf.gen.api.yaml $(foreach f,$(API_PROTO_FILES),--path $(f))
+	buf generate --template buf.gen.openapi.yaml $(foreach f,$(API_PROTO_FILES),--path $(f))
+else
+	@echo "No API proto files found; skip."
+endif
 
 .PHONY: build
 # build
@@ -58,8 +55,8 @@ generate:
 .PHONY: all
 # generate all
 all:
-	make api
 	make config
+	make api
 	make generate
 
 # show help

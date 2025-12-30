@@ -16,6 +16,9 @@ TENANT ||--o{ CHAT_SESSION : owns
 USER }o--o{ ROLE : assigned
 ROLE }o--o{ PERMISSION : grants
 
+BOT ||--o{ BOT_KB : links
+KNOWLEDGE_BASE ||--o{ BOT_KB : links
+
 KNOWLEDGE_BASE ||--o{ DOCUMENT : contains
 DOCUMENT ||--o{ DOCUMENT_VERSION : versions
 DOCUMENT_VERSION ||--o{ DOC_CHUNK : splits
@@ -71,6 +74,13 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `description`
 - `status` (active/disabled)
 - `config_json` (prompt/阈值/策略)
+
+**bot_kb**
+- `id` (PK)
+- `tenant_id`
+- `bot_id`
+- `kb_id`
+- `created_at`
 
 ---
 
@@ -178,6 +188,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 ## 3. 关键索引与约束
 - `tenant_id` 必须建联合索引（如 `tenant_id + created_at`）
+- `bot_id + kb_id` 唯一索引
 - `document_id + version` 唯一索引
 - `api_key.key_hash` 唯一索引
 - 向量库索引：HNSW / IVFFlat

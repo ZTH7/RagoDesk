@@ -9,7 +9,6 @@ RAGDesk/
 │   └── admin-web/     # React + Vite + Ant Design admin console
 ├── docs/              # PRD / Architecture / Data Model / API / Tech Stack
 ├── deploy/            # Docker / K8s manifests
-├── tools/             # local dev tools/scripts (future)
 ├── go.work
 └── go.work.sum
 ```
@@ -17,6 +16,8 @@ RAGDesk/
 ## Backend Module Layout (apps/server)
 ```
 cmd/            # entrypoint (main)
+api/            # proto/openapi (empty until API v1 is defined)
+configs/        # config templates
 internal/
   iam/
   knowledge/
@@ -25,12 +26,9 @@ internal/
   analytics/
   apimgmt/
   platform/
-pkg/            # reusable libs/middleware
-api/            # proto/openapi
-configs/        # config templates
-migrations/     # DB migrations
-scripts/        # admin scripts
-test/           # integration tests
+server/         # transport setup (HTTP/GRPC)
+buf.yaml        # proto module config (buf)
+buf.lock        # locked proto deps (buf)
 ```
 
 ## Quick Start

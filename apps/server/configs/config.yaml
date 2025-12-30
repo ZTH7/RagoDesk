@@ -13,3 +13,20 @@ data:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
     write_timeout: 0.2s
+  vectordb:
+    driver: qdrant
+    endpoint: http://127.0.0.1:6333
+    api_key: ""
+    collection: ragdesk_default
+  rabbitmq:
+    addr: amqp://guest:guest@127.0.0.1:5672/
+    username: guest
+    password: guest
+    vhost: /
+  object_storage:
+    endpoint: http://127.0.0.1:9000
+    access_key: minioadmin
+    secret_key: minioadmin
+    bucket: ragdesk
+    region: ""
+    use_ssl: false

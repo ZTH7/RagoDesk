@@ -36,6 +36,7 @@
 - TopK 召回 + 重排
 - Prompt 组装 + LLM 调用
 - 置信度评估
+- 按机器人绑定的知识库进行检索
 
 **核心能力**
 - `Retriever`
@@ -93,7 +94,7 @@
 
 ## 8. Infrastructure
 **职责**
-- MySQL / Redis / 向量库 / MQ
+- MySQL / Redis / 向量库 / RabbitMQ
 - 文件存储
 - 配置管理
 - 统一日志

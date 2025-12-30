@@ -128,6 +128,9 @@
 - `GET /admin/v1/bots`
 - `PATCH /admin/v1/bots/{id}`
 - `DELETE /admin/v1/bots/{id}`
+- `GET /admin/v1/bots/{id}/knowledge_bases`
+- `POST /admin/v1/bots/{id}/knowledge_bases`（绑定）
+- `DELETE /admin/v1/bots/{id}/knowledge_bases/{kb_id}`（解绑）
 
 ### 3.2 知识库管理
 - `POST /admin/v1/knowledge_bases`

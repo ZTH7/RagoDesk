@@ -18,7 +18,7 @@
 **Purpose**: clean template leftovers, align docs ↔ repo, and make the server boot without demo services.
 - Remove Greeter template code and registrations
 - Align `README.md` with actual repo structure
-- Expand `conf.proto` / `config.yaml` to include: vector DB, MQ, object storage
+- Expand `conf.proto` / `config.yaml` to include: vector DB, RabbitMQ, object storage
 - Add global middleware placeholders (auth, logging, tracing, error)
 - Establish standard error codes (match `docs/API.md`)
 
@@ -40,8 +40,9 @@
 ## Phase 2: Knowledge & Ingestion
 **Purpose**: content ingestion pipeline and storage.
 - Tables: `knowledge_base`, `document`, `document_version`, `doc_chunk`, `embedding`
+- Table: `bot_kb` (bot-to-knowledge-base association)
 - Object storage adapter (S3/MinIO)
-- Async ingestion job (MQ/Redis)
+- Async ingestion job (RabbitMQ/Redis)
 - Pipeline: clean → split → embed → upsert to vector DB
 - Status tracking with retries
 

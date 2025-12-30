@@ -147,6 +147,7 @@
 - 成员与角色权限
 - 知识库管理（文档上传/版本/回滚）
 - 机器人管理（配置、阈值、提示词）
+- 机器人与知识库绑定（支持多库）
 - API Key 管理与调用统计
 - 统计看板
 
@@ -161,6 +162,7 @@
 - **role / permission / user_role**
 - **bot**（机器人）
 - **knowledge_base**（知识库）
+- **bot_kb**（机器人与知识库关联）
 - **document / document_version**
 - **chunk / embedding**
 - **chat_session / chat_message**
