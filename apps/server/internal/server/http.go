@@ -17,6 +17,7 @@ func NewHTTPServer(c *conf.Server, logger log.Logger) *http.Server {
 			TracingMiddleware(),
 			LoggingMiddleware(),
 			AuthMiddleware(),
+			TenantContextMiddleware(),
 		),
 	}
 	if c.Http.Network != "" {

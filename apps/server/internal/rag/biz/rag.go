@@ -12,9 +12,32 @@ type RAG struct {
 	ID string
 }
 
+// IsolationMode defines vector DB isolation strategy.
+type IsolationMode string
+
+const (
+	IsolationModeCollection IsolationMode = "collection"
+	IsolationModePayload    IsolationMode = "payload"
+)
+
+// VectorSearchRequest describes a vector search input.
+type VectorSearchRequest struct {
+	BotID string
+	Query string
+	TopK  int32
+}
+
+// VectorSearchResult describes a vector search output.
+type VectorSearchResult struct {
+	ChunkID string
+	KBID    string
+	Score   float32
+}
+
 // RAGRepo is a repository interface (placeholder)
 type RAGRepo interface {
 	Ping(context.Context) error
+	Search(ctx context.Context, req VectorSearchRequest, mode IsolationMode) ([]VectorSearchResult, error)
 }
 
 // RAGUsecase handles rag business logic (placeholder)

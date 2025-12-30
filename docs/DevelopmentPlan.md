@@ -44,7 +44,9 @@
 - Object storage adapter (S3/MinIO)
 - Async ingestion job (RabbitMQ/Redis)
 - Pipeline: clean → split → embed → upsert to vector DB
+- Metadata extraction + index build (vector + metadata)
 - Status tracking with retries
+- Batch embedding + concurrency controls
 
 **Deliverable**: documents upload and index successfully.
 
@@ -53,9 +55,14 @@
 ## Phase 3: RAG Engine
 **Purpose**: answer generation with references and confidence.
 - Vector store adapter (Qdrant/pgvector)
-- Retriever + optional reranker
-- Prompt builder + LLM client
+- Retriever + optional reranker (hybrid search)
+- Prompt templates + system instruction control
+- Eino pipeline orchestration
+- RAG evaluation metrics (Recall@K, MRR, nDCG, Faithfulness)
 - Confidence scorer with configurable threshold
+- Feedback loop: user rating/correction → review → reindex
+- Cost/latency: cache, concurrency, batch embedding
+- Multi-model/multi-language routing and configuration
 
 **Deliverable**: `POST /api/v1/message` returns reply + refs + confidence.
 
@@ -76,6 +83,7 @@
 - Tables: `api_key`, `api_usage_log`
 - QPS + quota limits
 - Audit logs + export
+- Billing model + usage aggregation (per request/token/model)
 
 **Deliverable**: key lifecycle + rate limits enforced.
 

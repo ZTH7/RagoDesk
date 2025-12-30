@@ -46,6 +46,9 @@
 - **Embedding**：向量化生成
 - **Retrieval**：TopK 召回
 - **Rerank**：可选重排策略
+- **Prompt Templates**：系统指令与模板化拼接
+- **RAG 评测**：Recall@K / MRR / nDCG / Faithfulness
+- **Model Router**：多模型/多语言路由与配置管理
 
 ### 3.2 向量数据库
 - **Qdrant**（主选）

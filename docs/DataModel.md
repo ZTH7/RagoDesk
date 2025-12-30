@@ -25,6 +25,7 @@ DOCUMENT_VERSION ||--o{ DOC_CHUNK : splits
 DOC_CHUNK ||--o{ EMBEDDING : vectors
 
 CHAT_SESSION ||--o{ CHAT_MESSAGE : has
+CHAT_MESSAGE ||--o{ MESSAGE_FEEDBACK : has
 CHAT_SESSION ||--o{ SESSION_EVENT : has
 
 BOT ||--o{ CHAT_SESSION : serves
@@ -80,6 +81,8 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `tenant_id`
 - `bot_id`
 - `kb_id`
+- `priority` (int, optional)
+- `weight` (float, optional)
 - `created_at`
 
 ---
@@ -102,6 +105,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 **document_version**
 - `id` (PK)
+- `tenant_id`
 - `document_id`
 - `version` (int)
 - `raw_path` (object storage)
@@ -110,6 +114,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 **doc_chunk**
 - `id` (PK)
+- `tenant_id`
 - `document_version_id`
 - `chunk_index`
 - `content`
@@ -118,6 +123,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 **embedding**
 - `id` (PK)
+- `tenant_id`
 - `chunk_id`
 - `vector` (pgvector)
 - `model`
@@ -142,6 +148,15 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `content`
 - `refs_json` (引用来源)
 - `confidence`
+- `created_at`
+
+**message_feedback**
+- `id` (PK)
+- `tenant_id`
+- `session_id`
+- `message_id`
+- `rating` (1/-1)
+- `correction` (text, optional)
 - `created_at`
 
 **session_event**
@@ -190,6 +205,9 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `tenant_id` 必须建联合索引（如 `tenant_id + created_at`）
 - `bot_id + kb_id` 唯一索引
 - `document_id + version` 唯一索引
+- `doc_chunk (tenant_id, document_version_id)` 复合索引
+- `embedding (tenant_id, chunk_id)` 复合索引
+- `message_feedback (tenant_id, message_id)` 复合索引
 - `api_key.key_hash` 唯一索引
 - 向量库索引：HNSW / IVFFlat
 - `chat_session (tenant_id, status)` 用于筛选会话状态
@@ -207,3 +225,4 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `message_received`
 - `rag_hit` / `rag_miss`
 - `doc_ingestion_failed`
+- `feedback_submitted`

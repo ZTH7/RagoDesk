@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 
+	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/middleware"
+	"github.com/go-kratos/kratos/v2/transport"
 )
 
 // AuthMiddleware is a placeholder for auth (API Key / JWT) enforcement.
@@ -42,6 +44,26 @@ func ErrorMiddleware() middleware.Middleware {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			// TODO: map domain errors to API error codes.
 			return next(ctx, req)
+		}
+	}
+}
+
+// TenantContextMiddleware extracts tenant_id from transport metadata.
+func TenantContextMiddleware() middleware.Middleware {
+	return func(next middleware.Handler) middleware.Handler {
+		return func(ctx context.Context, req interface{}) (interface{}, error) {
+			if _, ok := tenant.TenantID(ctx); ok {
+				return next(ctx, req)
+			}
+			tr, ok := transport.FromServerContext(ctx)
+			if !ok {
+				return next(ctx, req)
+			}
+			tenantID := tr.RequestHeader().Get("X-Tenant-ID")
+			if tenantID == "" {
+				return next(ctx, req)
+			}
+			return next(tenant.WithTenantID(ctx, tenantID), req)
 		}
 	}
 }

@@ -21,12 +21,14 @@
 - 文档上传 / 解析 / 清洗 / 分片
 - 向量化任务与进度
 - 文档版本管理
+- 元数据抽取与索引构建
 
 **核心能力**
 - `DocumentService`
 - `ChunkingService`
 - `EmbeddingService`
 - `IngestionJob`
+- `IndexBuilder`
 
 ---
 
@@ -37,6 +39,10 @@
 - Prompt 组装 + LLM 调用
 - 置信度评估
 - 按机器人绑定的知识库进行检索
+- Eino Pipeline 编排
+- Prompt 模板与系统指令控制
+- 反馈闭环与评测指标
+- 多语言与多模型路由
 
 **核心能力**
 - `Retriever`
@@ -44,6 +50,11 @@
 - `PromptBuilder`
 - `LLMClient`
 - `ConfidenceScorer`
+- `PromptTemplateManager`
+- `SystemInstructionPolicy`
+- `RAGEvaluator`
+- `FeedbackService`
+- `ModelRouter`
 
 ---
 

@@ -10,7 +10,8 @@
 
 ### 1.1 认证
 - Header: `X-API-Key: <key>`
-- 可选签名：`X-Timestamp`, `X-Signature` (HMAC-SHA256)
+- 可选签名：`X-Timestamp`, `X-Nonce`, `X-Signature` (HMAC-SHA256)
+- 服务端校验时间窗口与 nonce 防重放
 
 ### 1.2 统一响应结构
 ```json
@@ -115,7 +116,8 @@
   "session_id": "sess_abc",
   "message_id": "msg_321",
   "rating": 1,
-  "comment": "回答不准确"
+  "comment": "回答不准确",
+  "correction": "正确答案应为..."
 }
 ```
 
@@ -144,6 +146,7 @@
 - `GET /admin/v1/api_keys`
 - `PATCH /admin/v1/api_keys/{id}`
 - `DELETE /admin/v1/api_keys/{id}`
+> 支持 scope 配置与 Key 轮换（可保留历史 Key 过渡期）
 
 ### 3.4 统计看板
 - `GET /admin/v1/analytics/overview`

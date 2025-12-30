@@ -17,6 +17,7 @@ func NewGRPCServer(c *conf.Server, logger log.Logger) *grpc.Server {
 			TracingMiddleware(),
 			LoggingMiddleware(),
 			AuthMiddleware(),
+			TenantContextMiddleware(),
 		),
 	}
 	if c.Grpc.Network != "" {

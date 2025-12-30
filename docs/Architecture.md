@@ -15,10 +15,15 @@
 - **Knowledge & Ingestion**
   - 文档上传、清洗、分片、版本
   - 异步任务、向量化
+  - 元数据抽取与索引构建（向量索引 + 元数据索引）
   - 维护机器人与知识库的关联（bot_kb）
 - **RAG Engine**
   - Query Embedding → 向量检索 → 重排 → Prompt → LLM
+  - Eino Pipeline 编排（检索、重排、Prompt、调用链）
+  - Prompt 模板与系统指令控制
   - 引用来源 + 置信度
+  - 评测指标与反馈闭环
+  - 多语言与多模型路由（按租户/机器人/知识库配置）
 - **Conversation**
   - 会话状态机（机器人 → 关闭）
   - 会话与消息记录
@@ -26,6 +31,7 @@
   - 指标聚合、日报/周报、看板
 - **API Management**
   - API Key、配额、QPS、审计
+  - 计费与用量统计（请求/Token/模型维度）
 - **Observability**
   - 日志 / Metrics / Trace / 审计
 
@@ -50,16 +56,24 @@
 - **IAM / Tenant**
   - 生产/消费 `tenant_id` 上下文
   - 为所有模块提供租户与权限校验能力
+  - DAO 层强制 tenant 过滤（防止越权访问）
 - **Knowledge & Ingestion**
   - Admin API 触发上传
   - 写 `document` / `document_version`
   - 异步任务：清洗、切分、向量化、入向量库
+  - 元数据抽取与索引构建（向量索引 + 元数据索引）
   - 维护 `bot_kb` 关联关系
+  - 幂等与重试：按 `document_version` 保证可重入
 - **RAG Engine**
   - 消费 `chat_message` 输入
   - 通过 `bot_kb` 解析可用知识库
-  - 调用向量库召回 + 可选重排
+  - 检索策略：按 `bot_kb` 权重/优先级组合召回
+  - 调用向量库召回 + 混合检索（向量 + 关键词）+ 可选重排
+  - Prompt 模板 + 系统指令控制 + LLM
   - 输出 `answer + refs + confidence`
+  - Eino Pipeline 负责链路编排与可观测性埋点
+  - 成本与延迟优化：缓存、并发、批量 embedding
+  - 多语言与多模型路由（模型选择、Prompt 选择、向量模型一致性校验）
 - **Conversation**
   - 维护会话状态机
   - 会话与消息记录
@@ -77,6 +91,11 @@
 ### 2.2 同步与异步边界
 - **同步路径**：用户请求 → RAG → 回复（要求低延迟）
 - **异步路径**：文档处理 / 统计聚合（高吞吐、可重试）
+
+### 2.3 RAG 责任边界
+- **Knowledge & Ingestion**：负责文档处理、切分、向量化、索引构建与更新；不参与在线生成。
+- **RAG Engine**：负责检索、重排、Prompt 编排与生成；不直接修改知识库或索引。
+- **Conversation**：负责会话状态与消息持久化；不承载检索/索引逻辑。
 
 ---
 
@@ -118,6 +137,12 @@ API-->>Client: reply
 - 实时指标：Redis + Prometheus
 - 离线聚合：定时作业写入 `analytics_daily`
 
+### 3.4 RAG 评测与反馈闭环
+- 采集用户反馈（点赞/踩/纠错）并关联 `chat_message`
+- 形成评测集与质检任务（抽样/回放/自动评测）
+- 指标看板：Recall@K、MRR、nDCG、Faithfulness、Answer Relevancy
+- 反馈闭环：人工审核 → 知识修订 → 重新切分/向量化/索引
+
 ---
 
 ## 4. 系统边界与演进
@@ -145,6 +170,7 @@ API-->>Client: reply
 - Query 层统一 `tenant filter`
 - API Key + HMAC 签名（可选）
 - 限流 / 配额 / 审计日志
+- 向量库隔离策略：`collection per tenant` 或 `payload filter + tenant_id`
 
 ---
 
