@@ -15,6 +15,8 @@ TENANT ||--o{ CHAT_SESSION : owns
 
 USER }o--o{ ROLE : assigned
 ROLE }o--o{ PERMISSION : grants
+ROLE ||--o{ ROLE_PERMISSION : links
+PERMISSION ||--o{ ROLE_PERMISSION : links
 
 BOT ||--o{ BOT_KB : links
 KNOWLEDGE_BASE ||--o{ BOT_KB : links
@@ -60,10 +62,15 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 **permission**
 - `id` (PK)
 - `code` (string, e.g. `knowledge.read`)
+- `description`
 
 **user_role**
 - `user_id`
 - `role_id`
+
+**role_permission**
+- `role_id`
+- `permission_id`
 
 ---
 
@@ -208,6 +215,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `doc_chunk (tenant_id, document_version_id)` 复合索引
 - `embedding (tenant_id, chunk_id)` 复合索引
 - `message_feedback (tenant_id, message_id)` 复合索引
+- `role_permission (role_id, permission_id)` 唯一索引
 - `api_key.key_hash` 唯一索引
 - 向量库索引：HNSW / IVFFlat
 - `chat_session (tenant_id, status)` 用于筛选会话状态

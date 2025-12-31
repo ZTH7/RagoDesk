@@ -2,23 +2,497 @@ package data
 
 import (
 	"context"
+	"database/sql"
+	stderrors "errors"
+	"fmt"
+	"strings"
+	"time"
 
+	internaldata "github.com/ZTH7/RAGDesk/apps/server/internal/data"
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/iam/biz"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	kerrors "github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/google/uuid"
 	"github.com/google/wire"
 )
 
 type iamRepo struct {
 	log *log.Helper
+	db  *sql.DB
 }
 
-// NewIAMRepo creates a new iam repo (placeholder)
-func NewIAMRepo(logger log.Logger) biz.IAMRepo {
-	return &iamRepo{log: log.NewHelper(logger)}
+// NewIAMRepo creates a new iam repo.
+func NewIAMRepo(data *internaldata.Data, logger log.Logger) biz.IAMRepo {
+	return &iamRepo{log: log.NewHelper(logger), db: data.DB}
 }
 
 func (r *iamRepo) Ping(ctx context.Context) error {
-	return nil
+	if r.db == nil {
+		return kerrors.InternalServer("DB_MISSING", "database not initialized")
+	}
+	return r.db.PingContext(ctx)
+}
+
+func (r *iamRepo) CreateTenant(ctx context.Context, tenantModel biz.Tenant) (biz.Tenant, error) {
+	// TODO: platform admin auth & audit.
+	if tenantModel.ID == "" {
+		tenantModel.ID = uuid.NewString()
+	}
+	if tenantModel.CreatedAt.IsZero() {
+		tenantModel.CreatedAt = time.Now()
+	}
+	_, err := r.db.ExecContext(
+		ctx,
+		"INSERT INTO tenant (id, name, plan, status, created_at) VALUES (?, ?, ?, ?, ?)",
+		tenantModel.ID,
+		tenantModel.Name,
+		tenantModel.Plan,
+		tenantModel.Status,
+		tenantModel.CreatedAt,
+	)
+	if err != nil {
+		return biz.Tenant{}, err
+	}
+	return tenantModel, nil
+}
+
+func (r *iamRepo) GetTenant(ctx context.Context, id string) (biz.Tenant, error) {
+	// TODO: platform admin auth & audit.
+	var tenantModel biz.Tenant
+	err := r.db.QueryRowContext(
+		ctx,
+		"SELECT id, name, plan, status, created_at FROM tenant WHERE id = ?",
+		id,
+	).Scan(&tenantModel.ID, &tenantModel.Name, &tenantModel.Plan, &tenantModel.Status, &tenantModel.CreatedAt)
+	if err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return biz.Tenant{}, kerrors.NotFound("TENANT_NOT_FOUND", "tenant not found")
+		}
+		return biz.Tenant{}, err
+	}
+	return tenantModel, nil
+}
+
+func (r *iamRepo) ListTenants(ctx context.Context) ([]biz.Tenant, error) {
+	// TODO: platform admin auth & audit.
+	rows, err := r.db.QueryContext(ctx, "SELECT id, name, plan, status, created_at FROM tenant ORDER BY created_at DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Tenant, 0)
+	for rows.Next() {
+		var tenantModel biz.Tenant
+		if err := rows.Scan(&tenantModel.ID, &tenantModel.Name, &tenantModel.Plan, &tenantModel.Status, &tenantModel.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, tenantModel)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) CreateUser(ctx context.Context, user biz.User) (biz.User, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return biz.User{}, err
+	}
+	user.TenantID = tenantID
+	if user.ID == "" {
+		user.ID = uuid.NewString()
+	}
+	if user.CreatedAt.IsZero() {
+		user.CreatedAt = time.Now()
+	}
+	_, err = r.db.ExecContext(
+		ctx,
+		"INSERT INTO `user` (id, tenant_id, email, phone, name, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		user.ID,
+		user.TenantID,
+		user.Email,
+		user.Phone,
+		user.Name,
+		user.Status,
+		user.CreatedAt,
+	)
+	if err != nil {
+		return biz.User{}, err
+	}
+	return user, nil
+}
+
+func (r *iamRepo) ListUsers(ctx context.Context) ([]biz.User, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.db.QueryContext(
+		ctx,
+		"SELECT id, tenant_id, email, phone, name, status, created_at FROM `user` WHERE tenant_id = ? ORDER BY created_at DESC",
+		tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.User, 0)
+	for rows.Next() {
+		var user biz.User
+		if err := rows.Scan(&user.ID, &user.TenantID, &user.Email, &user.Phone, &user.Name, &user.Status, &user.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, user)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) CreateRole(ctx context.Context, role biz.Role) (biz.Role, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return biz.Role{}, err
+	}
+	role.TenantID = tenantID
+	if role.ID == "" {
+		role.ID = uuid.NewString()
+	}
+	_, err = r.db.ExecContext(
+		ctx,
+		"INSERT INTO `role` (id, tenant_id, name) VALUES (?, ?, ?)",
+		role.ID,
+		role.TenantID,
+		role.Name,
+	)
+	if err != nil {
+		return biz.Role{}, err
+	}
+	return role, nil
+}
+
+func (r *iamRepo) ListRoles(ctx context.Context) ([]biz.Role, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.db.QueryContext(
+		ctx,
+		"SELECT id, tenant_id, name FROM `role` WHERE tenant_id = ? ORDER BY name ASC",
+		tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Role, 0)
+	for rows.Next() {
+		var role biz.Role
+		if err := rows.Scan(&role.ID, &role.TenantID, &role.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, role)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) AssignRole(ctx context.Context, userID string, roleID string) error {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return err
+	}
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	var userTenant string
+	if err = tx.QueryRowContext(ctx, "SELECT tenant_id FROM `user` WHERE id = ?", userID).Scan(&userTenant); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return kerrors.NotFound("USER_NOT_FOUND", "user not found")
+		}
+		return err
+	}
+	if userTenant != tenantID {
+		return kerrors.Forbidden("TENANT_MISMATCH", "tenant mismatch")
+	}
+
+	var roleTenant string
+	if err = tx.QueryRowContext(ctx, "SELECT tenant_id FROM `role` WHERE id = ?", roleID).Scan(&roleTenant); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return kerrors.NotFound("ROLE_NOT_FOUND", "role not found")
+		}
+		return err
+	}
+	if roleTenant != tenantID {
+		return kerrors.Forbidden("TENANT_MISMATCH", "tenant mismatch")
+	}
+
+	_, err = tx.ExecContext(
+		ctx,
+		"INSERT INTO user_role (user_id, role_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE role_id = role_id",
+		userID,
+		roleID,
+	)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *iamRepo) ListUserRoles(ctx context.Context, userID string) ([]biz.Role, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT r.id, r.tenant_id, r.name
+		FROM user_role ur
+		JOIN role r ON ur.role_id = r.id
+		JOIN user u ON ur.user_id = u.id
+		WHERE u.id = ? AND u.tenant_id = ? AND r.tenant_id = u.tenant_id`,
+		userID,
+		tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Role, 0)
+	for rows.Next() {
+		var role biz.Role
+		if err := rows.Scan(&role.ID, &role.TenantID, &role.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, role)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) ListUserPermissions(ctx context.Context, userID string) ([]biz.Permission, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT DISTINCT p.id, p.code, p.description
+		FROM user u
+		JOIN user_role ur ON u.id = ur.user_id
+		JOIN role_permission rp ON ur.role_id = rp.role_id
+		JOIN permission p ON rp.permission_id = p.id
+		WHERE u.id = ? AND u.tenant_id = ?`,
+		userID,
+		tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Permission, 0)
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, perm)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) CreatePermission(ctx context.Context, permission biz.Permission) (biz.Permission, error) {
+	if permission.ID == "" {
+		permission.ID = uuid.NewString()
+	}
+	_, err := r.db.ExecContext(
+		ctx,
+		"INSERT INTO permission (id, code, description) VALUES (?, ?, ?)",
+		permission.ID,
+		permission.Code,
+		permission.Description,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate") {
+			return r.getPermissionByCode(ctx, permission.Code)
+		}
+		return biz.Permission{}, err
+	}
+	return permission, nil
+}
+
+func (r *iamRepo) ListPermissions(ctx context.Context) ([]biz.Permission, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT id, code, description FROM permission ORDER BY code ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Permission, 0)
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, perm)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) AssignRolePermissions(ctx context.Context, roleID string, permissionCodes []string) error {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return err
+	}
+	if len(permissionCodes) == 0 {
+		return nil
+	}
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	var roleTenant string
+	if err = tx.QueryRowContext(ctx, "SELECT tenant_id FROM `role` WHERE id = ?", roleID).Scan(&roleTenant); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return kerrors.NotFound("ROLE_NOT_FOUND", "role not found")
+		}
+		return err
+	}
+	if roleTenant != tenantID {
+		return kerrors.Forbidden("TENANT_MISMATCH", "tenant mismatch")
+	}
+
+	placeholders, args := buildInClause(permissionCodes)
+	query := fmt.Sprintf("SELECT id, code, description FROM permission WHERE code IN (%s)", placeholders)
+	rows, err := tx.QueryContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	permByCode := map[string]biz.Permission{}
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+			return err
+		}
+		permByCode[perm.Code] = perm
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	missing := missingPermissions(permissionCodes, permByCode)
+	if len(missing) > 0 {
+		return kerrors.NotFound("PERMISSION_NOT_FOUND", fmt.Sprintf("missing permissions: %s", strings.Join(missing, ",")))
+	}
+
+	for _, code := range permissionCodes {
+		perm := permByCode[code]
+		_, err = tx.ExecContext(
+			ctx,
+			"INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE permission_id = permission_id",
+			roleID,
+			perm.ID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *iamRepo) ListRolePermissions(ctx context.Context, roleID string) ([]biz.Permission, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT p.id, p.code, p.description
+		FROM role_permission rp
+		JOIN permission p ON rp.permission_id = p.id
+		JOIN role r ON rp.role_id = r.id
+		WHERE r.id = ? AND r.tenant_id = ?`,
+		roleID,
+		tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Permission, 0)
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, perm)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) getPermissionByCode(ctx context.Context, code string) (biz.Permission, error) {
+	var perm biz.Permission
+	err := r.db.QueryRowContext(ctx, "SELECT id, code, description FROM permission WHERE code = ?", code).
+		Scan(&perm.ID, &perm.Code, &perm.Description)
+	if err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return biz.Permission{}, kerrors.NotFound("PERMISSION_NOT_FOUND", "permission not found")
+		}
+		return biz.Permission{}, err
+	}
+	return perm, nil
+}
+
+func buildInClause(values []string) (string, []any) {
+	placeholders := make([]string, 0, len(values))
+	args := make([]any, 0, len(values))
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		placeholders = append(placeholders, "?")
+		args = append(args, value)
+	}
+	if len(placeholders) == 0 {
+		placeholders = append(placeholders, "?")
+		args = append(args, "")
+	}
+	return strings.Join(placeholders, ","), args
+}
+
+func missingPermissions(codes []string, existing map[string]biz.Permission) []string {
+	seen := map[string]struct{}{}
+	missing := make([]string, 0)
+	for _, code := range codes {
+		if code == "" {
+			continue
+		}
+		if _, ok := seen[code]; ok {
+			continue
+		}
+		seen[code] = struct{}{}
+		if _, ok := existing[code]; !ok {
+			missing = append(missing, code)
+		}
+	}
+	return missing
 }
 
 // ProviderSet is iam data providers.

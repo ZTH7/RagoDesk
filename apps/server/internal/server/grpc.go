@@ -1,7 +1,9 @@
 package server
 
 import (
+	v1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -9,14 +11,14 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
 			ErrorMiddleware(),
 			TracingMiddleware(),
 			LoggingMiddleware(),
-			AuthMiddleware(),
+			AuthMiddleware(c.Auth),
 			TenantContextMiddleware(),
 		),
 	}
@@ -30,6 +32,6 @@ func NewGRPCServer(c *conf.Server, logger log.Logger) *grpc.Server {
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	// TODO: register module gRPC handlers here.
+	v1.RegisterAdminIAMServer(srv, iamSvc)
 	return srv
 }

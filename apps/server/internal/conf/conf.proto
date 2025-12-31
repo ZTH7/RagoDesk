@@ -21,8 +21,14 @@ message Server {
     string addr = 2;
     google.protobuf.Duration timeout = 3;
   }
+  message Auth {
+    string jwt_secret = 1;
+    string issuer = 2;
+    string audience = 3;
+  }
   HTTP http = 1;
   GRPC grpc = 2;
+  Auth auth = 3;
 }
 
 message Data {

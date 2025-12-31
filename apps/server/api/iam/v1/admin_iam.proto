@@ -1,0 +1,195 @@
+syntax = "proto3";
+
+package api.iam.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service AdminIAM {
+  rpc CreateTenant(CreateTenantRequest) returns (TenantResponse) {
+    option (google.api.http) = {
+      post: "/admin/v1/tenants"
+      body: "*"
+    };
+  }
+  rpc GetTenant(GetTenantRequest) returns (TenantResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/tenants/{id}"
+    };
+  }
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/tenants"
+    };
+  }
+
+  rpc CreateUser(CreateUserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      post: "/admin/v1/tenants/{tenant_id}/users"
+      body: "*"
+    };
+  }
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/tenants/{tenant_id}/users"
+    };
+  }
+
+  rpc CreateRole(CreateRoleRequest) returns (RoleResponse) {
+    option (google.api.http) = {
+      post: "/admin/v1/roles"
+      body: "*"
+    };
+  }
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/roles"
+    };
+  }
+
+  rpc AssignRole(AssignRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/admin/v1/users/{user_id}/roles"
+      body: "*"
+    };
+  }
+
+  rpc CreatePermission(CreatePermissionRequest) returns (PermissionResponse) {
+    option (google.api.http) = {
+      post: "/admin/v1/permissions"
+      body: "*"
+    };
+  }
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/permissions"
+    };
+  }
+  rpc AssignRolePermissions(AssignRolePermissionsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/admin/v1/roles/{role_id}/permissions"
+      body: "*"
+    };
+  }
+  rpc ListRolePermissions(ListRolePermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/roles/{role_id}/permissions"
+    };
+  }
+}
+
+message Tenant {
+  string id = 1;
+  string name = 2;
+  string plan = 3;
+  string status = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message User {
+  string id = 1;
+  string tenant_id = 2;
+  string email = 3;
+  string phone = 4;
+  string name = 5;
+  string status = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message Role {
+  string id = 1;
+  string tenant_id = 2;
+  string name = 3;
+}
+
+message Permission {
+  string id = 1;
+  string code = 2;
+  string description = 3;
+}
+
+message CreateTenantRequest {
+  string name = 1;
+  string plan = 2;
+  string status = 3;
+}
+
+message GetTenantRequest {
+  string id = 1;
+}
+
+message ListTenantsRequest {}
+
+message ListTenantsResponse {
+  repeated Tenant items = 1;
+}
+
+message CreateUserRequest {
+  string tenant_id = 1;
+  string email = 2;
+  string phone = 3;
+  string name = 4;
+  string status = 5;
+}
+
+message ListUsersRequest {
+  string tenant_id = 1;
+}
+
+message ListUsersResponse {
+  repeated User items = 1;
+}
+
+message CreateRoleRequest {
+  string name = 1;
+}
+
+message ListRolesRequest {}
+
+message ListRolesResponse {
+  repeated Role items = 1;
+}
+
+message AssignRoleRequest {
+  string user_id = 1;
+  string role_id = 2;
+}
+
+message CreatePermissionRequest {
+  string code = 1;
+  string description = 2;
+}
+
+message ListPermissionsRequest {}
+
+message ListPermissionsResponse {
+  repeated Permission items = 1;
+}
+
+message AssignRolePermissionsRequest {
+  string role_id = 1;
+  repeated string permission_codes = 2;
+}
+
+message ListRolePermissionsRequest {
+  string role_id = 1;
+}
+
+message TenantResponse {
+  Tenant tenant = 1;
+}
+
+message UserResponse {
+  User user = 1;
+}
+
+message RoleResponse {
+  Role role = 1;
+}
+
+message PermissionResponse {
+  Permission permission = 1;
+}

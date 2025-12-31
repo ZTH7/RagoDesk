@@ -12,6 +12,7 @@
 - Header: `X-API-Key: <key>`
 - 可选签名：`X-Timestamp`, `X-Nonce`, `X-Signature` (HMAC-SHA256)
 - 服务端校验时间窗口与 nonce 防重放
+- 管理后台使用 `Authorization: Bearer <JWT>`
 
 ### 1.2 统一响应结构
 ```json
@@ -124,6 +125,20 @@
 ---
 
 ## 3. 管理后台 API（企业内部）
+
+### 3.0 租户与成员
+- `POST /admin/v1/tenants`
+- `GET /admin/v1/tenants`
+- `GET /admin/v1/tenants/{id}`
+- `POST /admin/v1/tenants/{id}/users`（邀请成员）
+- `GET /admin/v1/tenants/{id}/users`
+- `POST /admin/v1/roles`
+- `GET /admin/v1/roles`
+- `POST /admin/v1/users/{id}/roles`（分配角色）
+- `POST /admin/v1/permissions`
+- `GET /admin/v1/permissions`
+- `POST /admin/v1/roles/{id}/permissions`（分配权限）
+- `GET /admin/v1/roles/{id}/permissions`
 
 ### 3.1 机器人管理
 - `POST /admin/v1/bots`

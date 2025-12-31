@@ -2,17 +2,47 @@ package server
 
 import (
 	"context"
+	"strings"
+	"time"
 
+	"github.com/ZTH7/RAGDesk/apps/server/internal/auth"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
 )
 
 // AuthMiddleware is a placeholder for auth (API Key / JWT) enforcement.
-func AuthMiddleware() middleware.Middleware {
+func AuthMiddleware(cfg *conf.Server_Auth) middleware.Middleware {
 	return func(next middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
-			// TODO: inject auth checks and tenant context.
+			tr, ok := transport.FromServerContext(ctx)
+			if !ok {
+				return next(ctx, req)
+			}
+			if !isAdminOperation(tr.Operation()) {
+				return next(ctx, req)
+			}
+			if cfg == nil || cfg.JwtSecret == "" {
+				return nil, errors.Unauthorized("ADMIN_UNAUTHORIZED", "jwt config missing")
+			}
+			header := strings.TrimSpace(tr.RequestHeader().Get("Authorization"))
+			token := header
+			if strings.HasPrefix(strings.ToLower(header), "bearer ") {
+				token = strings.TrimSpace(header[len("bearer "):])
+			}
+			if token == "" {
+				return nil, errors.Unauthorized("ADMIN_UNAUTHORIZED", "missing authorization")
+			}
+			claims, err := auth.ParseHS256(token, cfg.JwtSecret, cfg.Issuer, cfg.Audience, time.Now())
+			if err != nil {
+				return nil, errors.Unauthorized("ADMIN_UNAUTHORIZED", err.Error())
+			}
+			ctx = auth.WithClaims(ctx, claims)
+			if claims.TenantID != "" {
+				ctx = tenant.WithTenantID(ctx, claims.TenantID)
+			}
 			return next(ctx, req)
 		}
 	}
@@ -66,4 +96,8 @@ func TenantContextMiddleware() middleware.Middleware {
 			return next(tenant.WithTenantID(ctx, tenantID), req)
 		}
 	}
+}
+
+func isAdminOperation(operation string) bool {
+	return strings.Contains(operation, "AdminIAM")
 }
