@@ -5,32 +5,11 @@ import (
 	"database/sql"
 	"time"
 
-	analyticsdata "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/data"
-	apimgmtdata "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/data"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
-	conversationdata "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/data"
-	iamdata "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
-	knowledgedata "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
-	platformdata "github.com/ZTH7/RAGDesk/apps/server/internal/platform/data"
-	ragdata "github.com/ZTH7/RAGDesk/apps/server/internal/rag/data"
-
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/google/wire"
 
 	_ "github.com/go-sql-driver/mysql"
-)
-
-// ProviderSet is data providers.
-var ProviderSet = wire.NewSet(
-	NewData,
-	analyticsdata.ProviderSet,
-	apimgmtdata.ProviderSet,
-	conversationdata.ProviderSet,
-	iamdata.ProviderSet,
-	knowledgedata.ProviderSet,
-	platformdata.ProviderSet,
-	ragdata.ProviderSet,
 )
 
 // Data .
