@@ -77,6 +77,21 @@ type DocumentVersion struct {
 	CreatedAt   time.Time
 }
 
+// IngestionJob describes a document ingestion task.
+type IngestionJob struct {
+	TenantID          string
+	KBID              string
+	DocumentID        string
+	DocumentVersionID string
+	FallbackVersion   int32
+}
+
+// IngestionQueue enqueues ingestion jobs and consumes them.
+type IngestionQueue interface {
+	Enqueue(ctx context.Context, job IngestionJob) error
+	Start(ctx context.Context, handler func(context.Context, IngestionJob) error) error
+}
+
 // DocChunk is a chunk of a document version.
 type DocChunk struct {
 	ID          string
@@ -111,6 +126,8 @@ type KnowledgeRepo interface {
 	CreateKnowledgeBase(ctx context.Context, kb KnowledgeBase) (KnowledgeBase, error)
 	GetKnowledgeBase(ctx context.Context, id string) (KnowledgeBase, error)
 	ListKnowledgeBases(ctx context.Context) ([]KnowledgeBase, error)
+	UpdateKnowledgeBase(ctx context.Context, kb KnowledgeBase) (KnowledgeBase, error)
+	DeleteKnowledgeBase(ctx context.Context, id string) error
 
 	CreateDocument(ctx context.Context, doc Document) (Document, error)
 	GetDocument(ctx context.Context, id string) (Document, error)
@@ -131,17 +148,23 @@ type KnowledgeUsecase struct {
 	repo KnowledgeRepo
 	log  *log.Helper
 
+	queue        IngestionQueue
 	asyncEnabled bool
-	jobs         chan ingestionJob
 }
 
 // NewKnowledgeUsecase creates a new KnowledgeUsecase
-func NewKnowledgeUsecase(repo KnowledgeRepo, logger log.Logger) *KnowledgeUsecase {
-	uc := &KnowledgeUsecase{repo: repo, log: log.NewHelper(logger)}
-	if asyncEnabled() {
-		uc.asyncEnabled = true
-		uc.jobs = make(chan ingestionJob, 128)
-		go uc.runIngestionWorker()
+func NewKnowledgeUsecase(repo KnowledgeRepo, queue IngestionQueue, logger log.Logger) *KnowledgeUsecase {
+	uc := &KnowledgeUsecase{
+		repo:  repo,
+		queue: queue,
+		log:   log.NewHelper(logger),
+	}
+	uc.asyncEnabled = asyncEnabled(queue)
+	if uc.asyncEnabled && uc.queue != nil {
+		if err := uc.queue.Start(context.Background(), uc.processIngestion); err != nil {
+			uc.log.Warnf("ingestion queue start failed: %v", err)
+			uc.asyncEnabled = false
+		}
 	}
 	return uc
 }
@@ -164,6 +187,26 @@ func (uc *KnowledgeUsecase) GetKnowledgeBase(ctx context.Context, id string) (Kn
 
 func (uc *KnowledgeUsecase) ListKnowledgeBases(ctx context.Context) ([]KnowledgeBase, error) {
 	return uc.repo.ListKnowledgeBases(ctx)
+}
+
+func (uc *KnowledgeUsecase) UpdateKnowledgeBase(ctx context.Context, kb KnowledgeBase) (KnowledgeBase, error) {
+	kb.ID = strings.TrimSpace(kb.ID)
+	kb.Name = strings.TrimSpace(kb.Name)
+	if kb.ID == "" {
+		return KnowledgeBase{}, errors.BadRequest("KB_ID_MISSING", "knowledge base id missing")
+	}
+	if kb.Name == "" && strings.TrimSpace(kb.Description) == "" {
+		return KnowledgeBase{}, errors.BadRequest("KB_UPDATE_EMPTY", "knowledge base update empty")
+	}
+	return uc.repo.UpdateKnowledgeBase(ctx, kb)
+}
+
+func (uc *KnowledgeUsecase) DeleteKnowledgeBase(ctx context.Context, id string) error {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return errors.BadRequest("KB_ID_MISSING", "knowledge base id missing")
+	}
+	return uc.repo.DeleteKnowledgeBase(ctx, id)
 }
 
 func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sourceType, content string) (Document, DocumentVersion, error) {
@@ -212,14 +255,14 @@ func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sou
 		return Document{}, DocumentVersion{}, err
 	}
 
-	job := ingestionJob{
+	job := IngestionJob{
 		TenantID:          tenantID,
 		KBID:              kbID,
 		DocumentID:        doc.ID,
 		DocumentVersionID: ver.ID,
 		FallbackVersion:   0,
 	}
-	if uc.enqueueIngestion(job) {
+	if uc.enqueueIngestion(ctx, job) {
 		return doc, ver, nil
 	}
 	if err := uc.processIngestion(ctx, job); err != nil {
@@ -279,14 +322,14 @@ func (uc *KnowledgeUsecase) ReindexDocument(ctx context.Context, id string) (Doc
 	if err != nil {
 		return DocumentVersion{}, err
 	}
-	job := ingestionJob{
+	job := IngestionJob{
 		TenantID:          tenantID,
 		KBID:              doc.KBID,
 		DocumentID:        doc.ID,
 		DocumentVersionID: ver.ID,
 		FallbackVersion:   doc.CurrentVersion,
 	}
-	if uc.enqueueIngestion(job) {
+	if uc.enqueueIngestion(ctx, job) {
 		return ver, nil
 	}
 	if err := uc.processIngestion(ctx, job); err != nil {
@@ -314,36 +357,18 @@ func (uc *KnowledgeUsecase) RollbackDocument(ctx context.Context, id string, ver
 	return uc.repo.RollbackDocument(ctx, id, version)
 }
 
-type ingestionJob struct {
-	TenantID          string
-	KBID              string
-	DocumentID        string
-	DocumentVersionID string
-	FallbackVersion   int32
-}
-
-func (uc *KnowledgeUsecase) enqueueIngestion(job ingestionJob) bool {
-	if !uc.asyncEnabled || uc.jobs == nil {
+func (uc *KnowledgeUsecase) enqueueIngestion(ctx context.Context, job IngestionJob) bool {
+	if !uc.asyncEnabled || uc.queue == nil {
 		return false
 	}
-	select {
-	case uc.jobs <- job:
-		return true
-	default:
-		uc.log.Warn("ingestion queue full; falling back to sync")
+	if err := uc.queue.Enqueue(ctx, job); err != nil {
+		uc.log.Warnf("enqueue ingestion failed: %v", err)
 		return false
 	}
+	return true
 }
 
-func (uc *KnowledgeUsecase) runIngestionWorker() {
-	for job := range uc.jobs {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-		_ = uc.processIngestion(ctx, job)
-		cancel()
-	}
-}
-
-func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job ingestionJob) error {
+func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJob) error {
 	if job.TenantID == "" {
 		return errors.Forbidden("TENANT_MISSING", "tenant missing")
 	}
@@ -352,10 +377,11 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job ingestionJ
 	if err != nil {
 		return err
 	}
-	if version.RawText == "" {
+	content := cleanContent(version.RawText)
+	if content == "" {
 		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}
-	embedded := embedChunks(version.RawText, version.ID, defaultChunkSizeRunes, defaultChunkOverlapRunes, defaultEmbeddingDim)
+	embedded := embedChunks(content, version.ID, defaultChunkSizeRunes, defaultChunkOverlapRunes, defaultEmbeddingDim)
 	indexReq := IndexDocumentVersionRequest{
 		KBID:              job.KBID,
 		DocumentID:        job.DocumentID,
@@ -515,13 +541,18 @@ func clampInt(v, lo, hi int) int {
 	return v
 }
 
-func asyncEnabled() bool {
+func asyncEnabled(queue IngestionQueue) bool {
+	if queue == nil {
+		return false
+	}
 	value := strings.TrimSpace(os.Getenv("RAGDESK_INGESTION_ASYNC"))
 	switch strings.ToLower(value) {
 	case "1", "true", "yes", "y":
 		return true
-	default:
+	case "0", "false", "no", "n":
 		return false
+	default:
+		return true
 	}
 }
 
@@ -537,6 +568,21 @@ func withTenantID(ctx context.Context, tenantID string) context.Context {
 		return ctx
 	}
 	return tenant.WithTenantID(ctx, tenantID)
+}
+
+func cleanContent(input string) string {
+	if input == "" {
+		return ""
+	}
+	normalized := strings.ReplaceAll(input, "\r\n", "\n")
+	normalized = strings.ReplaceAll(normalized, "\r", "\n")
+	lines := strings.Split(normalized, "\n")
+	out := make([]string, 0, len(lines))
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		out = append(out, strings.Join(fields, " "))
+	}
+	return strings.TrimSpace(strings.Join(out, "\n"))
 }
 
 // ProviderSet is knowledge biz providers.

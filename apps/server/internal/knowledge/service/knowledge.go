@@ -60,6 +60,37 @@ func (s *KnowledgeService) GetKnowledgeBase(ctx context.Context, req *v1.GetKnow
 	return &v1.KnowledgeBaseResponse{KnowledgeBase: toKnowledgeBase(kb)}, nil
 }
 
+func (s *KnowledgeService) UpdateKnowledgeBase(ctx context.Context, req *v1.UpdateKnowledgeBaseRequest) (*v1.KnowledgeBaseResponse, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionKnowledgeBaseWrite); err != nil {
+		return nil, err
+	}
+	updated, err := s.uc.UpdateKnowledgeBase(ctx, biz.KnowledgeBase{
+		ID:          req.GetId(),
+		Name:        req.GetName(),
+		Description: req.GetDescription(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &v1.KnowledgeBaseResponse{KnowledgeBase: toKnowledgeBase(updated)}, nil
+}
+
+func (s *KnowledgeService) DeleteKnowledgeBase(ctx context.Context, req *v1.DeleteKnowledgeBaseRequest) (*emptypb.Empty, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionKnowledgeBaseWrite); err != nil {
+		return nil, err
+	}
+	if err := s.uc.DeleteKnowledgeBase(ctx, req.GetId()); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
 func (s *KnowledgeService) ListKnowledgeBases(ctx context.Context, req *v1.ListKnowledgeBasesRequest) (*v1.ListKnowledgeBasesResponse, error) {
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err

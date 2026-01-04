@@ -138,6 +138,64 @@ func (r *knowledgeRepo) ListKnowledgeBases(ctx context.Context) ([]biz.Knowledge
 	return items, rows.Err()
 }
 
+func (r *knowledgeRepo) UpdateKnowledgeBase(ctx context.Context, kb biz.KnowledgeBase) (biz.KnowledgeBase, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return biz.KnowledgeBase{}, err
+	}
+	current, err := r.GetKnowledgeBase(ctx, kb.ID)
+	if err != nil {
+		return biz.KnowledgeBase{}, err
+	}
+	if strings.TrimSpace(kb.Name) == "" {
+		kb.Name = current.Name
+	}
+	if strings.TrimSpace(kb.Description) == "" {
+		kb.Description = current.Description
+	}
+	kb.TenantID = tenantID
+	kb.CreatedAt = current.CreatedAt
+	kb.UpdatedAt = time.Now()
+	_, err = r.db.ExecContext(
+		ctx,
+		"UPDATE knowledge_base SET name = ?, description = ?, updated_at = ? WHERE tenant_id = ? AND id = ?",
+		kb.Name,
+		kb.Description,
+		kb.UpdatedAt,
+		tenantID,
+		kb.ID,
+	)
+	if err != nil {
+		var mysqlErr *mysql.MySQLError
+		if stderrors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return biz.KnowledgeBase{}, kerrors.Conflict("KB_DUPLICATE", "knowledge base already exists")
+		}
+		return biz.KnowledgeBase{}, err
+	}
+	return kb, nil
+}
+
+func (r *knowledgeRepo) DeleteKnowledgeBase(ctx context.Context, id string) error {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return err
+	}
+	res, err := r.db.ExecContext(
+		ctx,
+		"DELETE FROM knowledge_base WHERE tenant_id = ? AND id = ?",
+		tenantID,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err == nil && rows == 0 {
+		return kerrors.NotFound("KB_NOT_FOUND", "knowledge base not found")
+	}
+	return err
+}
+
 func (r *knowledgeRepo) CreateDocument(ctx context.Context, doc biz.Document) (biz.Document, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
@@ -483,7 +541,7 @@ func (r *knowledgeRepo) RollbackDocument(ctx context.Context, documentID string,
 }
 
 // ProviderSet is knowledge data providers.
-var ProviderSet = wire.NewSet(NewKnowledgeRepo)
+var ProviderSet = wire.NewSet(NewKnowledgeRepo, NewIngestionQueue)
 
 func deterministicEmbeddingID(chunkID string, model string) string {
 	// Deterministic IDs make ingestion idempotent.

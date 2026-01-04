@@ -47,6 +47,10 @@ deploy/data/
 
 # Local Go build cache (used when default cache path is restricted)
 .gocache/
+# Local Go module cache (optional override)
+.gomodcache/
+# Local buf cache (optional override)
+.bufcache/
 
 # Temp files accidentally created by tools (e.g. gofmt/crash leftovers)
 *.go.[0-9]*

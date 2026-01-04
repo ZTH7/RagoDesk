@@ -176,6 +176,8 @@
 - `POST /admin/v1/knowledge_bases`
 - `GET /admin/v1/knowledge_bases`
 - `GET /admin/v1/knowledge_bases/{id}`
+- `PATCH /admin/v1/knowledge_bases/{id}`
+- `DELETE /admin/v1/knowledge_bases/{id}`
 - `POST /admin/v1/documents/upload`
 - `GET /admin/v1/documents/{id}`
 - `POST /admin/v1/documents/{id}/reindex`

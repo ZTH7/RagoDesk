@@ -20,6 +20,17 @@ service KnowledgeAdmin {
       get: "/admin/v1/knowledge_bases/{id}"
     };
   }
+  rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns (KnowledgeBaseResponse) {
+    option (google.api.http) = {
+      patch: "/admin/v1/knowledge_bases/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/admin/v1/knowledge_bases/{id}"
+    };
+  }
   rpc ListKnowledgeBases(ListKnowledgeBasesRequest) returns (ListKnowledgeBasesResponse) {
     option (google.api.http) = {
       get: "/admin/v1/knowledge_bases"
@@ -90,6 +101,16 @@ message GetKnowledgeBaseRequest {
   string id = 1;
 }
 
+message UpdateKnowledgeBaseRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message DeleteKnowledgeBaseRequest {
+  string id = 1;
+}
+
 message ListKnowledgeBasesRequest {}
 
 message ListKnowledgeBasesResponse {
@@ -129,4 +150,3 @@ message RollbackDocumentRequest {
   string id = 1;
   int32 version = 2;
 }
-
