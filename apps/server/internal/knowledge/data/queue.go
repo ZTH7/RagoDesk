@@ -117,3 +117,13 @@ func (q *rabbitQueue) Start(ctx context.Context, handler func(context.Context, b
 	}()
 	return nil
 }
+
+func (q *rabbitQueue) Close() error {
+	if q.ch != nil {
+		_ = q.ch.Close()
+	}
+	if q.conn != nil {
+		return q.conn.Close()
+	}
+	return nil
+}

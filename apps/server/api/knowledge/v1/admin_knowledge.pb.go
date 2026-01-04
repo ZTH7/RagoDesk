@@ -108,6 +108,98 @@ func (x *KnowledgeBase) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type BotKnowledgeBase struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	BotId         string                 `protobuf:"bytes,3,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	KbId          string                 `protobuf:"bytes,4,opt,name=kb_id,json=kbId,proto3" json:"kb_id,omitempty"`
+	Priority      int32                  `protobuf:"varint,5,opt,name=priority,proto3" json:"priority,omitempty"`
+	Weight        float64                `protobuf:"fixed64,6,opt,name=weight,proto3" json:"weight,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BotKnowledgeBase) Reset() {
+	*x = BotKnowledgeBase{}
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BotKnowledgeBase) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BotKnowledgeBase) ProtoMessage() {}
+
+func (x *BotKnowledgeBase) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BotKnowledgeBase.ProtoReflect.Descriptor instead.
+func (*BotKnowledgeBase) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *BotKnowledgeBase) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *BotKnowledgeBase) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *BotKnowledgeBase) GetBotId() string {
+	if x != nil {
+		return x.BotId
+	}
+	return ""
+}
+
+func (x *BotKnowledgeBase) GetKbId() string {
+	if x != nil {
+		return x.KbId
+	}
+	return ""
+}
+
+func (x *BotKnowledgeBase) GetPriority() int32 {
+	if x != nil {
+		return x.Priority
+	}
+	return 0
+}
+
+func (x *BotKnowledgeBase) GetWeight() float64 {
+	if x != nil {
+		return x.Weight
+	}
+	return 0
+}
+
+func (x *BotKnowledgeBase) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
 type Document struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -125,7 +217,7 @@ type Document struct {
 
 func (x *Document) Reset() {
 	*x = Document{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[1]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -137,7 +229,7 @@ func (x *Document) String() string {
 func (*Document) ProtoMessage() {}
 
 func (x *Document) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[1]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -150,7 +242,7 @@ func (x *Document) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Document.ProtoReflect.Descriptor instead.
 func (*Document) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{1}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Document) GetId() string {
@@ -230,7 +322,7 @@ type DocumentVersion struct {
 
 func (x *DocumentVersion) Reset() {
 	*x = DocumentVersion{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[2]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -242,7 +334,7 @@ func (x *DocumentVersion) String() string {
 func (*DocumentVersion) ProtoMessage() {}
 
 func (x *DocumentVersion) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[2]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -255,7 +347,7 @@ func (x *DocumentVersion) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DocumentVersion.ProtoReflect.Descriptor instead.
 func (*DocumentVersion) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{2}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DocumentVersion) GetId() string {
@@ -310,7 +402,7 @@ type CreateKnowledgeBaseRequest struct {
 
 func (x *CreateKnowledgeBaseRequest) Reset() {
 	*x = CreateKnowledgeBaseRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[3]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -322,7 +414,7 @@ func (x *CreateKnowledgeBaseRequest) String() string {
 func (*CreateKnowledgeBaseRequest) ProtoMessage() {}
 
 func (x *CreateKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[3]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -335,7 +427,7 @@ func (x *CreateKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
 func (*CreateKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{3}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateKnowledgeBaseRequest) GetName() string {
@@ -361,7 +453,7 @@ type GetKnowledgeBaseRequest struct {
 
 func (x *GetKnowledgeBaseRequest) Reset() {
 	*x = GetKnowledgeBaseRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[4]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -373,7 +465,7 @@ func (x *GetKnowledgeBaseRequest) String() string {
 func (*GetKnowledgeBaseRequest) ProtoMessage() {}
 
 func (x *GetKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[4]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -386,7 +478,7 @@ func (x *GetKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
 func (*GetKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{4}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetKnowledgeBaseRequest) GetId() string {
@@ -407,7 +499,7 @@ type UpdateKnowledgeBaseRequest struct {
 
 func (x *UpdateKnowledgeBaseRequest) Reset() {
 	*x = UpdateKnowledgeBaseRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[5]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -419,7 +511,7 @@ func (x *UpdateKnowledgeBaseRequest) String() string {
 func (*UpdateKnowledgeBaseRequest) ProtoMessage() {}
 
 func (x *UpdateKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[5]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -432,7 +524,7 @@ func (x *UpdateKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
 func (*UpdateKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{5}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateKnowledgeBaseRequest) GetId() string {
@@ -465,7 +557,7 @@ type DeleteKnowledgeBaseRequest struct {
 
 func (x *DeleteKnowledgeBaseRequest) Reset() {
 	*x = DeleteKnowledgeBaseRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[6]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -477,7 +569,7 @@ func (x *DeleteKnowledgeBaseRequest) String() string {
 func (*DeleteKnowledgeBaseRequest) ProtoMessage() {}
 
 func (x *DeleteKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[6]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -490,7 +582,7 @@ func (x *DeleteKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
 func (*DeleteKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{6}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteKnowledgeBaseRequest) GetId() string {
@@ -508,7 +600,7 @@ type ListKnowledgeBasesRequest struct {
 
 func (x *ListKnowledgeBasesRequest) Reset() {
 	*x = ListKnowledgeBasesRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[7]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -520,7 +612,7 @@ func (x *ListKnowledgeBasesRequest) String() string {
 func (*ListKnowledgeBasesRequest) ProtoMessage() {}
 
 func (x *ListKnowledgeBasesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[7]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -533,7 +625,7 @@ func (x *ListKnowledgeBasesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListKnowledgeBasesRequest.ProtoReflect.Descriptor instead.
 func (*ListKnowledgeBasesRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{7}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{8}
 }
 
 type ListKnowledgeBasesResponse struct {
@@ -545,7 +637,7 @@ type ListKnowledgeBasesResponse struct {
 
 func (x *ListKnowledgeBasesResponse) Reset() {
 	*x = ListKnowledgeBasesResponse{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[8]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -557,7 +649,7 @@ func (x *ListKnowledgeBasesResponse) String() string {
 func (*ListKnowledgeBasesResponse) ProtoMessage() {}
 
 func (x *ListKnowledgeBasesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[8]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -570,10 +662,98 @@ func (x *ListKnowledgeBasesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListKnowledgeBasesResponse.ProtoReflect.Descriptor instead.
 func (*ListKnowledgeBasesResponse) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{8}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListKnowledgeBasesResponse) GetItems() []*KnowledgeBase {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type ListBotKnowledgeBasesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBotKnowledgeBasesRequest) Reset() {
+	*x = ListBotKnowledgeBasesRequest{}
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBotKnowledgeBasesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBotKnowledgeBasesRequest) ProtoMessage() {}
+
+func (x *ListBotKnowledgeBasesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBotKnowledgeBasesRequest.ProtoReflect.Descriptor instead.
+func (*ListBotKnowledgeBasesRequest) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListBotKnowledgeBasesRequest) GetBotId() string {
+	if x != nil {
+		return x.BotId
+	}
+	return ""
+}
+
+type ListBotKnowledgeBasesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*BotKnowledgeBase    `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListBotKnowledgeBasesResponse) Reset() {
+	*x = ListBotKnowledgeBasesResponse{}
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListBotKnowledgeBasesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListBotKnowledgeBasesResponse) ProtoMessage() {}
+
+func (x *ListBotKnowledgeBasesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListBotKnowledgeBasesResponse.ProtoReflect.Descriptor instead.
+func (*ListBotKnowledgeBasesResponse) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ListBotKnowledgeBasesResponse) GetItems() []*BotKnowledgeBase {
 	if x != nil {
 		return x.Items
 	}
@@ -589,7 +769,7 @@ type KnowledgeBaseResponse struct {
 
 func (x *KnowledgeBaseResponse) Reset() {
 	*x = KnowledgeBaseResponse{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[9]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -601,7 +781,7 @@ func (x *KnowledgeBaseResponse) String() string {
 func (*KnowledgeBaseResponse) ProtoMessage() {}
 
 func (x *KnowledgeBaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[9]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -614,12 +794,56 @@ func (x *KnowledgeBaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KnowledgeBaseResponse.ProtoReflect.Descriptor instead.
 func (*KnowledgeBaseResponse) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{9}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *KnowledgeBaseResponse) GetKnowledgeBase() *KnowledgeBase {
 	if x != nil {
 		return x.KnowledgeBase
+	}
+	return nil
+}
+
+type BotKnowledgeBaseResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BotKb         *BotKnowledgeBase      `protobuf:"bytes,1,opt,name=bot_kb,json=botKb,proto3" json:"bot_kb,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BotKnowledgeBaseResponse) Reset() {
+	*x = BotKnowledgeBaseResponse{}
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BotKnowledgeBaseResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BotKnowledgeBaseResponse) ProtoMessage() {}
+
+func (x *BotKnowledgeBaseResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BotKnowledgeBaseResponse.ProtoReflect.Descriptor instead.
+func (*BotKnowledgeBaseResponse) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *BotKnowledgeBaseResponse) GetBotKb() *BotKnowledgeBase {
+	if x != nil {
+		return x.BotKb
 	}
 	return nil
 }
@@ -636,7 +860,7 @@ type UploadDocumentRequest struct {
 
 func (x *UploadDocumentRequest) Reset() {
 	*x = UploadDocumentRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[10]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -648,7 +872,7 @@ func (x *UploadDocumentRequest) String() string {
 func (*UploadDocumentRequest) ProtoMessage() {}
 
 func (x *UploadDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[10]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -661,7 +885,7 @@ func (x *UploadDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadDocumentRequest.ProtoReflect.Descriptor instead.
 func (*UploadDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{10}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UploadDocumentRequest) GetKbId() string {
@@ -702,7 +926,7 @@ type UploadDocumentResponse struct {
 
 func (x *UploadDocumentResponse) Reset() {
 	*x = UploadDocumentResponse{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[11]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -714,7 +938,7 @@ func (x *UploadDocumentResponse) String() string {
 func (*UploadDocumentResponse) ProtoMessage() {}
 
 func (x *UploadDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[11]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -727,7 +951,7 @@ func (x *UploadDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadDocumentResponse.ProtoReflect.Descriptor instead.
 func (*UploadDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{11}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UploadDocumentResponse) GetDocument() *Document {
@@ -753,7 +977,7 @@ type GetDocumentRequest struct {
 
 func (x *GetDocumentRequest) Reset() {
 	*x = GetDocumentRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[12]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -765,7 +989,7 @@ func (x *GetDocumentRequest) String() string {
 func (*GetDocumentRequest) ProtoMessage() {}
 
 func (x *GetDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[12]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -778,7 +1002,7 @@ func (x *GetDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentRequest.ProtoReflect.Descriptor instead.
 func (*GetDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{12}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetDocumentRequest) GetId() string {
@@ -798,7 +1022,7 @@ type GetDocumentResponse struct {
 
 func (x *GetDocumentResponse) Reset() {
 	*x = GetDocumentResponse{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[13]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -810,7 +1034,7 @@ func (x *GetDocumentResponse) String() string {
 func (*GetDocumentResponse) ProtoMessage() {}
 
 func (x *GetDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[13]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -823,7 +1047,7 @@ func (x *GetDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentResponse.ProtoReflect.Descriptor instead.
 func (*GetDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{13}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetDocumentResponse) GetDocument() *Document {
@@ -849,7 +1073,7 @@ type ReindexDocumentRequest struct {
 
 func (x *ReindexDocumentRequest) Reset() {
 	*x = ReindexDocumentRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[14]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -861,7 +1085,7 @@ func (x *ReindexDocumentRequest) String() string {
 func (*ReindexDocumentRequest) ProtoMessage() {}
 
 func (x *ReindexDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[14]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -874,7 +1098,7 @@ func (x *ReindexDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReindexDocumentRequest.ProtoReflect.Descriptor instead.
 func (*ReindexDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{14}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ReindexDocumentRequest) GetId() string {
@@ -894,7 +1118,7 @@ type RollbackDocumentRequest struct {
 
 func (x *RollbackDocumentRequest) Reset() {
 	*x = RollbackDocumentRequest{}
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[15]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -906,7 +1130,7 @@ func (x *RollbackDocumentRequest) String() string {
 func (*RollbackDocumentRequest) ProtoMessage() {}
 
 func (x *RollbackDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[15]
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -919,7 +1143,7 @@ func (x *RollbackDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollbackDocumentRequest.ProtoReflect.Descriptor instead.
 func (*RollbackDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{15}
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RollbackDocumentRequest) GetId() string {
@@ -936,6 +1160,126 @@ func (x *RollbackDocumentRequest) GetVersion() int32 {
 	return 0
 }
 
+type BindBotKnowledgeBaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	KbId          string                 `protobuf:"bytes,2,opt,name=kb_id,json=kbId,proto3" json:"kb_id,omitempty"`
+	Priority      int32                  `protobuf:"varint,3,opt,name=priority,proto3" json:"priority,omitempty"`
+	Weight        float64                `protobuf:"fixed64,4,opt,name=weight,proto3" json:"weight,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BindBotKnowledgeBaseRequest) Reset() {
+	*x = BindBotKnowledgeBaseRequest{}
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BindBotKnowledgeBaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BindBotKnowledgeBaseRequest) ProtoMessage() {}
+
+func (x *BindBotKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BindBotKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
+func (*BindBotKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *BindBotKnowledgeBaseRequest) GetBotId() string {
+	if x != nil {
+		return x.BotId
+	}
+	return ""
+}
+
+func (x *BindBotKnowledgeBaseRequest) GetKbId() string {
+	if x != nil {
+		return x.KbId
+	}
+	return ""
+}
+
+func (x *BindBotKnowledgeBaseRequest) GetPriority() int32 {
+	if x != nil {
+		return x.Priority
+	}
+	return 0
+}
+
+func (x *BindBotKnowledgeBaseRequest) GetWeight() float64 {
+	if x != nil {
+		return x.Weight
+	}
+	return 0
+}
+
+type UnbindBotKnowledgeBaseRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	KbId          string                 `protobuf:"bytes,2,opt,name=kb_id,json=kbId,proto3" json:"kb_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnbindBotKnowledgeBaseRequest) Reset() {
+	*x = UnbindBotKnowledgeBaseRequest{}
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnbindBotKnowledgeBaseRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnbindBotKnowledgeBaseRequest) ProtoMessage() {}
+
+func (x *UnbindBotKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_admin_knowledge_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnbindBotKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
+func (*UnbindBotKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *UnbindBotKnowledgeBaseRequest) GetBotId() string {
+	if x != nil {
+		return x.BotId
+	}
+	return ""
+}
+
+func (x *UnbindBotKnowledgeBaseRequest) GetKbId() string {
+	if x != nil {
+		return x.KbId
+	}
+	return ""
+}
+
 var File_api_knowledge_v1_admin_knowledge_proto protoreflect.FileDescriptor
 
 const file_api_knowledge_v1_admin_knowledge_proto_rawDesc = "" +
@@ -949,7 +1293,16 @@ const file_api_knowledge_v1_admin_knowledge_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xba\x02\n" +
+	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xda\x01\n" +
+	"\x10BotKnowledgeBase\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
+	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x15\n" +
+	"\x06bot_id\x18\x03 \x01(\tR\x05botId\x12\x13\n" +
+	"\x05kb_id\x18\x04 \x01(\tR\x04kbId\x12\x1a\n" +
+	"\bpriority\x18\x05 \x01(\x05R\bpriority\x12\x16\n" +
+	"\x06weight\x18\x06 \x01(\x01R\x06weight\x129\n" +
+	"\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xba\x02\n" +
 	"\bDocument\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x13\n" +
@@ -985,9 +1338,15 @@ const file_api_knowledge_v1_admin_knowledge_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1b\n" +
 	"\x19ListKnowledgeBasesRequest\"S\n" +
 	"\x1aListKnowledgeBasesResponse\x125\n" +
-	"\x05items\x18\x01 \x03(\v2\x1f.api.knowledge.v1.KnowledgeBaseR\x05items\"_\n" +
+	"\x05items\x18\x01 \x03(\v2\x1f.api.knowledge.v1.KnowledgeBaseR\x05items\"5\n" +
+	"\x1cListBotKnowledgeBasesRequest\x12\x15\n" +
+	"\x06bot_id\x18\x01 \x01(\tR\x05botId\"Y\n" +
+	"\x1dListBotKnowledgeBasesResponse\x128\n" +
+	"\x05items\x18\x01 \x03(\v2\".api.knowledge.v1.BotKnowledgeBaseR\x05items\"_\n" +
 	"\x15KnowledgeBaseResponse\x12F\n" +
-	"\x0eknowledge_base\x18\x01 \x01(\v2\x1f.api.knowledge.v1.KnowledgeBaseR\rknowledgeBase\"}\n" +
+	"\x0eknowledge_base\x18\x01 \x01(\v2\x1f.api.knowledge.v1.KnowledgeBaseR\rknowledgeBase\"U\n" +
+	"\x18BotKnowledgeBaseResponse\x129\n" +
+	"\x06bot_kb\x18\x01 \x01(\v2\".api.knowledge.v1.BotKnowledgeBaseR\x05botKb\"}\n" +
 	"\x15UploadDocumentRequest\x12\x13\n" +
 	"\x05kb_id\x18\x01 \x01(\tR\x04kbId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1f\n" +
@@ -1006,13 +1365,24 @@ const file_api_knowledge_v1_admin_knowledge_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"C\n" +
 	"\x17RollbackDocumentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x05R\aversion2\xff\t\n" +
+	"\aversion\x18\x02 \x01(\x05R\aversion\"}\n" +
+	"\x1bBindBotKnowledgeBaseRequest\x12\x15\n" +
+	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x13\n" +
+	"\x05kb_id\x18\x02 \x01(\tR\x04kbId\x12\x1a\n" +
+	"\bpriority\x18\x03 \x01(\x05R\bpriority\x12\x16\n" +
+	"\x06weight\x18\x04 \x01(\x01R\x06weight\"K\n" +
+	"\x1dUnbindBotKnowledgeBaseRequest\x12\x15\n" +
+	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x13\n" +
+	"\x05kb_id\x18\x02 \x01(\tR\x04kbId2\xf0\r\n" +
 	"\x0eKnowledgeAdmin\x12\x92\x01\n" +
 	"\x13CreateKnowledgeBase\x12,.api.knowledge.v1.CreateKnowledgeBaseRequest\x1a'.api.knowledge.v1.KnowledgeBaseResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*\"\x19/admin/v1/knowledge_bases\x12\x8e\x01\n" +
 	"\x10GetKnowledgeBase\x12).api.knowledge.v1.GetKnowledgeBaseRequest\x1a'.api.knowledge.v1.KnowledgeBaseResponse\"&\x82\xd3\xe4\x93\x02 \x12\x1e/admin/v1/knowledge_bases/{id}\x12\x97\x01\n" +
 	"\x13UpdateKnowledgeBase\x12,.api.knowledge.v1.UpdateKnowledgeBaseRequest\x1a'.api.knowledge.v1.KnowledgeBaseResponse\")\x82\xd3\xe4\x93\x02#:\x01*2\x1e/admin/v1/knowledge_bases/{id}\x12\x83\x01\n" +
 	"\x13DeleteKnowledgeBase\x12,.api.knowledge.v1.DeleteKnowledgeBaseRequest\x1a\x16.google.protobuf.Empty\"&\x82\xd3\xe4\x93\x02 *\x1e/admin/v1/knowledge_bases/{id}\x12\x92\x01\n" +
-	"\x12ListKnowledgeBases\x12+.api.knowledge.v1.ListKnowledgeBasesRequest\x1a,.api.knowledge.v1.ListKnowledgeBasesResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/admin/v1/knowledge_bases\x12\x8a\x01\n" +
+	"\x12ListKnowledgeBases\x12+.api.knowledge.v1.ListKnowledgeBasesRequest\x1a,.api.knowledge.v1.ListKnowledgeBasesResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/admin/v1/knowledge_bases\x12\xa9\x01\n" +
+	"\x15ListBotKnowledgeBases\x12..api.knowledge.v1.ListBotKnowledgeBasesRequest\x1a/.api.knowledge.v1.ListBotKnowledgeBasesResponse\"/\x82\xd3\xe4\x93\x02)\x12'/admin/v1/bots/{bot_id}/knowledge_bases\x12\xa5\x01\n" +
+	"\x14BindBotKnowledgeBase\x12-.api.knowledge.v1.BindBotKnowledgeBaseRequest\x1a*.api.knowledge.v1.BotKnowledgeBaseResponse\"2\x82\xd3\xe4\x93\x02,:\x01*\"'/admin/v1/bots/{bot_id}/knowledge_bases\x12\x9a\x01\n" +
+	"\x16UnbindBotKnowledgeBase\x12/.api.knowledge.v1.UnbindBotKnowledgeBaseRequest\x1a\x16.google.protobuf.Empty\"7\x82\xd3\xe4\x93\x021*//admin/v1/bots/{bot_id}/knowledge_bases/{kb_id}\x12\x8a\x01\n" +
 	"\x0eUploadDocument\x12'.api.knowledge.v1.UploadDocumentRequest\x1a(.api.knowledge.v1.UploadDocumentResponse\"%\x82\xd3\xe4\x93\x02\x1f:\x01*\"\x1a/admin/v1/documents/upload\x12|\n" +
 	"\vGetDocument\x12$.api.knowledge.v1.GetDocumentRequest\x1a%.api.knowledge.v1.GetDocumentResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/admin/v1/documents/{id}\x12\x80\x01\n" +
 	"\x0fReindexDocument\x12(.api.knowledge.v1.ReindexDocumentRequest\x1a\x16.google.protobuf.Empty\"+\x82\xd3\xe4\x93\x02%:\x01*\" /admin/v1/documents/{id}/reindex\x12\x83\x01\n" +
@@ -1030,62 +1400,77 @@ func file_api_knowledge_v1_admin_knowledge_proto_rawDescGZIP() []byte {
 	return file_api_knowledge_v1_admin_knowledge_proto_rawDescData
 }
 
-var file_api_knowledge_v1_admin_knowledge_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_api_knowledge_v1_admin_knowledge_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_api_knowledge_v1_admin_knowledge_proto_goTypes = []any{
-	(*KnowledgeBase)(nil),              // 0: api.knowledge.v1.KnowledgeBase
-	(*Document)(nil),                   // 1: api.knowledge.v1.Document
-	(*DocumentVersion)(nil),            // 2: api.knowledge.v1.DocumentVersion
-	(*CreateKnowledgeBaseRequest)(nil), // 3: api.knowledge.v1.CreateKnowledgeBaseRequest
-	(*GetKnowledgeBaseRequest)(nil),    // 4: api.knowledge.v1.GetKnowledgeBaseRequest
-	(*UpdateKnowledgeBaseRequest)(nil), // 5: api.knowledge.v1.UpdateKnowledgeBaseRequest
-	(*DeleteKnowledgeBaseRequest)(nil), // 6: api.knowledge.v1.DeleteKnowledgeBaseRequest
-	(*ListKnowledgeBasesRequest)(nil),  // 7: api.knowledge.v1.ListKnowledgeBasesRequest
-	(*ListKnowledgeBasesResponse)(nil), // 8: api.knowledge.v1.ListKnowledgeBasesResponse
-	(*KnowledgeBaseResponse)(nil),      // 9: api.knowledge.v1.KnowledgeBaseResponse
-	(*UploadDocumentRequest)(nil),      // 10: api.knowledge.v1.UploadDocumentRequest
-	(*UploadDocumentResponse)(nil),     // 11: api.knowledge.v1.UploadDocumentResponse
-	(*GetDocumentRequest)(nil),         // 12: api.knowledge.v1.GetDocumentRequest
-	(*GetDocumentResponse)(nil),        // 13: api.knowledge.v1.GetDocumentResponse
-	(*ReindexDocumentRequest)(nil),     // 14: api.knowledge.v1.ReindexDocumentRequest
-	(*RollbackDocumentRequest)(nil),    // 15: api.knowledge.v1.RollbackDocumentRequest
-	(*timestamppb.Timestamp)(nil),      // 16: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),              // 17: google.protobuf.Empty
+	(*KnowledgeBase)(nil),                 // 0: api.knowledge.v1.KnowledgeBase
+	(*BotKnowledgeBase)(nil),              // 1: api.knowledge.v1.BotKnowledgeBase
+	(*Document)(nil),                      // 2: api.knowledge.v1.Document
+	(*DocumentVersion)(nil),               // 3: api.knowledge.v1.DocumentVersion
+	(*CreateKnowledgeBaseRequest)(nil),    // 4: api.knowledge.v1.CreateKnowledgeBaseRequest
+	(*GetKnowledgeBaseRequest)(nil),       // 5: api.knowledge.v1.GetKnowledgeBaseRequest
+	(*UpdateKnowledgeBaseRequest)(nil),    // 6: api.knowledge.v1.UpdateKnowledgeBaseRequest
+	(*DeleteKnowledgeBaseRequest)(nil),    // 7: api.knowledge.v1.DeleteKnowledgeBaseRequest
+	(*ListKnowledgeBasesRequest)(nil),     // 8: api.knowledge.v1.ListKnowledgeBasesRequest
+	(*ListKnowledgeBasesResponse)(nil),    // 9: api.knowledge.v1.ListKnowledgeBasesResponse
+	(*ListBotKnowledgeBasesRequest)(nil),  // 10: api.knowledge.v1.ListBotKnowledgeBasesRequest
+	(*ListBotKnowledgeBasesResponse)(nil), // 11: api.knowledge.v1.ListBotKnowledgeBasesResponse
+	(*KnowledgeBaseResponse)(nil),         // 12: api.knowledge.v1.KnowledgeBaseResponse
+	(*BotKnowledgeBaseResponse)(nil),      // 13: api.knowledge.v1.BotKnowledgeBaseResponse
+	(*UploadDocumentRequest)(nil),         // 14: api.knowledge.v1.UploadDocumentRequest
+	(*UploadDocumentResponse)(nil),        // 15: api.knowledge.v1.UploadDocumentResponse
+	(*GetDocumentRequest)(nil),            // 16: api.knowledge.v1.GetDocumentRequest
+	(*GetDocumentResponse)(nil),           // 17: api.knowledge.v1.GetDocumentResponse
+	(*ReindexDocumentRequest)(nil),        // 18: api.knowledge.v1.ReindexDocumentRequest
+	(*RollbackDocumentRequest)(nil),       // 19: api.knowledge.v1.RollbackDocumentRequest
+	(*BindBotKnowledgeBaseRequest)(nil),   // 20: api.knowledge.v1.BindBotKnowledgeBaseRequest
+	(*UnbindBotKnowledgeBaseRequest)(nil), // 21: api.knowledge.v1.UnbindBotKnowledgeBaseRequest
+	(*timestamppb.Timestamp)(nil),         // 22: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                 // 23: google.protobuf.Empty
 }
 var file_api_knowledge_v1_admin_knowledge_proto_depIdxs = []int32{
-	16, // 0: api.knowledge.v1.KnowledgeBase.created_at:type_name -> google.protobuf.Timestamp
-	16, // 1: api.knowledge.v1.KnowledgeBase.updated_at:type_name -> google.protobuf.Timestamp
-	16, // 2: api.knowledge.v1.Document.created_at:type_name -> google.protobuf.Timestamp
-	16, // 3: api.knowledge.v1.Document.updated_at:type_name -> google.protobuf.Timestamp
-	16, // 4: api.knowledge.v1.DocumentVersion.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 5: api.knowledge.v1.ListKnowledgeBasesResponse.items:type_name -> api.knowledge.v1.KnowledgeBase
-	0,  // 6: api.knowledge.v1.KnowledgeBaseResponse.knowledge_base:type_name -> api.knowledge.v1.KnowledgeBase
-	1,  // 7: api.knowledge.v1.UploadDocumentResponse.document:type_name -> api.knowledge.v1.Document
-	2,  // 8: api.knowledge.v1.UploadDocumentResponse.version:type_name -> api.knowledge.v1.DocumentVersion
-	1,  // 9: api.knowledge.v1.GetDocumentResponse.document:type_name -> api.knowledge.v1.Document
-	2,  // 10: api.knowledge.v1.GetDocumentResponse.versions:type_name -> api.knowledge.v1.DocumentVersion
-	3,  // 11: api.knowledge.v1.KnowledgeAdmin.CreateKnowledgeBase:input_type -> api.knowledge.v1.CreateKnowledgeBaseRequest
-	4,  // 12: api.knowledge.v1.KnowledgeAdmin.GetKnowledgeBase:input_type -> api.knowledge.v1.GetKnowledgeBaseRequest
-	5,  // 13: api.knowledge.v1.KnowledgeAdmin.UpdateKnowledgeBase:input_type -> api.knowledge.v1.UpdateKnowledgeBaseRequest
-	6,  // 14: api.knowledge.v1.KnowledgeAdmin.DeleteKnowledgeBase:input_type -> api.knowledge.v1.DeleteKnowledgeBaseRequest
-	7,  // 15: api.knowledge.v1.KnowledgeAdmin.ListKnowledgeBases:input_type -> api.knowledge.v1.ListKnowledgeBasesRequest
-	10, // 16: api.knowledge.v1.KnowledgeAdmin.UploadDocument:input_type -> api.knowledge.v1.UploadDocumentRequest
-	12, // 17: api.knowledge.v1.KnowledgeAdmin.GetDocument:input_type -> api.knowledge.v1.GetDocumentRequest
-	14, // 18: api.knowledge.v1.KnowledgeAdmin.ReindexDocument:input_type -> api.knowledge.v1.ReindexDocumentRequest
-	15, // 19: api.knowledge.v1.KnowledgeAdmin.RollbackDocument:input_type -> api.knowledge.v1.RollbackDocumentRequest
-	9,  // 20: api.knowledge.v1.KnowledgeAdmin.CreateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
-	9,  // 21: api.knowledge.v1.KnowledgeAdmin.GetKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
-	9,  // 22: api.knowledge.v1.KnowledgeAdmin.UpdateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
-	17, // 23: api.knowledge.v1.KnowledgeAdmin.DeleteKnowledgeBase:output_type -> google.protobuf.Empty
-	8,  // 24: api.knowledge.v1.KnowledgeAdmin.ListKnowledgeBases:output_type -> api.knowledge.v1.ListKnowledgeBasesResponse
-	11, // 25: api.knowledge.v1.KnowledgeAdmin.UploadDocument:output_type -> api.knowledge.v1.UploadDocumentResponse
-	13, // 26: api.knowledge.v1.KnowledgeAdmin.GetDocument:output_type -> api.knowledge.v1.GetDocumentResponse
-	17, // 27: api.knowledge.v1.KnowledgeAdmin.ReindexDocument:output_type -> google.protobuf.Empty
-	17, // 28: api.knowledge.v1.KnowledgeAdmin.RollbackDocument:output_type -> google.protobuf.Empty
-	20, // [20:29] is the sub-list for method output_type
-	11, // [11:20] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	22, // 0: api.knowledge.v1.KnowledgeBase.created_at:type_name -> google.protobuf.Timestamp
+	22, // 1: api.knowledge.v1.KnowledgeBase.updated_at:type_name -> google.protobuf.Timestamp
+	22, // 2: api.knowledge.v1.BotKnowledgeBase.created_at:type_name -> google.protobuf.Timestamp
+	22, // 3: api.knowledge.v1.Document.created_at:type_name -> google.protobuf.Timestamp
+	22, // 4: api.knowledge.v1.Document.updated_at:type_name -> google.protobuf.Timestamp
+	22, // 5: api.knowledge.v1.DocumentVersion.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 6: api.knowledge.v1.ListKnowledgeBasesResponse.items:type_name -> api.knowledge.v1.KnowledgeBase
+	1,  // 7: api.knowledge.v1.ListBotKnowledgeBasesResponse.items:type_name -> api.knowledge.v1.BotKnowledgeBase
+	0,  // 8: api.knowledge.v1.KnowledgeBaseResponse.knowledge_base:type_name -> api.knowledge.v1.KnowledgeBase
+	1,  // 9: api.knowledge.v1.BotKnowledgeBaseResponse.bot_kb:type_name -> api.knowledge.v1.BotKnowledgeBase
+	2,  // 10: api.knowledge.v1.UploadDocumentResponse.document:type_name -> api.knowledge.v1.Document
+	3,  // 11: api.knowledge.v1.UploadDocumentResponse.version:type_name -> api.knowledge.v1.DocumentVersion
+	2,  // 12: api.knowledge.v1.GetDocumentResponse.document:type_name -> api.knowledge.v1.Document
+	3,  // 13: api.knowledge.v1.GetDocumentResponse.versions:type_name -> api.knowledge.v1.DocumentVersion
+	4,  // 14: api.knowledge.v1.KnowledgeAdmin.CreateKnowledgeBase:input_type -> api.knowledge.v1.CreateKnowledgeBaseRequest
+	5,  // 15: api.knowledge.v1.KnowledgeAdmin.GetKnowledgeBase:input_type -> api.knowledge.v1.GetKnowledgeBaseRequest
+	6,  // 16: api.knowledge.v1.KnowledgeAdmin.UpdateKnowledgeBase:input_type -> api.knowledge.v1.UpdateKnowledgeBaseRequest
+	7,  // 17: api.knowledge.v1.KnowledgeAdmin.DeleteKnowledgeBase:input_type -> api.knowledge.v1.DeleteKnowledgeBaseRequest
+	8,  // 18: api.knowledge.v1.KnowledgeAdmin.ListKnowledgeBases:input_type -> api.knowledge.v1.ListKnowledgeBasesRequest
+	10, // 19: api.knowledge.v1.KnowledgeAdmin.ListBotKnowledgeBases:input_type -> api.knowledge.v1.ListBotKnowledgeBasesRequest
+	20, // 20: api.knowledge.v1.KnowledgeAdmin.BindBotKnowledgeBase:input_type -> api.knowledge.v1.BindBotKnowledgeBaseRequest
+	21, // 21: api.knowledge.v1.KnowledgeAdmin.UnbindBotKnowledgeBase:input_type -> api.knowledge.v1.UnbindBotKnowledgeBaseRequest
+	14, // 22: api.knowledge.v1.KnowledgeAdmin.UploadDocument:input_type -> api.knowledge.v1.UploadDocumentRequest
+	16, // 23: api.knowledge.v1.KnowledgeAdmin.GetDocument:input_type -> api.knowledge.v1.GetDocumentRequest
+	18, // 24: api.knowledge.v1.KnowledgeAdmin.ReindexDocument:input_type -> api.knowledge.v1.ReindexDocumentRequest
+	19, // 25: api.knowledge.v1.KnowledgeAdmin.RollbackDocument:input_type -> api.knowledge.v1.RollbackDocumentRequest
+	12, // 26: api.knowledge.v1.KnowledgeAdmin.CreateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
+	12, // 27: api.knowledge.v1.KnowledgeAdmin.GetKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
+	12, // 28: api.knowledge.v1.KnowledgeAdmin.UpdateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
+	23, // 29: api.knowledge.v1.KnowledgeAdmin.DeleteKnowledgeBase:output_type -> google.protobuf.Empty
+	9,  // 30: api.knowledge.v1.KnowledgeAdmin.ListKnowledgeBases:output_type -> api.knowledge.v1.ListKnowledgeBasesResponse
+	11, // 31: api.knowledge.v1.KnowledgeAdmin.ListBotKnowledgeBases:output_type -> api.knowledge.v1.ListBotKnowledgeBasesResponse
+	13, // 32: api.knowledge.v1.KnowledgeAdmin.BindBotKnowledgeBase:output_type -> api.knowledge.v1.BotKnowledgeBaseResponse
+	23, // 33: api.knowledge.v1.KnowledgeAdmin.UnbindBotKnowledgeBase:output_type -> google.protobuf.Empty
+	15, // 34: api.knowledge.v1.KnowledgeAdmin.UploadDocument:output_type -> api.knowledge.v1.UploadDocumentResponse
+	17, // 35: api.knowledge.v1.KnowledgeAdmin.GetDocument:output_type -> api.knowledge.v1.GetDocumentResponse
+	23, // 36: api.knowledge.v1.KnowledgeAdmin.ReindexDocument:output_type -> google.protobuf.Empty
+	23, // 37: api.knowledge.v1.KnowledgeAdmin.RollbackDocument:output_type -> google.protobuf.Empty
+	26, // [26:38] is the sub-list for method output_type
+	14, // [14:26] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_api_knowledge_v1_admin_knowledge_proto_init() }
@@ -1099,7 +1484,7 @@ func file_api_knowledge_v1_admin_knowledge_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_knowledge_v1_admin_knowledge_proto_rawDesc), len(file_api_knowledge_v1_admin_knowledge_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

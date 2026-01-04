@@ -20,15 +20,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	KnowledgeAdmin_CreateKnowledgeBase_FullMethodName = "/api.knowledge.v1.KnowledgeAdmin/CreateKnowledgeBase"
-	KnowledgeAdmin_GetKnowledgeBase_FullMethodName    = "/api.knowledge.v1.KnowledgeAdmin/GetKnowledgeBase"
-	KnowledgeAdmin_UpdateKnowledgeBase_FullMethodName = "/api.knowledge.v1.KnowledgeAdmin/UpdateKnowledgeBase"
-	KnowledgeAdmin_DeleteKnowledgeBase_FullMethodName = "/api.knowledge.v1.KnowledgeAdmin/DeleteKnowledgeBase"
-	KnowledgeAdmin_ListKnowledgeBases_FullMethodName  = "/api.knowledge.v1.KnowledgeAdmin/ListKnowledgeBases"
-	KnowledgeAdmin_UploadDocument_FullMethodName      = "/api.knowledge.v1.KnowledgeAdmin/UploadDocument"
-	KnowledgeAdmin_GetDocument_FullMethodName         = "/api.knowledge.v1.KnowledgeAdmin/GetDocument"
-	KnowledgeAdmin_ReindexDocument_FullMethodName     = "/api.knowledge.v1.KnowledgeAdmin/ReindexDocument"
-	KnowledgeAdmin_RollbackDocument_FullMethodName    = "/api.knowledge.v1.KnowledgeAdmin/RollbackDocument"
+	KnowledgeAdmin_CreateKnowledgeBase_FullMethodName    = "/api.knowledge.v1.KnowledgeAdmin/CreateKnowledgeBase"
+	KnowledgeAdmin_GetKnowledgeBase_FullMethodName       = "/api.knowledge.v1.KnowledgeAdmin/GetKnowledgeBase"
+	KnowledgeAdmin_UpdateKnowledgeBase_FullMethodName    = "/api.knowledge.v1.KnowledgeAdmin/UpdateKnowledgeBase"
+	KnowledgeAdmin_DeleteKnowledgeBase_FullMethodName    = "/api.knowledge.v1.KnowledgeAdmin/DeleteKnowledgeBase"
+	KnowledgeAdmin_ListKnowledgeBases_FullMethodName     = "/api.knowledge.v1.KnowledgeAdmin/ListKnowledgeBases"
+	KnowledgeAdmin_ListBotKnowledgeBases_FullMethodName  = "/api.knowledge.v1.KnowledgeAdmin/ListBotKnowledgeBases"
+	KnowledgeAdmin_BindBotKnowledgeBase_FullMethodName   = "/api.knowledge.v1.KnowledgeAdmin/BindBotKnowledgeBase"
+	KnowledgeAdmin_UnbindBotKnowledgeBase_FullMethodName = "/api.knowledge.v1.KnowledgeAdmin/UnbindBotKnowledgeBase"
+	KnowledgeAdmin_UploadDocument_FullMethodName         = "/api.knowledge.v1.KnowledgeAdmin/UploadDocument"
+	KnowledgeAdmin_GetDocument_FullMethodName            = "/api.knowledge.v1.KnowledgeAdmin/GetDocument"
+	KnowledgeAdmin_ReindexDocument_FullMethodName        = "/api.knowledge.v1.KnowledgeAdmin/ReindexDocument"
+	KnowledgeAdmin_RollbackDocument_FullMethodName       = "/api.knowledge.v1.KnowledgeAdmin/RollbackDocument"
 )
 
 // KnowledgeAdminClient is the client API for KnowledgeAdmin service.
@@ -40,6 +43,9 @@ type KnowledgeAdminClient interface {
 	UpdateKnowledgeBase(ctx context.Context, in *UpdateKnowledgeBaseRequest, opts ...grpc.CallOption) (*KnowledgeBaseResponse, error)
 	DeleteKnowledgeBase(ctx context.Context, in *DeleteKnowledgeBaseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListKnowledgeBases(ctx context.Context, in *ListKnowledgeBasesRequest, opts ...grpc.CallOption) (*ListKnowledgeBasesResponse, error)
+	ListBotKnowledgeBases(ctx context.Context, in *ListBotKnowledgeBasesRequest, opts ...grpc.CallOption) (*ListBotKnowledgeBasesResponse, error)
+	BindBotKnowledgeBase(ctx context.Context, in *BindBotKnowledgeBaseRequest, opts ...grpc.CallOption) (*BotKnowledgeBaseResponse, error)
+	UnbindBotKnowledgeBase(ctx context.Context, in *UnbindBotKnowledgeBaseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UploadDocument(ctx context.Context, in *UploadDocumentRequest, opts ...grpc.CallOption) (*UploadDocumentResponse, error)
 	GetDocument(ctx context.Context, in *GetDocumentRequest, opts ...grpc.CallOption) (*GetDocumentResponse, error)
 	ReindexDocument(ctx context.Context, in *ReindexDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -104,6 +110,36 @@ func (c *knowledgeAdminClient) ListKnowledgeBases(ctx context.Context, in *ListK
 	return out, nil
 }
 
+func (c *knowledgeAdminClient) ListBotKnowledgeBases(ctx context.Context, in *ListBotKnowledgeBasesRequest, opts ...grpc.CallOption) (*ListBotKnowledgeBasesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListBotKnowledgeBasesResponse)
+	err := c.cc.Invoke(ctx, KnowledgeAdmin_ListBotKnowledgeBases_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *knowledgeAdminClient) BindBotKnowledgeBase(ctx context.Context, in *BindBotKnowledgeBaseRequest, opts ...grpc.CallOption) (*BotKnowledgeBaseResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BotKnowledgeBaseResponse)
+	err := c.cc.Invoke(ctx, KnowledgeAdmin_BindBotKnowledgeBase_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *knowledgeAdminClient) UnbindBotKnowledgeBase(ctx context.Context, in *UnbindBotKnowledgeBaseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, KnowledgeAdmin_UnbindBotKnowledgeBase_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *knowledgeAdminClient) UploadDocument(ctx context.Context, in *UploadDocumentRequest, opts ...grpc.CallOption) (*UploadDocumentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UploadDocumentResponse)
@@ -153,6 +189,9 @@ type KnowledgeAdminServer interface {
 	UpdateKnowledgeBase(context.Context, *UpdateKnowledgeBaseRequest) (*KnowledgeBaseResponse, error)
 	DeleteKnowledgeBase(context.Context, *DeleteKnowledgeBaseRequest) (*emptypb.Empty, error)
 	ListKnowledgeBases(context.Context, *ListKnowledgeBasesRequest) (*ListKnowledgeBasesResponse, error)
+	ListBotKnowledgeBases(context.Context, *ListBotKnowledgeBasesRequest) (*ListBotKnowledgeBasesResponse, error)
+	BindBotKnowledgeBase(context.Context, *BindBotKnowledgeBaseRequest) (*BotKnowledgeBaseResponse, error)
+	UnbindBotKnowledgeBase(context.Context, *UnbindBotKnowledgeBaseRequest) (*emptypb.Empty, error)
 	UploadDocument(context.Context, *UploadDocumentRequest) (*UploadDocumentResponse, error)
 	GetDocument(context.Context, *GetDocumentRequest) (*GetDocumentResponse, error)
 	ReindexDocument(context.Context, *ReindexDocumentRequest) (*emptypb.Empty, error)
@@ -181,6 +220,15 @@ func (UnimplementedKnowledgeAdminServer) DeleteKnowledgeBase(context.Context, *D
 }
 func (UnimplementedKnowledgeAdminServer) ListKnowledgeBases(context.Context, *ListKnowledgeBasesRequest) (*ListKnowledgeBasesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListKnowledgeBases not implemented")
+}
+func (UnimplementedKnowledgeAdminServer) ListBotKnowledgeBases(context.Context, *ListBotKnowledgeBasesRequest) (*ListBotKnowledgeBasesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListBotKnowledgeBases not implemented")
+}
+func (UnimplementedKnowledgeAdminServer) BindBotKnowledgeBase(context.Context, *BindBotKnowledgeBaseRequest) (*BotKnowledgeBaseResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BindBotKnowledgeBase not implemented")
+}
+func (UnimplementedKnowledgeAdminServer) UnbindBotKnowledgeBase(context.Context, *UnbindBotKnowledgeBaseRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method UnbindBotKnowledgeBase not implemented")
 }
 func (UnimplementedKnowledgeAdminServer) UploadDocument(context.Context, *UploadDocumentRequest) (*UploadDocumentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UploadDocument not implemented")
@@ -305,6 +353,60 @@ func _KnowledgeAdmin_ListKnowledgeBases_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _KnowledgeAdmin_ListBotKnowledgeBases_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBotKnowledgeBasesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KnowledgeAdminServer).ListBotKnowledgeBases(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KnowledgeAdmin_ListBotKnowledgeBases_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KnowledgeAdminServer).ListBotKnowledgeBases(ctx, req.(*ListBotKnowledgeBasesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KnowledgeAdmin_BindBotKnowledgeBase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BindBotKnowledgeBaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KnowledgeAdminServer).BindBotKnowledgeBase(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KnowledgeAdmin_BindBotKnowledgeBase_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KnowledgeAdminServer).BindBotKnowledgeBase(ctx, req.(*BindBotKnowledgeBaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _KnowledgeAdmin_UnbindBotKnowledgeBase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnbindBotKnowledgeBaseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KnowledgeAdminServer).UnbindBotKnowledgeBase(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: KnowledgeAdmin_UnbindBotKnowledgeBase_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KnowledgeAdminServer).UnbindBotKnowledgeBase(ctx, req.(*UnbindBotKnowledgeBaseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _KnowledgeAdmin_UploadDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UploadDocumentRequest)
 	if err := dec(in); err != nil {
@@ -403,6 +505,18 @@ var KnowledgeAdmin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListKnowledgeBases",
 			Handler:    _KnowledgeAdmin_ListKnowledgeBases_Handler,
+		},
+		{
+			MethodName: "ListBotKnowledgeBases",
+			Handler:    _KnowledgeAdmin_ListBotKnowledgeBases_Handler,
+		},
+		{
+			MethodName: "BindBotKnowledgeBase",
+			Handler:    _KnowledgeAdmin_BindBotKnowledgeBase_Handler,
+		},
+		{
+			MethodName: "UnbindBotKnowledgeBase",
+			Handler:    _KnowledgeAdmin_UnbindBotKnowledgeBase_Handler,
 		},
 		{
 			MethodName: "UploadDocument",

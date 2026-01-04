@@ -27,6 +27,9 @@ const (
 	PermissionDocumentRead       = "tenant.document.read"
 	PermissionDocumentReindex    = "tenant.document.reindex"
 	PermissionDocumentRollback   = "tenant.document.rollback"
+	PermissionBotRead            = "tenant.bot.read"
+	PermissionBotKBBind          = "tenant.bot_kb.bind"
+	PermissionBotKBUnbind        = "tenant.bot_kb.unbind"
 )
 
 // Status constants (MVP).
@@ -49,6 +52,17 @@ type KnowledgeBase struct {
 	Description string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+// BotKnowledgeBase links a bot to a knowledge base.
+type BotKnowledgeBase struct {
+	ID        string
+	TenantID  string
+	BotID     string
+	KBID      string
+	Priority  int32
+	Weight    float64
+	CreatedAt time.Time
 }
 
 // Document is a document within a knowledge base.
@@ -141,6 +155,10 @@ type KnowledgeRepo interface {
 
 	IndexDocumentVersion(ctx context.Context, req IndexDocumentVersionRequest) error
 	RollbackDocument(ctx context.Context, documentID string, version int32) error
+
+	ListBotKnowledgeBases(ctx context.Context, botID string) ([]BotKnowledgeBase, error)
+	BindBotKnowledgeBase(ctx context.Context, link BotKnowledgeBase) (BotKnowledgeBase, error)
+	UnbindBotKnowledgeBase(ctx context.Context, botID string, kbID string) error
 }
 
 // KnowledgeUsecase handles knowledge business logic.
@@ -160,13 +178,18 @@ func NewKnowledgeUsecase(repo KnowledgeRepo, queue IngestionQueue, logger log.Lo
 		log:   log.NewHelper(logger),
 	}
 	uc.asyncEnabled = asyncEnabled(queue)
-	if uc.asyncEnabled && uc.queue != nil {
-		if err := uc.queue.Start(context.Background(), uc.processIngestion); err != nil {
-			uc.log.Warnf("ingestion queue start failed: %v", err)
-			uc.asyncEnabled = false
-		}
-	}
 	return uc
+}
+
+// StartIngestionConsumer starts consuming ingestion jobs from the queue.
+func (uc *KnowledgeUsecase) StartIngestionConsumer(ctx context.Context) error {
+	if uc.queue == nil {
+		return errors.InternalServer("INGESTION_QUEUE_MISSING", "ingestion queue missing")
+	}
+	if err := uc.queue.Start(ctx, uc.processIngestion); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (uc *KnowledgeUsecase) CreateKnowledgeBase(ctx context.Context, kb KnowledgeBase) (KnowledgeBase, error) {
@@ -189,6 +212,14 @@ func (uc *KnowledgeUsecase) ListKnowledgeBases(ctx context.Context) ([]Knowledge
 	return uc.repo.ListKnowledgeBases(ctx)
 }
 
+func (uc *KnowledgeUsecase) ListBotKnowledgeBases(ctx context.Context, botID string) ([]BotKnowledgeBase, error) {
+	botID = strings.TrimSpace(botID)
+	if botID == "" {
+		return nil, errors.BadRequest("BOT_ID_MISSING", "bot id missing")
+	}
+	return uc.repo.ListBotKnowledgeBases(ctx, botID)
+}
+
 func (uc *KnowledgeUsecase) UpdateKnowledgeBase(ctx context.Context, kb KnowledgeBase) (KnowledgeBase, error) {
 	kb.ID = strings.TrimSpace(kb.ID)
 	kb.Name = strings.TrimSpace(kb.Name)
@@ -209,19 +240,51 @@ func (uc *KnowledgeUsecase) DeleteKnowledgeBase(ctx context.Context, id string) 
 	return uc.repo.DeleteKnowledgeBase(ctx, id)
 }
 
+func (uc *KnowledgeUsecase) BindBotKnowledgeBase(ctx context.Context, botID, kbID string, priority int32, weight float64) (BotKnowledgeBase, error) {
+	botID = strings.TrimSpace(botID)
+	kbID = strings.TrimSpace(kbID)
+	if botID == "" {
+		return BotKnowledgeBase{}, errors.BadRequest("BOT_ID_MISSING", "bot id missing")
+	}
+	if kbID == "" {
+		return BotKnowledgeBase{}, errors.BadRequest("KB_ID_MISSING", "knowledge base id missing")
+	}
+	if weight <= 0 {
+		weight = 1
+	}
+	if _, err := uc.repo.GetKnowledgeBase(ctx, kbID); err != nil {
+		return BotKnowledgeBase{}, err
+	}
+	return uc.repo.BindBotKnowledgeBase(ctx, BotKnowledgeBase{
+		BotID:    botID,
+		KBID:     kbID,
+		Priority: priority,
+		Weight:   weight,
+	})
+}
+
+func (uc *KnowledgeUsecase) UnbindBotKnowledgeBase(ctx context.Context, botID, kbID string) error {
+	botID = strings.TrimSpace(botID)
+	kbID = strings.TrimSpace(kbID)
+	if botID == "" {
+		return errors.BadRequest("BOT_ID_MISSING", "bot id missing")
+	}
+	if kbID == "" {
+		return errors.BadRequest("KB_ID_MISSING", "knowledge base id missing")
+	}
+	return uc.repo.UnbindBotKnowledgeBase(ctx, botID, kbID)
+}
+
 func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sourceType, content string) (Document, DocumentVersion, error) {
 	kbID = strings.TrimSpace(kbID)
 	title = strings.TrimSpace(title)
-	sourceType = strings.TrimSpace(sourceType)
+	sourceType = normalizeSourceType(sourceType)
 	content = strings.TrimSpace(content)
 	if kbID == "" {
 		return Document{}, DocumentVersion{}, errors.BadRequest("KB_ID_MISSING", "kb_id missing")
 	}
 	if title == "" {
 		return Document{}, DocumentVersion{}, errors.BadRequest("DOC_TITLE_MISSING", "title missing")
-	}
-	if sourceType == "" {
-		sourceType = "text"
 	}
 	if content == "" {
 		return Document{}, DocumentVersion{}, errors.BadRequest("DOC_CONTENT_MISSING", "content missing")
@@ -377,7 +440,11 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 	if err != nil {
 		return err
 	}
-	content := cleanContent(version.RawText)
+	doc, err := uc.repo.GetDocument(ctx, job.DocumentID)
+	if err != nil {
+		return err
+	}
+	content := prepareContentNormalized(doc.SourceType, version.RawText)
 	if content == "" {
 		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}
@@ -549,10 +616,8 @@ func asyncEnabled(queue IngestionQueue) bool {
 	switch strings.ToLower(value) {
 	case "1", "true", "yes", "y":
 		return true
-	case "0", "false", "no", "n":
-		return false
 	default:
-		return true
+		return false
 	}
 }
 
@@ -583,6 +648,95 @@ func cleanContent(input string) string {
 		out = append(out, strings.Join(fields, " "))
 	}
 	return strings.TrimSpace(strings.Join(out, "\n"))
+}
+
+func normalizeSourceType(sourceType string) string {
+	value := strings.ToLower(strings.TrimSpace(sourceType))
+	switch value {
+	case "", "text", "plain", "txt":
+		return "text"
+	case "md", "markdown":
+		return "markdown"
+	case "html", "htm":
+		return "html"
+	case "doc", "docx":
+		return "doc"
+	case "pdf":
+		return "pdf"
+	case "url", "link":
+		return "url"
+	default:
+		return value
+	}
+}
+
+func prepareContentNormalized(sourceType, content string) string {
+	switch sourceType {
+	case "markdown":
+		content = stripMarkdown(content)
+	case "html":
+		content = stripHTMLTags(content)
+	}
+	return cleanContent(content)
+}
+
+func stripMarkdown(input string) string {
+	if input == "" {
+		return ""
+	}
+	lines := strings.Split(input, "\n")
+	out := make([]string, 0, len(lines))
+	inCode := false
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "```") {
+			inCode = !inCode
+			continue
+		}
+		if inCode {
+			out = append(out, line)
+			continue
+		}
+		line = strings.TrimLeft(line, " \t")
+		if strings.HasPrefix(line, ">") {
+			line = strings.TrimSpace(strings.TrimPrefix(line, ">"))
+		}
+		if strings.HasPrefix(line, "#") {
+			line = strings.TrimSpace(strings.TrimLeft(line, "#"))
+		}
+		if strings.HasPrefix(line, "- ") || strings.HasPrefix(line, "* ") || strings.HasPrefix(line, "+ ") {
+			line = strings.TrimSpace(line[2:])
+		}
+		line = strings.ReplaceAll(line, "**", "")
+		line = strings.ReplaceAll(line, "__", "")
+		line = strings.ReplaceAll(line, "`", "")
+		out = append(out, line)
+	}
+	return strings.Join(out, "\n")
+}
+
+func stripHTMLTags(input string) string {
+	if input == "" {
+		return ""
+	}
+	var b strings.Builder
+	b.Grow(len(input))
+	inTag := false
+	for _, r := range input {
+		switch r {
+		case '<':
+			inTag = true
+			b.WriteRune(' ')
+		case '>':
+			inTag = false
+			b.WriteRune(' ')
+		default:
+			if !inTag {
+				b.WriteRune(r)
+			}
+		}
+	}
+	return b.String()
 }
 
 // ProviderSet is knowledge biz providers.

@@ -180,7 +180,22 @@ func (r *knowledgeRepo) DeleteKnowledgeBase(ctx context.Context, id string) erro
 	if err != nil {
 		return err
 	}
-	res, err := r.db.ExecContext(
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.ExecContext(
+		ctx,
+		"DELETE FROM bot_kb WHERE tenant_id = ? AND kb_id = ?",
+		tenantID,
+		id,
+	); err != nil {
+		return err
+	}
+
+	res, err := tx.ExecContext(
 		ctx,
 		"DELETE FROM knowledge_base WHERE tenant_id = ? AND id = ?",
 		tenantID,
@@ -193,7 +208,10 @@ func (r *knowledgeRepo) DeleteKnowledgeBase(ctx context.Context, id string) erro
 	if err == nil && rows == 0 {
 		return kerrors.NotFound("KB_NOT_FOUND", "knowledge base not found")
 	}
-	return err
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *knowledgeRepo) CreateDocument(ctx context.Context, doc biz.Document) (biz.Document, error) {
@@ -537,6 +555,98 @@ func (r *knowledgeRepo) RollbackDocument(ctx context.Context, documentID string,
 		tenantID,
 		documentID,
 	)
+	return err
+}
+
+func (r *knowledgeRepo) ListBotKnowledgeBases(ctx context.Context, botID string) ([]biz.BotKnowledgeBase, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT id, tenant_id, bot_id, kb_id, priority, weight, created_at
+		FROM bot_kb WHERE tenant_id = ? AND bot_id = ? ORDER BY priority DESC, created_at DESC`,
+		tenantID,
+		botID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.BotKnowledgeBase, 0)
+	for rows.Next() {
+		var item biz.BotKnowledgeBase
+		if err := rows.Scan(
+			&item.ID,
+			&item.TenantID,
+			&item.BotID,
+			&item.KBID,
+			&item.Priority,
+			&item.Weight,
+			&item.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, rows.Err()
+}
+
+func (r *knowledgeRepo) BindBotKnowledgeBase(ctx context.Context, link biz.BotKnowledgeBase) (biz.BotKnowledgeBase, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return biz.BotKnowledgeBase{}, err
+	}
+	if link.ID == "" {
+		link.ID = uuid.NewString()
+	}
+	link.TenantID = tenantID
+	if link.CreatedAt.IsZero() {
+		link.CreatedAt = time.Now()
+	}
+	_, err = r.db.ExecContext(
+		ctx,
+		`INSERT INTO bot_kb (id, tenant_id, bot_id, kb_id, priority, weight, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		link.ID,
+		link.TenantID,
+		link.BotID,
+		link.KBID,
+		link.Priority,
+		link.Weight,
+		link.CreatedAt,
+	)
+	if err != nil {
+		var mysqlErr *mysql.MySQLError
+		if stderrors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return biz.BotKnowledgeBase{}, kerrors.Conflict("BOT_KB_DUPLICATE", "bot knowledge base already bound")
+		}
+		return biz.BotKnowledgeBase{}, err
+	}
+	return link, nil
+}
+
+func (r *knowledgeRepo) UnbindBotKnowledgeBase(ctx context.Context, botID string, kbID string) error {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return err
+	}
+	res, err := r.db.ExecContext(
+		ctx,
+		"DELETE FROM bot_kb WHERE tenant_id = ? AND bot_id = ? AND kb_id = ?",
+		tenantID,
+		botID,
+		kbID,
+	)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err == nil && rows == 0 {
+		return kerrors.NotFound("BOT_KB_NOT_FOUND", "bot knowledge base not found")
+	}
 	return err
 }
 

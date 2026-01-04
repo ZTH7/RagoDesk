@@ -109,6 +109,51 @@ func (s *KnowledgeService) ListKnowledgeBases(ctx context.Context, req *v1.ListK
 	return resp, nil
 }
 
+func (s *KnowledgeService) ListBotKnowledgeBases(ctx context.Context, req *v1.ListBotKnowledgeBasesRequest) (*v1.ListBotKnowledgeBasesResponse, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionBotRead); err != nil {
+		return nil, err
+	}
+	items, err := s.uc.ListBotKnowledgeBases(ctx, req.GetBotId())
+	if err != nil {
+		return nil, err
+	}
+	resp := &v1.ListBotKnowledgeBasesResponse{Items: make([]*v1.BotKnowledgeBase, 0, len(items))}
+	for _, item := range items {
+		resp.Items = append(resp.Items, toBotKnowledgeBase(item))
+	}
+	return resp, nil
+}
+
+func (s *KnowledgeService) BindBotKnowledgeBase(ctx context.Context, req *v1.BindBotKnowledgeBaseRequest) (*v1.BotKnowledgeBaseResponse, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionBotKBBind); err != nil {
+		return nil, err
+	}
+	linked, err := s.uc.BindBotKnowledgeBase(ctx, req.GetBotId(), req.GetKbId(), req.GetPriority(), req.GetWeight())
+	if err != nil {
+		return nil, err
+	}
+	return &v1.BotKnowledgeBaseResponse{BotKb: toBotKnowledgeBase(linked)}, nil
+}
+
+func (s *KnowledgeService) UnbindBotKnowledgeBase(ctx context.Context, req *v1.UnbindBotKnowledgeBaseRequest) (*emptypb.Empty, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionBotKBUnbind); err != nil {
+		return nil, err
+	}
+	if err := s.uc.UnbindBotKnowledgeBase(ctx, req.GetBotId(), req.GetKbId()); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
 func (s *KnowledgeService) UploadDocument(ctx context.Context, req *v1.UploadDocumentRequest) (*v1.UploadDocumentResponse, error) {
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err
@@ -201,6 +246,21 @@ func toKnowledgeBase(kb biz.KnowledgeBase) *v1.KnowledgeBase {
 		Description: kb.Description,
 		CreatedAt:   toTimestamp(kb.CreatedAt),
 		UpdatedAt:   toTimestamp(kb.UpdatedAt),
+	}
+}
+
+func toBotKnowledgeBase(link biz.BotKnowledgeBase) *v1.BotKnowledgeBase {
+	if link.ID == "" && link.BotID == "" && link.KBID == "" {
+		return nil
+	}
+	return &v1.BotKnowledgeBase{
+		Id:        link.ID,
+		TenantId:  link.TenantID,
+		BotId:     link.BotID,
+		KbId:      link.KBID,
+		Priority:  link.Priority,
+		Weight:    link.Weight,
+		CreatedAt: toTimestamp(link.CreatedAt),
 	}
 }
 

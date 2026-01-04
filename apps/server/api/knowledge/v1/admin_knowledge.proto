@@ -37,6 +37,23 @@ service KnowledgeAdmin {
     };
   }
 
+  rpc ListBotKnowledgeBases(ListBotKnowledgeBasesRequest) returns (ListBotKnowledgeBasesResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/bots/{bot_id}/knowledge_bases"
+    };
+  }
+  rpc BindBotKnowledgeBase(BindBotKnowledgeBaseRequest) returns (BotKnowledgeBaseResponse) {
+    option (google.api.http) = {
+      post: "/admin/v1/bots/{bot_id}/knowledge_bases"
+      body: "*"
+    };
+  }
+  rpc UnbindBotKnowledgeBase(UnbindBotKnowledgeBaseRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/admin/v1/bots/{bot_id}/knowledge_bases/{kb_id}"
+    };
+  }
+
   rpc UploadDocument(UploadDocumentRequest) returns (UploadDocumentResponse) {
     option (google.api.http) = {
       post: "/admin/v1/documents/upload"
@@ -69,6 +86,16 @@ message KnowledgeBase {
   string description = 4;
   google.protobuf.Timestamp created_at = 5;
   google.protobuf.Timestamp updated_at = 6;
+}
+
+message BotKnowledgeBase {
+  string id = 1;
+  string tenant_id = 2;
+  string bot_id = 3;
+  string kb_id = 4;
+  int32 priority = 5;
+  double weight = 6;
+  google.protobuf.Timestamp created_at = 7;
 }
 
 message Document {
@@ -117,8 +144,20 @@ message ListKnowledgeBasesResponse {
   repeated KnowledgeBase items = 1;
 }
 
+message ListBotKnowledgeBasesRequest {
+  string bot_id = 1;
+}
+
+message ListBotKnowledgeBasesResponse {
+  repeated BotKnowledgeBase items = 1;
+}
+
 message KnowledgeBaseResponse {
   KnowledgeBase knowledge_base = 1;
+}
+
+message BotKnowledgeBaseResponse {
+  BotKnowledgeBase bot_kb = 1;
 }
 
 message UploadDocumentRequest {
@@ -149,4 +188,16 @@ message ReindexDocumentRequest {
 message RollbackDocumentRequest {
   string id = 1;
   int32 version = 2;
+}
+
+message BindBotKnowledgeBaseRequest {
+  string bot_id = 1;
+  string kb_id = 2;
+  int32 priority = 3;
+  double weight = 4;
+}
+
+message UnbindBotKnowledgeBaseRequest {
+  string bot_id = 1;
+  string kb_id = 2;
 }

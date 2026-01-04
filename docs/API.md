@@ -171,6 +171,7 @@
 - `GET /admin/v1/bots/{id}/knowledge_bases`
 - `POST /admin/v1/bots/{id}/knowledge_bases`（绑定）
 - `DELETE /admin/v1/bots/{id}/knowledge_bases/{kb_id}`（解绑）
+绑定请求字段：`kb_id`, `priority`（可选）, `weight`（可选）
 
 ### 4.4 知识库管理
 - `POST /admin/v1/knowledge_bases`

@@ -20,24 +20,30 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationKnowledgeAdminBindBotKnowledgeBase = "/api.knowledge.v1.KnowledgeAdmin/BindBotKnowledgeBase"
 const OperationKnowledgeAdminCreateKnowledgeBase = "/api.knowledge.v1.KnowledgeAdmin/CreateKnowledgeBase"
 const OperationKnowledgeAdminDeleteKnowledgeBase = "/api.knowledge.v1.KnowledgeAdmin/DeleteKnowledgeBase"
 const OperationKnowledgeAdminGetDocument = "/api.knowledge.v1.KnowledgeAdmin/GetDocument"
 const OperationKnowledgeAdminGetKnowledgeBase = "/api.knowledge.v1.KnowledgeAdmin/GetKnowledgeBase"
+const OperationKnowledgeAdminListBotKnowledgeBases = "/api.knowledge.v1.KnowledgeAdmin/ListBotKnowledgeBases"
 const OperationKnowledgeAdminListKnowledgeBases = "/api.knowledge.v1.KnowledgeAdmin/ListKnowledgeBases"
 const OperationKnowledgeAdminReindexDocument = "/api.knowledge.v1.KnowledgeAdmin/ReindexDocument"
 const OperationKnowledgeAdminRollbackDocument = "/api.knowledge.v1.KnowledgeAdmin/RollbackDocument"
+const OperationKnowledgeAdminUnbindBotKnowledgeBase = "/api.knowledge.v1.KnowledgeAdmin/UnbindBotKnowledgeBase"
 const OperationKnowledgeAdminUpdateKnowledgeBase = "/api.knowledge.v1.KnowledgeAdmin/UpdateKnowledgeBase"
 const OperationKnowledgeAdminUploadDocument = "/api.knowledge.v1.KnowledgeAdmin/UploadDocument"
 
 type KnowledgeAdminHTTPServer interface {
+	BindBotKnowledgeBase(context.Context, *BindBotKnowledgeBaseRequest) (*BotKnowledgeBaseResponse, error)
 	CreateKnowledgeBase(context.Context, *CreateKnowledgeBaseRequest) (*KnowledgeBaseResponse, error)
 	DeleteKnowledgeBase(context.Context, *DeleteKnowledgeBaseRequest) (*emptypb.Empty, error)
 	GetDocument(context.Context, *GetDocumentRequest) (*GetDocumentResponse, error)
 	GetKnowledgeBase(context.Context, *GetKnowledgeBaseRequest) (*KnowledgeBaseResponse, error)
+	ListBotKnowledgeBases(context.Context, *ListBotKnowledgeBasesRequest) (*ListBotKnowledgeBasesResponse, error)
 	ListKnowledgeBases(context.Context, *ListKnowledgeBasesRequest) (*ListKnowledgeBasesResponse, error)
 	ReindexDocument(context.Context, *ReindexDocumentRequest) (*emptypb.Empty, error)
 	RollbackDocument(context.Context, *RollbackDocumentRequest) (*emptypb.Empty, error)
+	UnbindBotKnowledgeBase(context.Context, *UnbindBotKnowledgeBaseRequest) (*emptypb.Empty, error)
 	UpdateKnowledgeBase(context.Context, *UpdateKnowledgeBaseRequest) (*KnowledgeBaseResponse, error)
 	UploadDocument(context.Context, *UploadDocumentRequest) (*UploadDocumentResponse, error)
 }
@@ -49,6 +55,9 @@ func RegisterKnowledgeAdminHTTPServer(s *http.Server, srv KnowledgeAdminHTTPServ
 	r.PATCH("/admin/v1/knowledge_bases/{id}", _KnowledgeAdmin_UpdateKnowledgeBase0_HTTP_Handler(srv))
 	r.DELETE("/admin/v1/knowledge_bases/{id}", _KnowledgeAdmin_DeleteKnowledgeBase0_HTTP_Handler(srv))
 	r.GET("/admin/v1/knowledge_bases", _KnowledgeAdmin_ListKnowledgeBases0_HTTP_Handler(srv))
+	r.GET("/admin/v1/bots/{bot_id}/knowledge_bases", _KnowledgeAdmin_ListBotKnowledgeBases0_HTTP_Handler(srv))
+	r.POST("/admin/v1/bots/{bot_id}/knowledge_bases", _KnowledgeAdmin_BindBotKnowledgeBase0_HTTP_Handler(srv))
+	r.DELETE("/admin/v1/bots/{bot_id}/knowledge_bases/{kb_id}", _KnowledgeAdmin_UnbindBotKnowledgeBase0_HTTP_Handler(srv))
 	r.POST("/admin/v1/documents/upload", _KnowledgeAdmin_UploadDocument0_HTTP_Handler(srv))
 	r.GET("/admin/v1/documents/{id}", _KnowledgeAdmin_GetDocument0_HTTP_Handler(srv))
 	r.POST("/admin/v1/documents/{id}/reindex", _KnowledgeAdmin_ReindexDocument0_HTTP_Handler(srv))
@@ -165,6 +174,75 @@ func _KnowledgeAdmin_ListKnowledgeBases0_HTTP_Handler(srv KnowledgeAdminHTTPServ
 	}
 }
 
+func _KnowledgeAdmin_ListBotKnowledgeBases0_HTTP_Handler(srv KnowledgeAdminHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListBotKnowledgeBasesRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationKnowledgeAdminListBotKnowledgeBases)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListBotKnowledgeBases(ctx, req.(*ListBotKnowledgeBasesRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListBotKnowledgeBasesResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _KnowledgeAdmin_BindBotKnowledgeBase0_HTTP_Handler(srv KnowledgeAdminHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in BindBotKnowledgeBaseRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationKnowledgeAdminBindBotKnowledgeBase)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.BindBotKnowledgeBase(ctx, req.(*BindBotKnowledgeBaseRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*BotKnowledgeBaseResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _KnowledgeAdmin_UnbindBotKnowledgeBase0_HTTP_Handler(srv KnowledgeAdminHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UnbindBotKnowledgeBaseRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationKnowledgeAdminUnbindBotKnowledgeBase)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UnbindBotKnowledgeBase(ctx, req.(*UnbindBotKnowledgeBaseRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _KnowledgeAdmin_UploadDocument0_HTTP_Handler(srv KnowledgeAdminHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in UploadDocumentRequest
@@ -260,13 +338,16 @@ func _KnowledgeAdmin_RollbackDocument0_HTTP_Handler(srv KnowledgeAdminHTTPServer
 }
 
 type KnowledgeAdminHTTPClient interface {
+	BindBotKnowledgeBase(ctx context.Context, req *BindBotKnowledgeBaseRequest, opts ...http.CallOption) (rsp *BotKnowledgeBaseResponse, err error)
 	CreateKnowledgeBase(ctx context.Context, req *CreateKnowledgeBaseRequest, opts ...http.CallOption) (rsp *KnowledgeBaseResponse, err error)
 	DeleteKnowledgeBase(ctx context.Context, req *DeleteKnowledgeBaseRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	GetDocument(ctx context.Context, req *GetDocumentRequest, opts ...http.CallOption) (rsp *GetDocumentResponse, err error)
 	GetKnowledgeBase(ctx context.Context, req *GetKnowledgeBaseRequest, opts ...http.CallOption) (rsp *KnowledgeBaseResponse, err error)
+	ListBotKnowledgeBases(ctx context.Context, req *ListBotKnowledgeBasesRequest, opts ...http.CallOption) (rsp *ListBotKnowledgeBasesResponse, err error)
 	ListKnowledgeBases(ctx context.Context, req *ListKnowledgeBasesRequest, opts ...http.CallOption) (rsp *ListKnowledgeBasesResponse, err error)
 	ReindexDocument(ctx context.Context, req *ReindexDocumentRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	RollbackDocument(ctx context.Context, req *RollbackDocumentRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	UnbindBotKnowledgeBase(ctx context.Context, req *UnbindBotKnowledgeBaseRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	UpdateKnowledgeBase(ctx context.Context, req *UpdateKnowledgeBaseRequest, opts ...http.CallOption) (rsp *KnowledgeBaseResponse, err error)
 	UploadDocument(ctx context.Context, req *UploadDocumentRequest, opts ...http.CallOption) (rsp *UploadDocumentResponse, err error)
 }
@@ -277,6 +358,19 @@ type KnowledgeAdminHTTPClientImpl struct {
 
 func NewKnowledgeAdminHTTPClient(client *http.Client) KnowledgeAdminHTTPClient {
 	return &KnowledgeAdminHTTPClientImpl{client}
+}
+
+func (c *KnowledgeAdminHTTPClientImpl) BindBotKnowledgeBase(ctx context.Context, in *BindBotKnowledgeBaseRequest, opts ...http.CallOption) (*BotKnowledgeBaseResponse, error) {
+	var out BotKnowledgeBaseResponse
+	pattern := "/admin/v1/bots/{bot_id}/knowledge_bases"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationKnowledgeAdminBindBotKnowledgeBase))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *KnowledgeAdminHTTPClientImpl) CreateKnowledgeBase(ctx context.Context, in *CreateKnowledgeBaseRequest, opts ...http.CallOption) (*KnowledgeBaseResponse, error) {
@@ -331,6 +425,19 @@ func (c *KnowledgeAdminHTTPClientImpl) GetKnowledgeBase(ctx context.Context, in 
 	return &out, nil
 }
 
+func (c *KnowledgeAdminHTTPClientImpl) ListBotKnowledgeBases(ctx context.Context, in *ListBotKnowledgeBasesRequest, opts ...http.CallOption) (*ListBotKnowledgeBasesResponse, error) {
+	var out ListBotKnowledgeBasesResponse
+	pattern := "/admin/v1/bots/{bot_id}/knowledge_bases"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationKnowledgeAdminListBotKnowledgeBases))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *KnowledgeAdminHTTPClientImpl) ListKnowledgeBases(ctx context.Context, in *ListKnowledgeBasesRequest, opts ...http.CallOption) (*ListKnowledgeBasesResponse, error) {
 	var out ListKnowledgeBasesResponse
 	pattern := "/admin/v1/knowledge_bases"
@@ -364,6 +471,19 @@ func (c *KnowledgeAdminHTTPClientImpl) RollbackDocument(ctx context.Context, in 
 	opts = append(opts, http.Operation(OperationKnowledgeAdminRollbackDocument))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *KnowledgeAdminHTTPClientImpl) UnbindBotKnowledgeBase(ctx context.Context, in *UnbindBotKnowledgeBaseRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/admin/v1/bots/{bot_id}/knowledge_bases/{kb_id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationKnowledgeAdminUnbindBotKnowledgeBase))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -92,6 +92,7 @@
 ### 2.2 同步与异步边界
 - **同步路径**：用户请求 → RAG → 回复（要求低延迟）
 - **异步路径**：文档处理 / 统计聚合（高吞吐、可重试）
+- **执行方式**：由独立 ingestion worker（`apps/server/cmd/ingester`）消费 RabbitMQ；API 进程设置 `RAGDESK_INGESTION_ASYNC=1` 仅负责入队
 
 ### 2.3 RAG 责任边界
 - **Knowledge & Ingestion**：负责文档处理、切分、向量化、索引构建与更新；不参与在线生成。
@@ -106,7 +107,7 @@
 ```mermaid
 flowchart LR
 A[上传文档] --> B[入库 document]
-B --> C[任务执行（MVP: 同步；后续: 异步队列）]
+B --> C[任务执行（可配置：同步 / RabbitMQ 异步）]
 C --> D[清洗/解析]
 D --> E[切分 chunk]
 E --> F[Embedding]

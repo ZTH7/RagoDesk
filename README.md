@@ -36,7 +36,7 @@ buf.lock        # locked proto deps (buf)
 ### Infrastructure (Docker)
 ```bash
 cd deploy
-# start mysql/redis/qdrant
+# start mysql/redis/qdrant/rabbitmq/minio
 docker compose up -d
 ```
 
@@ -44,6 +44,12 @@ docker compose up -d
 ```bash
 cd apps/server
 kratos run
+```
+
+### Ingestion Worker (optional)
+```bash
+cd apps/server
+go run ./cmd/ingester
 ```
 
 ### Admin Web (React + Vite)
