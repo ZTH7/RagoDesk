@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+package api.knowledge.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service KnowledgeAdmin {
+  rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns (KnowledgeBaseResponse) {
+    option (google.api.http) = {
+      post: "/admin/v1/knowledge_bases"
+      body: "*"
+    };
+  }
+  rpc GetKnowledgeBase(GetKnowledgeBaseRequest) returns (KnowledgeBaseResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/knowledge_bases/{id}"
+    };
+  }
+  rpc ListKnowledgeBases(ListKnowledgeBasesRequest) returns (ListKnowledgeBasesResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/knowledge_bases"
+    };
+  }
+
+  rpc UploadDocument(UploadDocumentRequest) returns (UploadDocumentResponse) {
+    option (google.api.http) = {
+      post: "/admin/v1/documents/upload"
+      body: "*"
+    };
+  }
+  rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse) {
+    option (google.api.http) = {
+      get: "/admin/v1/documents/{id}"
+    };
+  }
+  rpc ReindexDocument(ReindexDocumentRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/admin/v1/documents/{id}/reindex"
+      body: "*"
+    };
+  }
+  rpc RollbackDocument(RollbackDocumentRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/admin/v1/documents/{id}/rollback"
+      body: "*"
+    };
+  }
+}
+
+message KnowledgeBase {
+  string id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message Document {
+  string id = 1;
+  string tenant_id = 2;
+  string kb_id = 3;
+  string title = 4;
+  string source_type = 5;
+  string status = 6;
+  int32 current_version = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message DocumentVersion {
+  string id = 1;
+  string tenant_id = 2;
+  string document_id = 3;
+  int32 version = 4;
+  string status = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message CreateKnowledgeBaseRequest {
+  string name = 1;
+  string description = 2;
+}
+
+message GetKnowledgeBaseRequest {
+  string id = 1;
+}
+
+message ListKnowledgeBasesRequest {}
+
+message ListKnowledgeBasesResponse {
+  repeated KnowledgeBase items = 1;
+}
+
+message KnowledgeBaseResponse {
+  KnowledgeBase knowledge_base = 1;
+}
+
+message UploadDocumentRequest {
+  string kb_id = 1;
+  string title = 2;
+  string source_type = 3;
+  string content = 4;
+}
+
+message UploadDocumentResponse {
+  Document document = 1;
+  DocumentVersion version = 2;
+}
+
+message GetDocumentRequest {
+  string id = 1;
+}
+
+message GetDocumentResponse {
+  Document document = 1;
+  repeated DocumentVersion versions = 2;
+}
+
+message ReindexDocumentRequest {
+  string id = 1;
+}
+
+message RollbackDocumentRequest {
+  string id = 1;
+  int32 version = 2;
+}
+

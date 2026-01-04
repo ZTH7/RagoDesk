@@ -99,5 +99,7 @@ func TenantContextMiddleware() middleware.Middleware {
 }
 
 func isAdminOperation(operation string) bool {
-	return strings.Contains(operation, "PlatformIAM") || strings.Contains(operation, "TenantIAM")
+	return strings.Contains(operation, "PlatformIAM") ||
+		strings.Contains(operation, "TenantIAM") ||
+		strings.Contains(operation, "KnowledgeAdmin")
 }

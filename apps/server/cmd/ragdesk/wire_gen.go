@@ -12,6 +12,9 @@ import (
 	iambiz "github.com/ZTH7/RAGDesk/apps/server/internal/iam/biz"
 	iamdata "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
 	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
+	knowledgebiz "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
+	knowledgedata "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
+	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/server"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
@@ -32,8 +35,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	iamRepo := iamdata.NewIAMRepo(dataData, logger)
 	iamUsecase := iambiz.NewIAMUsecase(iamRepo, logger)
 	iamService := iamservice.NewIAMService(iamUsecase, logger)
-	grpcServer := server.NewGRPCServer(confServer, logger, iamService)
-	httpServer := server.NewHTTPServer(confServer, logger, iamService)
+	knowledgeRepo := knowledgedata.NewKnowledgeRepo(dataData, confData, logger)
+	knowledgeUsecase := knowledgebiz.NewKnowledgeUsecase(knowledgeRepo, logger)
+	knowledgeService := knowledgeservice.NewKnowledgeService(knowledgeUsecase, iamUsecase, logger)
+	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService)
+	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

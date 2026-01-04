@@ -175,9 +175,11 @@
 ### 4.4 知识库管理
 - `POST /admin/v1/knowledge_bases`
 - `GET /admin/v1/knowledge_bases`
+- `GET /admin/v1/knowledge_bases/{id}`
 - `POST /admin/v1/documents/upload`
 - `GET /admin/v1/documents/{id}`
 - `POST /admin/v1/documents/{id}/reindex`
+- `POST /admin/v1/documents/{id}/rollback`
 
 ### 4.5 API Key 管理
 - `POST /admin/v1/api_keys`

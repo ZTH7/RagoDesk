@@ -106,7 +106,7 @@
 ```mermaid
 flowchart LR
 A[上传文档] --> B[入库 document]
-B --> C[异步任务 queue]
+B --> C[任务执行（MVP: 同步；后续: 异步队列）]
 C --> D[清洗/解析]
 D --> E[切分 chunk]
 E --> F[Embedding]

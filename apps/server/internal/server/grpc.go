@@ -1,9 +1,11 @@
 package server
 
 import (
-	v1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
+	iamv1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
+	knowledgev1 "github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
+	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -11,7 +13,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService) *grpc.Server {
+func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -32,7 +34,8 @@ func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterPlatformIAMServer(srv, iamSvc)
-	v1.RegisterTenantIAMServer(srv, iamSvc)
+	iamv1.RegisterPlatformIAMServer(srv, iamSvc)
+	iamv1.RegisterTenantIAMServer(srv, iamSvc)
+	knowledgev1.RegisterKnowledgeAdminServer(srv, knowledgeSvc)
 	return srv
 }

@@ -56,6 +56,9 @@ func ensureSchemaAndSeed(ctx context.Context, db *sql.DB) error {
 	if err := ensureIAMSchema(ctx, db); err != nil {
 		return err
 	}
+	if err := ensureKnowledgeSchema(ctx, db); err != nil {
+		return err
+	}
 	if err := seedIAMPermissions(ctx, db); err != nil {
 		return err
 	}
@@ -167,6 +170,102 @@ func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if _, err := db.ExecContext(ctx, "UPDATE permission SET scope = 'platform' WHERE scope IS NULL OR scope = ''"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS knowledge_base (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			description TEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_kb_tenant_name (tenant_id, name),
+			KEY idx_kb_tenant (tenant_id),
+			KEY idx_kb_created_at (tenant_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS document (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			kb_id VARCHAR(36) NOT NULL,
+			title VARCHAR(255) NOT NULL,
+			source_type VARCHAR(32) NOT NULL,
+			status VARCHAR(32) NOT NULL,
+			current_version INT NOT NULL DEFAULT 0,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			KEY idx_document_tenant_kb (tenant_id, kb_id),
+			KEY idx_document_created_at (tenant_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS document_version (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			document_id VARCHAR(36) NOT NULL,
+			version INT NOT NULL,
+			raw_text LONGTEXT NOT NULL,
+			raw_uri VARCHAR(1024) NULL,
+			status VARCHAR(32) NOT NULL,
+			error_message TEXT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_doc_version (document_id, version),
+			KEY idx_doc_version_tenant_doc (tenant_id, document_id),
+			KEY idx_doc_version_created_at (tenant_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS doc_chunk (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			kb_id VARCHAR(36) NOT NULL,
+			document_id VARCHAR(36) NOT NULL,
+			document_version_id VARCHAR(36) NOT NULL,
+			chunk_index INT NOT NULL,
+			content LONGTEXT NOT NULL,
+			token_count INT NOT NULL,
+			content_hash VARCHAR(64) NOT NULL,
+			language VARCHAR(32) NOT NULL DEFAULT '',
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_chunk_version_index (document_version_id, chunk_index),
+			KEY idx_chunk_tenant_kb (tenant_id, kb_id),
+			KEY idx_chunk_version (tenant_id, document_version_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS embedding (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			chunk_id VARCHAR(36) NOT NULL,
+			model VARCHAR(128) NOT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_embedding_chunk_model (chunk_id, model),
+			KEY idx_embedding_tenant_chunk (tenant_id, chunk_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS bot_kb (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			bot_id VARCHAR(36) NOT NULL,
+			kb_id VARCHAR(36) NOT NULL,
+			priority INT NOT NULL DEFAULT 0,
+			weight DOUBLE NOT NULL DEFAULT 1,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_bot_kb (tenant_id, bot_id, kb_id),
+			KEY idx_bot_kb_tenant_bot (tenant_id, bot_id),
+			KEY idx_bot_kb_tenant_kb (tenant_id, kb_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	}
+
+	for _, stmt := range statements {
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			return err
+		}
+	}
+	if err := ensureColumn(ctx, db, "document_version", "raw_uri", "VARCHAR(1024) NULL"); err != nil {
 		return err
 	}
 	return nil

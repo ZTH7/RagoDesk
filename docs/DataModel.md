@@ -176,6 +176,8 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `tenant_id`
 - `name`
 - `description`
+- `created_at`
+- `updated_at`
 
 **document**
 - `id` (PK)
@@ -184,33 +186,42 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `title`
 - `source_type` (pdf/doc/md/url)
 - `status` (uploaded/processing/ready/failed)
+- `current_version` (int)
 - `created_at`
+- `updated_at`
 
 **document_version**
 - `id` (PK)
 - `tenant_id`
 - `document_id`
 - `version` (int)
-- `raw_path` (object storage)
-- `parsed_path`
+- `raw_text` (MVP: 直接存 MySQL；后续可切换到 object storage 并改为 path)
+- `raw_uri` (可选：object storage path)
+- `status` (processing/ready/failed)
+- `error_message`
 - `created_at`
 
 **doc_chunk**
 - `id` (PK)
 - `tenant_id`
+- `kb_id`
+- `document_id`
 - `document_version_id`
 - `chunk_index`
 - `content`
-- `tokens`
-- `metadata_json`
+- `token_count`
+- `content_hash`
+- `language`
+- `created_at`
 
 **embedding**
 - `id` (PK)
 - `tenant_id`
 - `chunk_id`
-- `vector` (pgvector)
 - `model`
 - `created_at`
+
+> `vector` 本体存储在 VectorDB（MVP: Qdrant），MySQL 仅记录 chunk 与 embedding 元信息。
 
 ---
 

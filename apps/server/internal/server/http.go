@@ -1,9 +1,11 @@
 package server
 
 import (
-	v1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
+	iamv1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
+	knowledgev1 "github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
+	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -11,7 +13,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService) *http.Server {
+func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -32,7 +34,8 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterPlatformIAMHTTPServer(srv, iamSvc)
-	v1.RegisterTenantIAMHTTPServer(srv, iamSvc)
+	iamv1.RegisterPlatformIAMHTTPServer(srv, iamSvc)
+	iamv1.RegisterTenantIAMHTTPServer(srv, iamSvc)
+	knowledgev1.RegisterKnowledgeAdminHTTPServer(srv, knowledgeSvc)
 	return srv
 }
