@@ -32,6 +32,7 @@ func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterAdminIAMServer(srv, iamSvc)
+	v1.RegisterPlatformIAMServer(srv, iamSvc)
+	v1.RegisterTenantIAMServer(srv, iamSvc)
 	return srv
 }

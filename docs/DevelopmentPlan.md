@@ -28,7 +28,7 @@
 
 ## Phase 1: IAM Foundation (multi‑tenant + RBAC)
 **Purpose**: all other modules depend on tenant context.
-- Tables: `tenant`, `user`, `role`, `permission`, `user_role`
+- Tables: `tenant`, `user`, `role`, `permission`, `user_role`, `role_permission`, `platform_admin`, `platform_role`, `platform_admin_role`, `platform_role_permission`
 - Enforce `tenant_id` filter in data access
 - Admin API: create tenant, invite users, assign roles
 - Auth: JWT for admin, context injection of `tenant_id`

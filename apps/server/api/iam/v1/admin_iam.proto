@@ -8,24 +8,80 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-service AdminIAM {
+service PlatformIAM {
   rpc CreateTenant(CreateTenantRequest) returns (TenantResponse) {
     option (google.api.http) = {
-      post: "/admin/v1/tenants"
+      post: "/platform/v1/tenants"
       body: "*"
     };
   }
   rpc GetTenant(GetTenantRequest) returns (TenantResponse) {
     option (google.api.http) = {
-      get: "/admin/v1/tenants/{id}"
+      get: "/platform/v1/tenants/{id}"
     };
   }
   rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse) {
     option (google.api.http) = {
-      get: "/admin/v1/tenants"
+      get: "/platform/v1/tenants"
     };
   }
 
+  rpc CreatePermission(CreatePermissionRequest) returns (PermissionResponse) {
+    option (google.api.http) = {
+      post: "/platform/v1/permissions"
+      body: "*"
+    };
+  }
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/permissions"
+    };
+  }
+
+  rpc CreatePlatformAdmin(CreatePlatformAdminRequest) returns (PlatformAdminResponse) {
+    option (google.api.http) = {
+      post: "/platform/v1/admins"
+      body: "*"
+    };
+  }
+  rpc ListPlatformAdmins(ListPlatformAdminsRequest) returns (ListPlatformAdminsResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/admins"
+    };
+  }
+
+  rpc CreatePlatformRole(CreatePlatformRoleRequest) returns (PlatformRoleResponse) {
+    option (google.api.http) = {
+      post: "/platform/v1/roles"
+      body: "*"
+    };
+  }
+  rpc ListPlatformRoles(ListPlatformRolesRequest) returns (ListPlatformRolesResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/roles"
+    };
+  }
+
+  rpc AssignPlatformAdminRole(AssignPlatformAdminRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/platform/v1/admins/{admin_id}/roles"
+      body: "*"
+    };
+  }
+  rpc AssignPlatformRolePermissions(AssignPlatformRolePermissionsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/platform/v1/roles/{role_id}/permissions"
+      body: "*"
+    };
+  }
+  rpc ListPlatformRolePermissions(ListPlatformRolePermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/roles/{role_id}/permissions"
+    };
+  }
+}
+
+service TenantIAM {
   rpc CreateUser(CreateUserRequest) returns (UserResponse) {
     option (google.api.http) = {
       post: "/admin/v1/tenants/{tenant_id}/users"
@@ -57,12 +113,6 @@ service AdminIAM {
     };
   }
 
-  rpc CreatePermission(CreatePermissionRequest) returns (PermissionResponse) {
-    option (google.api.http) = {
-      post: "/admin/v1/permissions"
-      body: "*"
-    };
-  }
   rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse) {
     option (google.api.http) = {
       get: "/admin/v1/permissions"
@@ -109,6 +159,21 @@ message Permission {
   string id = 1;
   string code = 2;
   string description = 3;
+  string scope = 4;
+}
+
+message PlatformAdmin {
+  string id = 1;
+  string email = 2;
+  string phone = 3;
+  string name = 4;
+  string status = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message PlatformRole {
+  string id = 1;
+  string name = 2;
 }
 
 message CreateTenantRequest {
@@ -161,6 +226,7 @@ message AssignRoleRequest {
 message CreatePermissionRequest {
   string code = 1;
   string description = 2;
+  string scope = 3;
 }
 
 message ListPermissionsRequest {}
@@ -178,6 +244,44 @@ message ListRolePermissionsRequest {
   string role_id = 1;
 }
 
+message CreatePlatformAdminRequest {
+  string email = 1;
+  string phone = 2;
+  string name = 3;
+  string status = 4;
+  string password_hash = 5;
+}
+
+message ListPlatformAdminsRequest {}
+
+message ListPlatformAdminsResponse {
+  repeated PlatformAdmin items = 1;
+}
+
+message CreatePlatformRoleRequest {
+  string name = 1;
+}
+
+message ListPlatformRolesRequest {}
+
+message ListPlatformRolesResponse {
+  repeated PlatformRole items = 1;
+}
+
+message AssignPlatformAdminRoleRequest {
+  string admin_id = 1;
+  string role_id = 2;
+}
+
+message AssignPlatformRolePermissionsRequest {
+  string role_id = 1;
+  repeated string permission_codes = 2;
+}
+
+message ListPlatformRolePermissionsRequest {
+  string role_id = 1;
+}
+
 message TenantResponse {
   Tenant tenant = 1;
 }
@@ -192,4 +296,12 @@ message RoleResponse {
 
 message PermissionResponse {
   Permission permission = 1;
+}
+
+message PlatformAdminResponse {
+  PlatformAdmin admin = 1;
+}
+
+message PlatformRoleResponse {
+  PlatformRole role = 1;
 }

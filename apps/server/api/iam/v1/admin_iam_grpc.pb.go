@@ -20,519 +20,887 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AdminIAM_CreateTenant_FullMethodName          = "/api.iam.v1.AdminIAM/CreateTenant"
-	AdminIAM_GetTenant_FullMethodName             = "/api.iam.v1.AdminIAM/GetTenant"
-	AdminIAM_ListTenants_FullMethodName           = "/api.iam.v1.AdminIAM/ListTenants"
-	AdminIAM_CreateUser_FullMethodName            = "/api.iam.v1.AdminIAM/CreateUser"
-	AdminIAM_ListUsers_FullMethodName             = "/api.iam.v1.AdminIAM/ListUsers"
-	AdminIAM_CreateRole_FullMethodName            = "/api.iam.v1.AdminIAM/CreateRole"
-	AdminIAM_ListRoles_FullMethodName             = "/api.iam.v1.AdminIAM/ListRoles"
-	AdminIAM_AssignRole_FullMethodName            = "/api.iam.v1.AdminIAM/AssignRole"
-	AdminIAM_CreatePermission_FullMethodName      = "/api.iam.v1.AdminIAM/CreatePermission"
-	AdminIAM_ListPermissions_FullMethodName       = "/api.iam.v1.AdminIAM/ListPermissions"
-	AdminIAM_AssignRolePermissions_FullMethodName = "/api.iam.v1.AdminIAM/AssignRolePermissions"
-	AdminIAM_ListRolePermissions_FullMethodName   = "/api.iam.v1.AdminIAM/ListRolePermissions"
+	PlatformIAM_CreateTenant_FullMethodName                  = "/api.iam.v1.PlatformIAM/CreateTenant"
+	PlatformIAM_GetTenant_FullMethodName                     = "/api.iam.v1.PlatformIAM/GetTenant"
+	PlatformIAM_ListTenants_FullMethodName                   = "/api.iam.v1.PlatformIAM/ListTenants"
+	PlatformIAM_CreatePermission_FullMethodName              = "/api.iam.v1.PlatformIAM/CreatePermission"
+	PlatformIAM_ListPermissions_FullMethodName               = "/api.iam.v1.PlatformIAM/ListPermissions"
+	PlatformIAM_CreatePlatformAdmin_FullMethodName           = "/api.iam.v1.PlatformIAM/CreatePlatformAdmin"
+	PlatformIAM_ListPlatformAdmins_FullMethodName            = "/api.iam.v1.PlatformIAM/ListPlatformAdmins"
+	PlatformIAM_CreatePlatformRole_FullMethodName            = "/api.iam.v1.PlatformIAM/CreatePlatformRole"
+	PlatformIAM_ListPlatformRoles_FullMethodName             = "/api.iam.v1.PlatformIAM/ListPlatformRoles"
+	PlatformIAM_AssignPlatformAdminRole_FullMethodName       = "/api.iam.v1.PlatformIAM/AssignPlatformAdminRole"
+	PlatformIAM_AssignPlatformRolePermissions_FullMethodName = "/api.iam.v1.PlatformIAM/AssignPlatformRolePermissions"
+	PlatformIAM_ListPlatformRolePermissions_FullMethodName   = "/api.iam.v1.PlatformIAM/ListPlatformRolePermissions"
 )
 
-// AdminIAMClient is the client API for AdminIAM service.
+// PlatformIAMClient is the client API for PlatformIAM service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AdminIAMClient interface {
+type PlatformIAMClient interface {
 	CreateTenant(ctx context.Context, in *CreateTenantRequest, opts ...grpc.CallOption) (*TenantResponse, error)
 	GetTenant(ctx context.Context, in *GetTenantRequest, opts ...grpc.CallOption) (*TenantResponse, error)
 	ListTenants(ctx context.Context, in *ListTenantsRequest, opts ...grpc.CallOption) (*ListTenantsResponse, error)
-	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*UserResponse, error)
-	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
-	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error)
-	ListRoles(ctx context.Context, in *ListRolesRequest, opts ...grpc.CallOption) (*ListRolesResponse, error)
-	AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreatePermission(ctx context.Context, in *CreatePermissionRequest, opts ...grpc.CallOption) (*PermissionResponse, error)
 	ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
-	AssignRolePermissions(ctx context.Context, in *AssignRolePermissionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	ListRolePermissions(ctx context.Context, in *ListRolePermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
+	CreatePlatformAdmin(ctx context.Context, in *CreatePlatformAdminRequest, opts ...grpc.CallOption) (*PlatformAdminResponse, error)
+	ListPlatformAdmins(ctx context.Context, in *ListPlatformAdminsRequest, opts ...grpc.CallOption) (*ListPlatformAdminsResponse, error)
+	CreatePlatformRole(ctx context.Context, in *CreatePlatformRoleRequest, opts ...grpc.CallOption) (*PlatformRoleResponse, error)
+	ListPlatformRoles(ctx context.Context, in *ListPlatformRolesRequest, opts ...grpc.CallOption) (*ListPlatformRolesResponse, error)
+	AssignPlatformAdminRole(ctx context.Context, in *AssignPlatformAdminRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AssignPlatformRolePermissions(ctx context.Context, in *AssignPlatformRolePermissionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListPlatformRolePermissions(ctx context.Context, in *ListPlatformRolePermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
 }
 
-type adminIAMClient struct {
+type platformIAMClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAdminIAMClient(cc grpc.ClientConnInterface) AdminIAMClient {
-	return &adminIAMClient{cc}
+func NewPlatformIAMClient(cc grpc.ClientConnInterface) PlatformIAMClient {
+	return &platformIAMClient{cc}
 }
 
-func (c *adminIAMClient) CreateTenant(ctx context.Context, in *CreateTenantRequest, opts ...grpc.CallOption) (*TenantResponse, error) {
+func (c *platformIAMClient) CreateTenant(ctx context.Context, in *CreateTenantRequest, opts ...grpc.CallOption) (*TenantResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TenantResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_CreateTenant_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, PlatformIAM_CreateTenant_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminIAMClient) GetTenant(ctx context.Context, in *GetTenantRequest, opts ...grpc.CallOption) (*TenantResponse, error) {
+func (c *platformIAMClient) GetTenant(ctx context.Context, in *GetTenantRequest, opts ...grpc.CallOption) (*TenantResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(TenantResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_GetTenant_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, PlatformIAM_GetTenant_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminIAMClient) ListTenants(ctx context.Context, in *ListTenantsRequest, opts ...grpc.CallOption) (*ListTenantsResponse, error) {
+func (c *platformIAMClient) ListTenants(ctx context.Context, in *ListTenantsRequest, opts ...grpc.CallOption) (*ListTenantsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListTenantsResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_ListTenants_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, PlatformIAM_ListTenants_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminIAMClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*UserResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UserResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_CreateUser_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminIAMClient) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListUsersResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_ListUsers_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminIAMClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RoleResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_CreateRole_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminIAMClient) ListRoles(ctx context.Context, in *ListRolesRequest, opts ...grpc.CallOption) (*ListRolesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListRolesResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_ListRoles_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminIAMClient) AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, AdminIAM_AssignRole_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminIAMClient) CreatePermission(ctx context.Context, in *CreatePermissionRequest, opts ...grpc.CallOption) (*PermissionResponse, error) {
+func (c *platformIAMClient) CreatePermission(ctx context.Context, in *CreatePermissionRequest, opts ...grpc.CallOption) (*PermissionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PermissionResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_CreatePermission_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, PlatformIAM_CreatePermission_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminIAMClient) ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
+func (c *platformIAMClient) ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListPermissionsResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_ListPermissions_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, PlatformIAM_ListPermissions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminIAMClient) AssignRolePermissions(ctx context.Context, in *AssignRolePermissionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *platformIAMClient) CreatePlatformAdmin(ctx context.Context, in *CreatePlatformAdminRequest, opts ...grpc.CallOption) (*PlatformAdminResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlatformAdminResponse)
+	err := c.cc.Invoke(ctx, PlatformIAM_CreatePlatformAdmin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformIAMClient) ListPlatformAdmins(ctx context.Context, in *ListPlatformAdminsRequest, opts ...grpc.CallOption) (*ListPlatformAdminsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPlatformAdminsResponse)
+	err := c.cc.Invoke(ctx, PlatformIAM_ListPlatformAdmins_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformIAMClient) CreatePlatformRole(ctx context.Context, in *CreatePlatformRoleRequest, opts ...grpc.CallOption) (*PlatformRoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlatformRoleResponse)
+	err := c.cc.Invoke(ctx, PlatformIAM_CreatePlatformRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformIAMClient) ListPlatformRoles(ctx context.Context, in *ListPlatformRolesRequest, opts ...grpc.CallOption) (*ListPlatformRolesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPlatformRolesResponse)
+	err := c.cc.Invoke(ctx, PlatformIAM_ListPlatformRoles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformIAMClient) AssignPlatformAdminRole(ctx context.Context, in *AssignPlatformAdminRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, AdminIAM_AssignRolePermissions_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, PlatformIAM_AssignPlatformAdminRole_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *adminIAMClient) ListRolePermissions(ctx context.Context, in *ListRolePermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
+func (c *platformIAMClient) AssignPlatformRolePermissions(ctx context.Context, in *AssignPlatformRolePermissionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PlatformIAM_AssignPlatformRolePermissions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformIAMClient) ListPlatformRolePermissions(ctx context.Context, in *ListPlatformRolePermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListPermissionsResponse)
-	err := c.cc.Invoke(ctx, AdminIAM_ListRolePermissions_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, PlatformIAM_ListPlatformRolePermissions_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// AdminIAMServer is the server API for AdminIAM service.
-// All implementations must embed UnimplementedAdminIAMServer
+// PlatformIAMServer is the server API for PlatformIAM service.
+// All implementations must embed UnimplementedPlatformIAMServer
 // for forward compatibility.
-type AdminIAMServer interface {
+type PlatformIAMServer interface {
 	CreateTenant(context.Context, *CreateTenantRequest) (*TenantResponse, error)
 	GetTenant(context.Context, *GetTenantRequest) (*TenantResponse, error)
 	ListTenants(context.Context, *ListTenantsRequest) (*ListTenantsResponse, error)
-	CreateUser(context.Context, *CreateUserRequest) (*UserResponse, error)
-	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
-	CreateRole(context.Context, *CreateRoleRequest) (*RoleResponse, error)
-	ListRoles(context.Context, *ListRolesRequest) (*ListRolesResponse, error)
-	AssignRole(context.Context, *AssignRoleRequest) (*emptypb.Empty, error)
 	CreatePermission(context.Context, *CreatePermissionRequest) (*PermissionResponse, error)
 	ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error)
-	AssignRolePermissions(context.Context, *AssignRolePermissionsRequest) (*emptypb.Empty, error)
-	ListRolePermissions(context.Context, *ListRolePermissionsRequest) (*ListPermissionsResponse, error)
-	mustEmbedUnimplementedAdminIAMServer()
+	CreatePlatformAdmin(context.Context, *CreatePlatformAdminRequest) (*PlatformAdminResponse, error)
+	ListPlatformAdmins(context.Context, *ListPlatformAdminsRequest) (*ListPlatformAdminsResponse, error)
+	CreatePlatformRole(context.Context, *CreatePlatformRoleRequest) (*PlatformRoleResponse, error)
+	ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error)
+	AssignPlatformAdminRole(context.Context, *AssignPlatformAdminRoleRequest) (*emptypb.Empty, error)
+	AssignPlatformRolePermissions(context.Context, *AssignPlatformRolePermissionsRequest) (*emptypb.Empty, error)
+	ListPlatformRolePermissions(context.Context, *ListPlatformRolePermissionsRequest) (*ListPermissionsResponse, error)
+	mustEmbedUnimplementedPlatformIAMServer()
 }
 
-// UnimplementedAdminIAMServer must be embedded to have
+// UnimplementedPlatformIAMServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedAdminIAMServer struct{}
+type UnimplementedPlatformIAMServer struct{}
 
-func (UnimplementedAdminIAMServer) CreateTenant(context.Context, *CreateTenantRequest) (*TenantResponse, error) {
+func (UnimplementedPlatformIAMServer) CreateTenant(context.Context, *CreateTenantRequest) (*TenantResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateTenant not implemented")
 }
-func (UnimplementedAdminIAMServer) GetTenant(context.Context, *GetTenantRequest) (*TenantResponse, error) {
+func (UnimplementedPlatformIAMServer) GetTenant(context.Context, *GetTenantRequest) (*TenantResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetTenant not implemented")
 }
-func (UnimplementedAdminIAMServer) ListTenants(context.Context, *ListTenantsRequest) (*ListTenantsResponse, error) {
+func (UnimplementedPlatformIAMServer) ListTenants(context.Context, *ListTenantsRequest) (*ListTenantsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListTenants not implemented")
 }
-func (UnimplementedAdminIAMServer) CreateUser(context.Context, *CreateUserRequest) (*UserResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateUser not implemented")
-}
-func (UnimplementedAdminIAMServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListUsers not implemented")
-}
-func (UnimplementedAdminIAMServer) CreateRole(context.Context, *CreateRoleRequest) (*RoleResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateRole not implemented")
-}
-func (UnimplementedAdminIAMServer) ListRoles(context.Context, *ListRolesRequest) (*ListRolesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListRoles not implemented")
-}
-func (UnimplementedAdminIAMServer) AssignRole(context.Context, *AssignRoleRequest) (*emptypb.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method AssignRole not implemented")
-}
-func (UnimplementedAdminIAMServer) CreatePermission(context.Context, *CreatePermissionRequest) (*PermissionResponse, error) {
+func (UnimplementedPlatformIAMServer) CreatePermission(context.Context, *CreatePermissionRequest) (*PermissionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreatePermission not implemented")
 }
-func (UnimplementedAdminIAMServer) ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error) {
+func (UnimplementedPlatformIAMServer) ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPermissions not implemented")
 }
-func (UnimplementedAdminIAMServer) AssignRolePermissions(context.Context, *AssignRolePermissionsRequest) (*emptypb.Empty, error) {
-	return nil, status.Error(codes.Unimplemented, "method AssignRolePermissions not implemented")
+func (UnimplementedPlatformIAMServer) CreatePlatformAdmin(context.Context, *CreatePlatformAdminRequest) (*PlatformAdminResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreatePlatformAdmin not implemented")
 }
-func (UnimplementedAdminIAMServer) ListRolePermissions(context.Context, *ListRolePermissionsRequest) (*ListPermissionsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListRolePermissions not implemented")
+func (UnimplementedPlatformIAMServer) ListPlatformAdmins(context.Context, *ListPlatformAdminsRequest) (*ListPlatformAdminsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlatformAdmins not implemented")
 }
-func (UnimplementedAdminIAMServer) mustEmbedUnimplementedAdminIAMServer() {}
-func (UnimplementedAdminIAMServer) testEmbeddedByValue()                  {}
+func (UnimplementedPlatformIAMServer) CreatePlatformRole(context.Context, *CreatePlatformRoleRequest) (*PlatformRoleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreatePlatformRole not implemented")
+}
+func (UnimplementedPlatformIAMServer) ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlatformRoles not implemented")
+}
+func (UnimplementedPlatformIAMServer) AssignPlatformAdminRole(context.Context, *AssignPlatformAdminRoleRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method AssignPlatformAdminRole not implemented")
+}
+func (UnimplementedPlatformIAMServer) AssignPlatformRolePermissions(context.Context, *AssignPlatformRolePermissionsRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method AssignPlatformRolePermissions not implemented")
+}
+func (UnimplementedPlatformIAMServer) ListPlatformRolePermissions(context.Context, *ListPlatformRolePermissionsRequest) (*ListPermissionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlatformRolePermissions not implemented")
+}
+func (UnimplementedPlatformIAMServer) mustEmbedUnimplementedPlatformIAMServer() {}
+func (UnimplementedPlatformIAMServer) testEmbeddedByValue()                     {}
 
-// UnsafeAdminIAMServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AdminIAMServer will
+// UnsafePlatformIAMServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to PlatformIAMServer will
 // result in compilation errors.
-type UnsafeAdminIAMServer interface {
-	mustEmbedUnimplementedAdminIAMServer()
+type UnsafePlatformIAMServer interface {
+	mustEmbedUnimplementedPlatformIAMServer()
 }
 
-func RegisterAdminIAMServer(s grpc.ServiceRegistrar, srv AdminIAMServer) {
-	// If the following call panics, it indicates UnimplementedAdminIAMServer was
+func RegisterPlatformIAMServer(s grpc.ServiceRegistrar, srv PlatformIAMServer) {
+	// If the following call panics, it indicates UnimplementedPlatformIAMServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&AdminIAM_ServiceDesc, srv)
+	s.RegisterService(&PlatformIAM_ServiceDesc, srv)
 }
 
-func _AdminIAM_CreateTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PlatformIAM_CreateTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateTenantRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminIAMServer).CreateTenant(ctx, in)
+		return srv.(PlatformIAMServer).CreateTenant(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AdminIAM_CreateTenant_FullMethodName,
+		FullMethod: PlatformIAM_CreateTenant_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).CreateTenant(ctx, req.(*CreateTenantRequest))
+		return srv.(PlatformIAMServer).CreateTenant(ctx, req.(*CreateTenantRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminIAM_GetTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PlatformIAM_GetTenant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTenantRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminIAMServer).GetTenant(ctx, in)
+		return srv.(PlatformIAMServer).GetTenant(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AdminIAM_GetTenant_FullMethodName,
+		FullMethod: PlatformIAM_GetTenant_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).GetTenant(ctx, req.(*GetTenantRequest))
+		return srv.(PlatformIAMServer).GetTenant(ctx, req.(*GetTenantRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminIAM_ListTenants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PlatformIAM_ListTenants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTenantsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminIAMServer).ListTenants(ctx, in)
+		return srv.(PlatformIAMServer).ListTenants(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AdminIAM_ListTenants_FullMethodName,
+		FullMethod: PlatformIAM_ListTenants_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).ListTenants(ctx, req.(*ListTenantsRequest))
+		return srv.(PlatformIAMServer).ListTenants(ctx, req.(*ListTenantsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminIAM_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateUserRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminIAMServer).CreateUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AdminIAM_CreateUser_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).CreateUser(ctx, req.(*CreateUserRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminIAM_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListUsersRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminIAMServer).ListUsers(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AdminIAM_ListUsers_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).ListUsers(ctx, req.(*ListUsersRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminIAM_CreateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateRoleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminIAMServer).CreateRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AdminIAM_CreateRole_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).CreateRole(ctx, req.(*CreateRoleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminIAM_ListRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListRolesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminIAMServer).ListRoles(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AdminIAM_ListRoles_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).ListRoles(ctx, req.(*ListRolesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminIAM_AssignRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AssignRoleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminIAMServer).AssignRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AdminIAM_AssignRole_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).AssignRole(ctx, req.(*AssignRoleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminIAM_CreatePermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PlatformIAM_CreatePermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreatePermissionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminIAMServer).CreatePermission(ctx, in)
+		return srv.(PlatformIAMServer).CreatePermission(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AdminIAM_CreatePermission_FullMethodName,
+		FullMethod: PlatformIAM_CreatePermission_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).CreatePermission(ctx, req.(*CreatePermissionRequest))
+		return srv.(PlatformIAMServer).CreatePermission(ctx, req.(*CreatePermissionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminIAM_ListPermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PlatformIAM_ListPermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListPermissionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminIAMServer).ListPermissions(ctx, in)
+		return srv.(PlatformIAMServer).ListPermissions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AdminIAM_ListPermissions_FullMethodName,
+		FullMethod: PlatformIAM_ListPermissions_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).ListPermissions(ctx, req.(*ListPermissionsRequest))
+		return srv.(PlatformIAMServer).ListPermissions(ctx, req.(*ListPermissionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminIAM_AssignRolePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PlatformIAM_CreatePlatformAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreatePlatformAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).CreatePlatformAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_CreatePlatformAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).CreatePlatformAdmin(ctx, req.(*CreatePlatformAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_ListPlatformAdmins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlatformAdminsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).ListPlatformAdmins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_ListPlatformAdmins_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).ListPlatformAdmins(ctx, req.(*ListPlatformAdminsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_CreatePlatformRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreatePlatformRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).CreatePlatformRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_CreatePlatformRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).CreatePlatformRole(ctx, req.(*CreatePlatformRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_ListPlatformRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlatformRolesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).ListPlatformRoles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_ListPlatformRoles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).ListPlatformRoles(ctx, req.(*ListPlatformRolesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_AssignPlatformAdminRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AssignPlatformAdminRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).AssignPlatformAdminRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_AssignPlatformAdminRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).AssignPlatformAdminRole(ctx, req.(*AssignPlatformAdminRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_AssignPlatformRolePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AssignPlatformRolePermissionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).AssignPlatformRolePermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_AssignPlatformRolePermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).AssignPlatformRolePermissions(ctx, req.(*AssignPlatformRolePermissionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_ListPlatformRolePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlatformRolePermissionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).ListPlatformRolePermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_ListPlatformRolePermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).ListPlatformRolePermissions(ctx, req.(*ListPlatformRolePermissionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// PlatformIAM_ServiceDesc is the grpc.ServiceDesc for PlatformIAM service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var PlatformIAM_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.iam.v1.PlatformIAM",
+	HandlerType: (*PlatformIAMServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateTenant",
+			Handler:    _PlatformIAM_CreateTenant_Handler,
+		},
+		{
+			MethodName: "GetTenant",
+			Handler:    _PlatformIAM_GetTenant_Handler,
+		},
+		{
+			MethodName: "ListTenants",
+			Handler:    _PlatformIAM_ListTenants_Handler,
+		},
+		{
+			MethodName: "CreatePermission",
+			Handler:    _PlatformIAM_CreatePermission_Handler,
+		},
+		{
+			MethodName: "ListPermissions",
+			Handler:    _PlatformIAM_ListPermissions_Handler,
+		},
+		{
+			MethodName: "CreatePlatformAdmin",
+			Handler:    _PlatformIAM_CreatePlatformAdmin_Handler,
+		},
+		{
+			MethodName: "ListPlatformAdmins",
+			Handler:    _PlatformIAM_ListPlatformAdmins_Handler,
+		},
+		{
+			MethodName: "CreatePlatformRole",
+			Handler:    _PlatformIAM_CreatePlatformRole_Handler,
+		},
+		{
+			MethodName: "ListPlatformRoles",
+			Handler:    _PlatformIAM_ListPlatformRoles_Handler,
+		},
+		{
+			MethodName: "AssignPlatformAdminRole",
+			Handler:    _PlatformIAM_AssignPlatformAdminRole_Handler,
+		},
+		{
+			MethodName: "AssignPlatformRolePermissions",
+			Handler:    _PlatformIAM_AssignPlatformRolePermissions_Handler,
+		},
+		{
+			MethodName: "ListPlatformRolePermissions",
+			Handler:    _PlatformIAM_ListPlatformRolePermissions_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "api/iam/v1/admin_iam.proto",
+}
+
+const (
+	TenantIAM_CreateUser_FullMethodName            = "/api.iam.v1.TenantIAM/CreateUser"
+	TenantIAM_ListUsers_FullMethodName             = "/api.iam.v1.TenantIAM/ListUsers"
+	TenantIAM_CreateRole_FullMethodName            = "/api.iam.v1.TenantIAM/CreateRole"
+	TenantIAM_ListRoles_FullMethodName             = "/api.iam.v1.TenantIAM/ListRoles"
+	TenantIAM_AssignRole_FullMethodName            = "/api.iam.v1.TenantIAM/AssignRole"
+	TenantIAM_ListPermissions_FullMethodName       = "/api.iam.v1.TenantIAM/ListPermissions"
+	TenantIAM_AssignRolePermissions_FullMethodName = "/api.iam.v1.TenantIAM/AssignRolePermissions"
+	TenantIAM_ListRolePermissions_FullMethodName   = "/api.iam.v1.TenantIAM/ListRolePermissions"
+)
+
+// TenantIAMClient is the client API for TenantIAM service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type TenantIAMClient interface {
+	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*UserResponse, error)
+	ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error)
+	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error)
+	ListRoles(ctx context.Context, in *ListRolesRequest, opts ...grpc.CallOption) (*ListRolesResponse, error)
+	AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
+	AssignRolePermissions(ctx context.Context, in *AssignRolePermissionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListRolePermissions(ctx context.Context, in *ListRolePermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
+}
+
+type tenantIAMClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewTenantIAMClient(cc grpc.ClientConnInterface) TenantIAMClient {
+	return &tenantIAMClient{cc}
+}
+
+func (c *tenantIAMClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*UserResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserResponse)
+	err := c.cc.Invoke(ctx, TenantIAM_CreateUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantIAMClient) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...grpc.CallOption) (*ListUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListUsersResponse)
+	err := c.cc.Invoke(ctx, TenantIAM_ListUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantIAMClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*RoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoleResponse)
+	err := c.cc.Invoke(ctx, TenantIAM_CreateRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantIAMClient) ListRoles(ctx context.Context, in *ListRolesRequest, opts ...grpc.CallOption) (*ListRolesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRolesResponse)
+	err := c.cc.Invoke(ctx, TenantIAM_ListRoles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantIAMClient) AssignRole(ctx context.Context, in *AssignRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, TenantIAM_AssignRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantIAMClient) ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPermissionsResponse)
+	err := c.cc.Invoke(ctx, TenantIAM_ListPermissions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantIAMClient) AssignRolePermissions(ctx context.Context, in *AssignRolePermissionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, TenantIAM_AssignRolePermissions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tenantIAMClient) ListRolePermissions(ctx context.Context, in *ListRolePermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPermissionsResponse)
+	err := c.cc.Invoke(ctx, TenantIAM_ListRolePermissions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// TenantIAMServer is the server API for TenantIAM service.
+// All implementations must embed UnimplementedTenantIAMServer
+// for forward compatibility.
+type TenantIAMServer interface {
+	CreateUser(context.Context, *CreateUserRequest) (*UserResponse, error)
+	ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error)
+	CreateRole(context.Context, *CreateRoleRequest) (*RoleResponse, error)
+	ListRoles(context.Context, *ListRolesRequest) (*ListRolesResponse, error)
+	AssignRole(context.Context, *AssignRoleRequest) (*emptypb.Empty, error)
+	ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error)
+	AssignRolePermissions(context.Context, *AssignRolePermissionsRequest) (*emptypb.Empty, error)
+	ListRolePermissions(context.Context, *ListRolePermissionsRequest) (*ListPermissionsResponse, error)
+	mustEmbedUnimplementedTenantIAMServer()
+}
+
+// UnimplementedTenantIAMServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedTenantIAMServer struct{}
+
+func (UnimplementedTenantIAMServer) CreateUser(context.Context, *CreateUserRequest) (*UserResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateUser not implemented")
+}
+func (UnimplementedTenantIAMServer) ListUsers(context.Context, *ListUsersRequest) (*ListUsersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListUsers not implemented")
+}
+func (UnimplementedTenantIAMServer) CreateRole(context.Context, *CreateRoleRequest) (*RoleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateRole not implemented")
+}
+func (UnimplementedTenantIAMServer) ListRoles(context.Context, *ListRolesRequest) (*ListRolesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListRoles not implemented")
+}
+func (UnimplementedTenantIAMServer) AssignRole(context.Context, *AssignRoleRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method AssignRole not implemented")
+}
+func (UnimplementedTenantIAMServer) ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPermissions not implemented")
+}
+func (UnimplementedTenantIAMServer) AssignRolePermissions(context.Context, *AssignRolePermissionsRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method AssignRolePermissions not implemented")
+}
+func (UnimplementedTenantIAMServer) ListRolePermissions(context.Context, *ListRolePermissionsRequest) (*ListPermissionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListRolePermissions not implemented")
+}
+func (UnimplementedTenantIAMServer) mustEmbedUnimplementedTenantIAMServer() {}
+func (UnimplementedTenantIAMServer) testEmbeddedByValue()                   {}
+
+// UnsafeTenantIAMServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TenantIAMServer will
+// result in compilation errors.
+type UnsafeTenantIAMServer interface {
+	mustEmbedUnimplementedTenantIAMServer()
+}
+
+func RegisterTenantIAMServer(s grpc.ServiceRegistrar, srv TenantIAMServer) {
+	// If the following call panics, it indicates UnimplementedTenantIAMServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&TenantIAM_ServiceDesc, srv)
+}
+
+func _TenantIAM_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantIAMServer).CreateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantIAM_CreateUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantIAMServer).CreateUser(ctx, req.(*CreateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantIAM_ListUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantIAMServer).ListUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantIAM_ListUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantIAMServer).ListUsers(ctx, req.(*ListUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantIAM_CreateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantIAMServer).CreateRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantIAM_CreateRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantIAMServer).CreateRole(ctx, req.(*CreateRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantIAM_ListRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRolesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantIAMServer).ListRoles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantIAM_ListRoles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantIAMServer).ListRoles(ctx, req.(*ListRolesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantIAM_AssignRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AssignRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantIAMServer).AssignRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantIAM_AssignRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantIAMServer).AssignRole(ctx, req.(*AssignRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantIAM_ListPermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPermissionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TenantIAMServer).ListPermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TenantIAM_ListPermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TenantIAMServer).ListPermissions(ctx, req.(*ListPermissionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TenantIAM_AssignRolePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AssignRolePermissionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminIAMServer).AssignRolePermissions(ctx, in)
+		return srv.(TenantIAMServer).AssignRolePermissions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AdminIAM_AssignRolePermissions_FullMethodName,
+		FullMethod: TenantIAM_AssignRolePermissions_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).AssignRolePermissions(ctx, req.(*AssignRolePermissionsRequest))
+		return srv.(TenantIAMServer).AssignRolePermissions(ctx, req.(*AssignRolePermissionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminIAM_ListRolePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TenantIAM_ListRolePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRolePermissionsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AdminIAMServer).ListRolePermissions(ctx, in)
+		return srv.(TenantIAMServer).ListRolePermissions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: AdminIAM_ListRolePermissions_FullMethodName,
+		FullMethod: TenantIAM_ListRolePermissions_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminIAMServer).ListRolePermissions(ctx, req.(*ListRolePermissionsRequest))
+		return srv.(TenantIAMServer).ListRolePermissions(ctx, req.(*ListRolePermissionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// AdminIAM_ServiceDesc is the grpc.ServiceDesc for AdminIAM service.
+// TenantIAM_ServiceDesc is the grpc.ServiceDesc for TenantIAM service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var AdminIAM_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.iam.v1.AdminIAM",
-	HandlerType: (*AdminIAMServer)(nil),
+var TenantIAM_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.iam.v1.TenantIAM",
+	HandlerType: (*TenantIAMServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateTenant",
-			Handler:    _AdminIAM_CreateTenant_Handler,
-		},
-		{
-			MethodName: "GetTenant",
-			Handler:    _AdminIAM_GetTenant_Handler,
-		},
-		{
-			MethodName: "ListTenants",
-			Handler:    _AdminIAM_ListTenants_Handler,
-		},
-		{
 			MethodName: "CreateUser",
-			Handler:    _AdminIAM_CreateUser_Handler,
+			Handler:    _TenantIAM_CreateUser_Handler,
 		},
 		{
 			MethodName: "ListUsers",
-			Handler:    _AdminIAM_ListUsers_Handler,
+			Handler:    _TenantIAM_ListUsers_Handler,
 		},
 		{
 			MethodName: "CreateRole",
-			Handler:    _AdminIAM_CreateRole_Handler,
+			Handler:    _TenantIAM_CreateRole_Handler,
 		},
 		{
 			MethodName: "ListRoles",
-			Handler:    _AdminIAM_ListRoles_Handler,
+			Handler:    _TenantIAM_ListRoles_Handler,
 		},
 		{
 			MethodName: "AssignRole",
-			Handler:    _AdminIAM_AssignRole_Handler,
-		},
-		{
-			MethodName: "CreatePermission",
-			Handler:    _AdminIAM_CreatePermission_Handler,
+			Handler:    _TenantIAM_AssignRole_Handler,
 		},
 		{
 			MethodName: "ListPermissions",
-			Handler:    _AdminIAM_ListPermissions_Handler,
+			Handler:    _TenantIAM_ListPermissions_Handler,
 		},
 		{
 			MethodName: "AssignRolePermissions",
-			Handler:    _AdminIAM_AssignRolePermissions_Handler,
+			Handler:    _TenantIAM_AssignRolePermissions_Handler,
 		},
 		{
 			MethodName: "ListRolePermissions",
-			Handler:    _AdminIAM_ListRolePermissions_Handler,
+			Handler:    _TenantIAM_ListRolePermissions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

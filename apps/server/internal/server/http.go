@@ -32,6 +32,7 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterAdminIAMHTTPServer(srv, iamSvc)
+	v1.RegisterPlatformIAMHTTPServer(srv, iamSvc)
+	v1.RegisterTenantIAMHTTPServer(srv, iamSvc)
 	return srv
 }

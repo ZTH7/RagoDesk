@@ -166,7 +166,7 @@ API-->>Client: reply
 ---
 
 ## 5. 安全与隔离设计
-- 所有表强制 `tenant_id`
+- 租户业务表强制 `tenant_id`；平台管理员与权限目录为全局表
 - Query 层统一 `tenant filter`
 - API Key + HMAC 签名（可选）
 - 限流 / 配额 / 审计日志

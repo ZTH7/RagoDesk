@@ -1,6 +1,6 @@
 # Data Model — RAGDesk
 
-> 目标：支持多租户、RAG 知识库、会话流转与统计分析。所有核心业务表均必须带 `tenant_id`。
+> 目标：支持多租户、RAG 知识库、会话流转与统计分析。所有租户业务表必须带 `tenant_id`；平台管理员与全局权限表除外。
 
 ---
 
@@ -17,6 +17,13 @@ USER }o--o{ ROLE : assigned
 ROLE }o--o{ PERMISSION : grants
 ROLE ||--o{ ROLE_PERMISSION : links
 PERMISSION ||--o{ ROLE_PERMISSION : links
+
+PLATFORM_ADMIN }o--o{ PLATFORM_ROLE : assigned
+PLATFORM_ADMIN ||--o{ PLATFORM_ADMIN_ROLE : links
+PLATFORM_ROLE ||--o{ PLATFORM_ADMIN_ROLE : links
+PLATFORM_ROLE }o--o{ PERMISSION : grants
+PLATFORM_ROLE ||--o{ PLATFORM_ROLE_PERMISSION : links
+PERMISSION ||--o{ PLATFORM_ROLE_PERMISSION : links
 
 BOT ||--o{ BOT_KB : links
 KNOWLEDGE_BASE ||--o{ BOT_KB : links
@@ -42,6 +49,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 **tenant**
 - `id` (PK)
 - `name`
+- `type` (personal/enterprise)
 - `plan` (free/pro/enterprise)
 - `status` (active/suspended)
 - `created_at`
@@ -58,11 +66,13 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `id` (PK)
 - `tenant_id`
 - `name`
+> 说明：角色为租户级定义。
 
 **permission**
 - `id` (PK)
 - `code` (string, e.g. `knowledge.read`)
 - `description`
+- `scope` (platform/tenant)
 
 **user_role**
 - `user_id`
@@ -71,6 +81,72 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 **role_permission**
 - `role_id`
 - `permission_id`
+
+**platform_admin**
+- `id` (PK)
+- `email` / `phone`
+- `name`
+- `status` (active/disabled)
+- `password_hash`
+- `created_at`
+
+**platform_role**
+- `id` (PK)
+- `name`
+
+**platform_admin_role**
+- `admin_id`
+- `role_id`
+
+**platform_role_permission**
+- `role_id`
+- `permission_id`
+
+**permission seeds（PRD 对齐）**
+**platform scope**
+- `platform.tenant.create` 创建租户
+- `platform.tenant.read` 查询租户
+- `platform.tenant.write` 更新租户套餐/状态/配额
+- `platform.admin.create` 创建平台管理员
+- `platform.admin.read` 查询平台管理员
+- `platform.role.write` 创建/更新平台角色
+- `platform.role.read` 查询平台角色
+- `platform.role.assign` 分配平台角色
+- `platform.role.permission.assign` 分配平台角色权限
+- `platform.permission.read` 查询权限目录
+- `platform.permission.write` 创建权限
+- `platform.config.read` 查询平台配置
+- `platform.config.write` 更新平台配置
+
+**tenant scope**
+- `tenant.user.read` 查询成员
+- `tenant.user.write` 创建/更新成员
+- `tenant.role.read` 查询角色
+- `tenant.role.write` 创建/更新角色
+- `tenant.role.assign` 分配角色
+- `tenant.role.permission.assign` 分配角色权限
+- `tenant.permission.read` 查询租户权限目录
+- `tenant.bot.read` 查询机器人
+- `tenant.bot.write` 创建/更新机器人
+- `tenant.bot.delete` 删除机器人
+- `tenant.bot_kb.bind` 绑定知识库
+- `tenant.bot_kb.unbind` 解绑知识库
+- `tenant.knowledge_base.read` 查询知识库
+- `tenant.knowledge_base.write` 创建/更新知识库
+- `tenant.knowledge_base.delete` 删除知识库
+- `tenant.document.upload` 上传文档
+- `tenant.document.read` 查询文档
+- `tenant.document.delete` 删除文档
+- `tenant.document.reindex` 重新索引
+- `tenant.document.rollback` 版本回滚
+- `tenant.api_key.read` 查询 API Key
+- `tenant.api_key.write` 创建/更新 API Key
+- `tenant.api_key.delete` 删除 API Key
+- `tenant.api_key.rotate` 轮换 API Key
+- `tenant.api_usage.read` 查询 API 调用日志
+- `tenant.analytics.read` 查询统计看板
+- `tenant.chat_session.read` 查询会话
+- `tenant.chat_message.read` 查询消息
 
 ---
 
@@ -210,12 +286,19 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 ## 3. 关键索引与约束
 - `tenant_id` 必须建联合索引（如 `tenant_id + created_at`）
+- `user (tenant_id, email)` 唯一
+- `role (tenant_id, name)` 唯一
+- `permission (code)` 唯一
+- `platform_admin (email)` 唯一
+- `platform_role (name)` 唯一
 - `bot_id + kb_id` 唯一索引
 - `document_id + version` 唯一索引
 - `doc_chunk (tenant_id, document_version_id)` 复合索引
 - `embedding (tenant_id, chunk_id)` 复合索引
 - `message_feedback (tenant_id, message_id)` 复合索引
 - `role_permission (role_id, permission_id)` 唯一索引
+- `platform_admin_role (admin_id, role_id)` 唯一索引
+- `platform_role_permission (role_id, permission_id)` 唯一索引
 - `api_key.key_hash` 唯一索引
 - 向量库索引：HNSW / IVFFlat
 - `chat_session (tenant_id, status)` 用于筛选会话状态
@@ -224,8 +307,8 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 ## 4. 多租户隔离策略
 - **强制 tenant_id filter**：DAO 层必须注入
-- **RBAC**：角色-权限映射
-- **平台管理员**：只读审计 + 最高权限
+- **RBAC**：角色-权限映射（租户角色与平台角色分离）
+- **平台管理员**：独立账号与角色域，仅访问平台范围权限
 
 ---
 

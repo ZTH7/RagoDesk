@@ -93,6 +93,240 @@ func (r *iamRepo) ListTenants(ctx context.Context) ([]biz.Tenant, error) {
 	return items, rows.Err()
 }
 
+func (r *iamRepo) CreatePlatformAdmin(ctx context.Context, admin biz.PlatformAdmin) (biz.PlatformAdmin, error) {
+	if admin.ID == "" {
+		admin.ID = uuid.NewString()
+	}
+	if admin.CreatedAt.IsZero() {
+		admin.CreatedAt = time.Now()
+	}
+	_, err := r.db.ExecContext(
+		ctx,
+		"INSERT INTO platform_admin (id, email, phone, name, status, password_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		admin.ID,
+		admin.Email,
+		admin.Phone,
+		admin.Name,
+		admin.Status,
+		admin.PasswordHash,
+		admin.CreatedAt,
+	)
+	if err != nil {
+		return biz.PlatformAdmin{}, err
+	}
+	return admin, nil
+}
+
+func (r *iamRepo) ListPlatformAdmins(ctx context.Context) ([]biz.PlatformAdmin, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		"SELECT id, email, phone, name, status, created_at FROM platform_admin ORDER BY created_at DESC",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.PlatformAdmin, 0)
+	for rows.Next() {
+		var admin biz.PlatformAdmin
+		if err := rows.Scan(&admin.ID, &admin.Email, &admin.Phone, &admin.Name, &admin.Status, &admin.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, admin)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) CreatePlatformRole(ctx context.Context, role biz.PlatformRole) (biz.PlatformRole, error) {
+	if role.ID == "" {
+		role.ID = uuid.NewString()
+	}
+	_, err := r.db.ExecContext(
+		ctx,
+		"INSERT INTO platform_role (id, name) VALUES (?, ?)",
+		role.ID,
+		role.Name,
+	)
+	if err != nil {
+		return biz.PlatformRole{}, err
+	}
+	return role, nil
+}
+
+func (r *iamRepo) ListPlatformRoles(ctx context.Context) ([]biz.PlatformRole, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT id, name FROM platform_role ORDER BY name ASC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.PlatformRole, 0)
+	for rows.Next() {
+		var role biz.PlatformRole
+		if err := rows.Scan(&role.ID, &role.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, role)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) AssignPlatformAdminRole(ctx context.Context, adminID string, roleID string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	var adminExists string
+	if err = tx.QueryRowContext(ctx, "SELECT id FROM platform_admin WHERE id = ?", adminID).Scan(&adminExists); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return kerrors.NotFound("PLATFORM_ADMIN_NOT_FOUND", "platform admin not found")
+		}
+		return err
+	}
+	var roleExists string
+	if err = tx.QueryRowContext(ctx, "SELECT id FROM platform_role WHERE id = ?", roleID).Scan(&roleExists); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return kerrors.NotFound("PLATFORM_ROLE_NOT_FOUND", "platform role not found")
+		}
+		return err
+	}
+
+	_, err = tx.ExecContext(
+		ctx,
+		"INSERT INTO platform_admin_role (admin_id, role_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE role_id = role_id",
+		adminID,
+		roleID,
+	)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *iamRepo) ListPlatformAdminPermissions(ctx context.Context, adminID string) ([]biz.Permission, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT DISTINCT p.id, p.code, p.description, p.scope
+		FROM platform_admin_role ar
+		JOIN platform_role_permission rp ON ar.role_id = rp.role_id
+		JOIN permission p ON rp.permission_id = p.id
+		WHERE ar.admin_id = ? AND p.scope = ?`,
+		adminID,
+		biz.PermissionScopePlatform,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Permission, 0)
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
+			return nil, err
+		}
+		items = append(items, perm)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) AssignPlatformRolePermissions(ctx context.Context, roleID string, permissionCodes []string) error {
+	if len(permissionCodes) == 0 {
+		return nil
+	}
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	var roleExists string
+	if err = tx.QueryRowContext(ctx, "SELECT id FROM platform_role WHERE id = ?", roleID).Scan(&roleExists); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return kerrors.NotFound("PLATFORM_ROLE_NOT_FOUND", "platform role not found")
+		}
+		return err
+	}
+
+	placeholders, args := buildInClause(permissionCodes)
+	query := fmt.Sprintf("SELECT id, code, description, scope FROM permission WHERE scope = ? AND code IN (%s)", placeholders)
+	args = append([]any{biz.PermissionScopePlatform}, args...)
+	rows, err := tx.QueryContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	permByCode := map[string]biz.Permission{}
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
+			return err
+		}
+		permByCode[perm.Code] = perm
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	missing := missingPermissions(permissionCodes, permByCode)
+	if len(missing) > 0 {
+		return kerrors.NotFound("PERMISSION_NOT_FOUND", fmt.Sprintf("missing permissions: %s", strings.Join(missing, ",")))
+	}
+
+	for _, code := range permissionCodes {
+		perm := permByCode[code]
+		_, err = tx.ExecContext(
+			ctx,
+			"INSERT INTO platform_role_permission (role_id, permission_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE permission_id = permission_id",
+			roleID,
+			perm.ID,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *iamRepo) ListPlatformRolePermissions(ctx context.Context, roleID string) ([]biz.Permission, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT p.id, p.code, p.description, p.scope
+		FROM platform_role_permission rp
+		JOIN permission p ON rp.permission_id = p.id
+		WHERE rp.role_id = ? AND p.scope = ?`,
+		roleID,
+		biz.PermissionScopePlatform,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Permission, 0)
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
+			return nil, err
+		}
+		items = append(items, perm)
+	}
+	return items, rows.Err()
+}
+
 func (r *iamRepo) CreateUser(ctx context.Context, user biz.User) (biz.User, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
@@ -283,14 +517,15 @@ func (r *iamRepo) ListUserPermissions(ctx context.Context, userID string) ([]biz
 	}
 	rows, err := r.db.QueryContext(
 		ctx,
-		`SELECT DISTINCT p.id, p.code, p.description
+		`SELECT DISTINCT p.id, p.code, p.description, p.scope
 		FROM user u
 		JOIN user_role ur ON u.id = ur.user_id
 		JOIN role_permission rp ON ur.role_id = rp.role_id
 		JOIN permission p ON rp.permission_id = p.id
-		WHERE u.id = ? AND u.tenant_id = ?`,
+		WHERE u.id = ? AND u.tenant_id = ? AND p.scope = ?`,
 		userID,
 		tenantID,
+		biz.PermissionScopeTenant,
 	)
 	if err != nil {
 		return nil, err
@@ -300,7 +535,7 @@ func (r *iamRepo) ListUserPermissions(ctx context.Context, userID string) ([]biz
 	items := make([]biz.Permission, 0)
 	for rows.Next() {
 		var perm biz.Permission
-		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
 			return nil, err
 		}
 		items = append(items, perm)
@@ -312,12 +547,16 @@ func (r *iamRepo) CreatePermission(ctx context.Context, permission biz.Permissio
 	if permission.ID == "" {
 		permission.ID = uuid.NewString()
 	}
+	if permission.Scope == "" {
+		permission.Scope = biz.PermissionScopePlatform
+	}
 	_, err := r.db.ExecContext(
 		ctx,
-		"INSERT INTO permission (id, code, description) VALUES (?, ?, ?)",
+		"INSERT INTO permission (id, code, description, scope) VALUES (?, ?, ?, ?)",
 		permission.ID,
 		permission.Code,
 		permission.Description,
+		permission.Scope,
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate") {
@@ -329,7 +568,7 @@ func (r *iamRepo) CreatePermission(ctx context.Context, permission biz.Permissio
 }
 
 func (r *iamRepo) ListPermissions(ctx context.Context) ([]biz.Permission, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT id, code, description FROM permission ORDER BY code ASC")
+	rows, err := r.db.QueryContext(ctx, "SELECT id, code, description, scope FROM permission ORDER BY code ASC")
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +577,29 @@ func (r *iamRepo) ListPermissions(ctx context.Context) ([]biz.Permission, error)
 	items := make([]biz.Permission, 0)
 	for rows.Next() {
 		var perm biz.Permission
-		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
+			return nil, err
+		}
+		items = append(items, perm)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) ListTenantPermissions(ctx context.Context) ([]biz.Permission, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		"SELECT id, code, description, scope FROM permission WHERE scope = ? ORDER BY code ASC",
+		biz.PermissionScopeTenant,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Permission, 0)
+	for rows.Next() {
+		var perm biz.Permission
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
 			return nil, err
 		}
 		items = append(items, perm)
@@ -376,7 +637,8 @@ func (r *iamRepo) AssignRolePermissions(ctx context.Context, roleID string, perm
 	}
 
 	placeholders, args := buildInClause(permissionCodes)
-	query := fmt.Sprintf("SELECT id, code, description FROM permission WHERE code IN (%s)", placeholders)
+	query := fmt.Sprintf("SELECT id, code, description, scope FROM permission WHERE scope = ? AND code IN (%s)", placeholders)
+	args = append([]any{biz.PermissionScopeTenant}, args...)
 	rows, err := tx.QueryContext(ctx, query, args...)
 	if err != nil {
 		return err
@@ -386,7 +648,7 @@ func (r *iamRepo) AssignRolePermissions(ctx context.Context, roleID string, perm
 	permByCode := map[string]biz.Permission{}
 	for rows.Next() {
 		var perm biz.Permission
-		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
 			return err
 		}
 		permByCode[perm.Code] = perm
@@ -423,13 +685,14 @@ func (r *iamRepo) ListRolePermissions(ctx context.Context, roleID string) ([]biz
 	}
 	rows, err := r.db.QueryContext(
 		ctx,
-		`SELECT p.id, p.code, p.description
+		`SELECT p.id, p.code, p.description, p.scope
 		FROM role_permission rp
 		JOIN permission p ON rp.permission_id = p.id
 		JOIN role r ON rp.role_id = r.id
-		WHERE r.id = ? AND r.tenant_id = ?`,
+		WHERE r.id = ? AND r.tenant_id = ? AND p.scope = ?`,
 		roleID,
 		tenantID,
+		biz.PermissionScopeTenant,
 	)
 	if err != nil {
 		return nil, err
@@ -439,7 +702,7 @@ func (r *iamRepo) ListRolePermissions(ctx context.Context, roleID string) ([]biz
 	items := make([]biz.Permission, 0)
 	for rows.Next() {
 		var perm biz.Permission
-		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description); err != nil {
+		if err := rows.Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope); err != nil {
 			return nil, err
 		}
 		items = append(items, perm)
@@ -449,8 +712,8 @@ func (r *iamRepo) ListRolePermissions(ctx context.Context, roleID string) ([]biz
 
 func (r *iamRepo) getPermissionByCode(ctx context.Context, code string) (biz.Permission, error) {
 	var perm biz.Permission
-	err := r.db.QueryRowContext(ctx, "SELECT id, code, description FROM permission WHERE code = ?", code).
-		Scan(&perm.ID, &perm.Code, &perm.Description)
+	err := r.db.QueryRowContext(ctx, "SELECT id, code, description, scope FROM permission WHERE code = ?", code).
+		Scan(&perm.ID, &perm.Code, &perm.Description, &perm.Scope)
 	if err != nil {
 		if stderrors.Is(err, sql.ErrNoRows) {
 			return biz.Permission{}, kerrors.NotFound("PERMISSION_NOT_FOUND", "permission not found")

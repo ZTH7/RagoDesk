@@ -257,6 +257,7 @@ type Permission struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Scope         string                 `protobuf:"bytes,4,opt,name=scope,proto3" json:"scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -312,6 +313,149 @@ func (x *Permission) GetDescription() string {
 	return ""
 }
 
+func (x *Permission) GetScope() string {
+	if x != nil {
+		return x.Scope
+	}
+	return ""
+}
+
+type PlatformAdmin struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	Phone         string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlatformAdmin) Reset() {
+	*x = PlatformAdmin{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlatformAdmin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlatformAdmin) ProtoMessage() {}
+
+func (x *PlatformAdmin) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlatformAdmin.ProtoReflect.Descriptor instead.
+func (*PlatformAdmin) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *PlatformAdmin) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *PlatformAdmin) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *PlatformAdmin) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+func (x *PlatformAdmin) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PlatformAdmin) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *PlatformAdmin) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type PlatformRole struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlatformRole) Reset() {
+	*x = PlatformRole{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlatformRole) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlatformRole) ProtoMessage() {}
+
+func (x *PlatformRole) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlatformRole.ProtoReflect.Descriptor instead.
+func (*PlatformRole) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *PlatformRole) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *PlatformRole) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 type CreateTenantRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -323,7 +467,7 @@ type CreateTenantRequest struct {
 
 func (x *CreateTenantRequest) Reset() {
 	*x = CreateTenantRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[4]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -335,7 +479,7 @@ func (x *CreateTenantRequest) String() string {
 func (*CreateTenantRequest) ProtoMessage() {}
 
 func (x *CreateTenantRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[4]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -348,7 +492,7 @@ func (x *CreateTenantRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTenantRequest.ProtoReflect.Descriptor instead.
 func (*CreateTenantRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{4}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreateTenantRequest) GetName() string {
@@ -381,7 +525,7 @@ type GetTenantRequest struct {
 
 func (x *GetTenantRequest) Reset() {
 	*x = GetTenantRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[5]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -393,7 +537,7 @@ func (x *GetTenantRequest) String() string {
 func (*GetTenantRequest) ProtoMessage() {}
 
 func (x *GetTenantRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[5]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -406,7 +550,7 @@ func (x *GetTenantRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTenantRequest.ProtoReflect.Descriptor instead.
 func (*GetTenantRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{5}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetTenantRequest) GetId() string {
@@ -424,7 +568,7 @@ type ListTenantsRequest struct {
 
 func (x *ListTenantsRequest) Reset() {
 	*x = ListTenantsRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[6]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -436,7 +580,7 @@ func (x *ListTenantsRequest) String() string {
 func (*ListTenantsRequest) ProtoMessage() {}
 
 func (x *ListTenantsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[6]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -449,7 +593,7 @@ func (x *ListTenantsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantsRequest.ProtoReflect.Descriptor instead.
 func (*ListTenantsRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{6}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{8}
 }
 
 type ListTenantsResponse struct {
@@ -461,7 +605,7 @@ type ListTenantsResponse struct {
 
 func (x *ListTenantsResponse) Reset() {
 	*x = ListTenantsResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[7]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -473,7 +617,7 @@ func (x *ListTenantsResponse) String() string {
 func (*ListTenantsResponse) ProtoMessage() {}
 
 func (x *ListTenantsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[7]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -486,7 +630,7 @@ func (x *ListTenantsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTenantsResponse.ProtoReflect.Descriptor instead.
 func (*ListTenantsResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{7}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ListTenantsResponse) GetItems() []*Tenant {
@@ -509,7 +653,7 @@ type CreateUserRequest struct {
 
 func (x *CreateUserRequest) Reset() {
 	*x = CreateUserRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[8]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -521,7 +665,7 @@ func (x *CreateUserRequest) String() string {
 func (*CreateUserRequest) ProtoMessage() {}
 
 func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[8]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -534,7 +678,7 @@ func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateUserRequest.ProtoReflect.Descriptor instead.
 func (*CreateUserRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{8}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CreateUserRequest) GetTenantId() string {
@@ -581,7 +725,7 @@ type ListUsersRequest struct {
 
 func (x *ListUsersRequest) Reset() {
 	*x = ListUsersRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[9]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -593,7 +737,7 @@ func (x *ListUsersRequest) String() string {
 func (*ListUsersRequest) ProtoMessage() {}
 
 func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[9]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -606,7 +750,7 @@ func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsersRequest.ProtoReflect.Descriptor instead.
 func (*ListUsersRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{9}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListUsersRequest) GetTenantId() string {
@@ -625,7 +769,7 @@ type ListUsersResponse struct {
 
 func (x *ListUsersResponse) Reset() {
 	*x = ListUsersResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[10]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -637,7 +781,7 @@ func (x *ListUsersResponse) String() string {
 func (*ListUsersResponse) ProtoMessage() {}
 
 func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[10]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -650,7 +794,7 @@ func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsersResponse.ProtoReflect.Descriptor instead.
 func (*ListUsersResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{10}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListUsersResponse) GetItems() []*User {
@@ -669,7 +813,7 @@ type CreateRoleRequest struct {
 
 func (x *CreateRoleRequest) Reset() {
 	*x = CreateRoleRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[11]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -681,7 +825,7 @@ func (x *CreateRoleRequest) String() string {
 func (*CreateRoleRequest) ProtoMessage() {}
 
 func (x *CreateRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[11]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -694,7 +838,7 @@ func (x *CreateRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRoleRequest.ProtoReflect.Descriptor instead.
 func (*CreateRoleRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{11}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CreateRoleRequest) GetName() string {
@@ -712,7 +856,7 @@ type ListRolesRequest struct {
 
 func (x *ListRolesRequest) Reset() {
 	*x = ListRolesRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[12]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -724,7 +868,7 @@ func (x *ListRolesRequest) String() string {
 func (*ListRolesRequest) ProtoMessage() {}
 
 func (x *ListRolesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[12]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -737,7 +881,7 @@ func (x *ListRolesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRolesRequest.ProtoReflect.Descriptor instead.
 func (*ListRolesRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{12}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{14}
 }
 
 type ListRolesResponse struct {
@@ -749,7 +893,7 @@ type ListRolesResponse struct {
 
 func (x *ListRolesResponse) Reset() {
 	*x = ListRolesResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[13]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -761,7 +905,7 @@ func (x *ListRolesResponse) String() string {
 func (*ListRolesResponse) ProtoMessage() {}
 
 func (x *ListRolesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[13]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -774,7 +918,7 @@ func (x *ListRolesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRolesResponse.ProtoReflect.Descriptor instead.
 func (*ListRolesResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{13}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListRolesResponse) GetItems() []*Role {
@@ -794,7 +938,7 @@ type AssignRoleRequest struct {
 
 func (x *AssignRoleRequest) Reset() {
 	*x = AssignRoleRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[14]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -806,7 +950,7 @@ func (x *AssignRoleRequest) String() string {
 func (*AssignRoleRequest) ProtoMessage() {}
 
 func (x *AssignRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[14]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -819,7 +963,7 @@ func (x *AssignRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignRoleRequest.ProtoReflect.Descriptor instead.
 func (*AssignRoleRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{14}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AssignRoleRequest) GetUserId() string {
@@ -840,13 +984,14 @@ type CreatePermissionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
 	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Scope         string                 `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreatePermissionRequest) Reset() {
 	*x = CreatePermissionRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[15]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -858,7 +1003,7 @@ func (x *CreatePermissionRequest) String() string {
 func (*CreatePermissionRequest) ProtoMessage() {}
 
 func (x *CreatePermissionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[15]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -871,7 +1016,7 @@ func (x *CreatePermissionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePermissionRequest.ProtoReflect.Descriptor instead.
 func (*CreatePermissionRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{15}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CreatePermissionRequest) GetCode() string {
@@ -888,6 +1033,13 @@ func (x *CreatePermissionRequest) GetDescription() string {
 	return ""
 }
 
+func (x *CreatePermissionRequest) GetScope() string {
+	if x != nil {
+		return x.Scope
+	}
+	return ""
+}
+
 type ListPermissionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -896,7 +1048,7 @@ type ListPermissionsRequest struct {
 
 func (x *ListPermissionsRequest) Reset() {
 	*x = ListPermissionsRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[16]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -908,7 +1060,7 @@ func (x *ListPermissionsRequest) String() string {
 func (*ListPermissionsRequest) ProtoMessage() {}
 
 func (x *ListPermissionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[16]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -921,7 +1073,7 @@ func (x *ListPermissionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPermissionsRequest.ProtoReflect.Descriptor instead.
 func (*ListPermissionsRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{16}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{18}
 }
 
 type ListPermissionsResponse struct {
@@ -933,7 +1085,7 @@ type ListPermissionsResponse struct {
 
 func (x *ListPermissionsResponse) Reset() {
 	*x = ListPermissionsResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[17]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -945,7 +1097,7 @@ func (x *ListPermissionsResponse) String() string {
 func (*ListPermissionsResponse) ProtoMessage() {}
 
 func (x *ListPermissionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[17]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -958,7 +1110,7 @@ func (x *ListPermissionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPermissionsResponse.ProtoReflect.Descriptor instead.
 func (*ListPermissionsResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{17}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListPermissionsResponse) GetItems() []*Permission {
@@ -978,7 +1130,7 @@ type AssignRolePermissionsRequest struct {
 
 func (x *AssignRolePermissionsRequest) Reset() {
 	*x = AssignRolePermissionsRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[18]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -990,7 +1142,7 @@ func (x *AssignRolePermissionsRequest) String() string {
 func (*AssignRolePermissionsRequest) ProtoMessage() {}
 
 func (x *AssignRolePermissionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[18]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1003,7 +1155,7 @@ func (x *AssignRolePermissionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignRolePermissionsRequest.ProtoReflect.Descriptor instead.
 func (*AssignRolePermissionsRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{18}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AssignRolePermissionsRequest) GetRoleId() string {
@@ -1029,7 +1181,7 @@ type ListRolePermissionsRequest struct {
 
 func (x *ListRolePermissionsRequest) Reset() {
 	*x = ListRolePermissionsRequest{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[19]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1041,7 +1193,7 @@ func (x *ListRolePermissionsRequest) String() string {
 func (*ListRolePermissionsRequest) ProtoMessage() {}
 
 func (x *ListRolePermissionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[19]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1054,10 +1206,438 @@ func (x *ListRolePermissionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRolePermissionsRequest.ProtoReflect.Descriptor instead.
 func (*ListRolePermissionsRequest) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{19}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ListRolePermissionsRequest) GetRoleId() string {
+	if x != nil {
+		return x.RoleId
+	}
+	return ""
+}
+
+type CreatePlatformAdminRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Phone         string                 `protobuf:"bytes,2,opt,name=phone,proto3" json:"phone,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	PasswordHash  string                 `protobuf:"bytes,5,opt,name=password_hash,json=passwordHash,proto3" json:"password_hash,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreatePlatformAdminRequest) Reset() {
+	*x = CreatePlatformAdminRequest{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreatePlatformAdminRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePlatformAdminRequest) ProtoMessage() {}
+
+func (x *CreatePlatformAdminRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePlatformAdminRequest.ProtoReflect.Descriptor instead.
+func (*CreatePlatformAdminRequest) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *CreatePlatformAdminRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *CreatePlatformAdminRequest) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+func (x *CreatePlatformAdminRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreatePlatformAdminRequest) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *CreatePlatformAdminRequest) GetPasswordHash() string {
+	if x != nil {
+		return x.PasswordHash
+	}
+	return ""
+}
+
+type ListPlatformAdminsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPlatformAdminsRequest) Reset() {
+	*x = ListPlatformAdminsRequest{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlatformAdminsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlatformAdminsRequest) ProtoMessage() {}
+
+func (x *ListPlatformAdminsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlatformAdminsRequest.ProtoReflect.Descriptor instead.
+func (*ListPlatformAdminsRequest) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{23}
+}
+
+type ListPlatformAdminsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*PlatformAdmin       `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPlatformAdminsResponse) Reset() {
+	*x = ListPlatformAdminsResponse{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlatformAdminsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlatformAdminsResponse) ProtoMessage() {}
+
+func (x *ListPlatformAdminsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlatformAdminsResponse.ProtoReflect.Descriptor instead.
+func (*ListPlatformAdminsResponse) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ListPlatformAdminsResponse) GetItems() []*PlatformAdmin {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type CreatePlatformRoleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreatePlatformRoleRequest) Reset() {
+	*x = CreatePlatformRoleRequest{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreatePlatformRoleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePlatformRoleRequest) ProtoMessage() {}
+
+func (x *CreatePlatformRoleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePlatformRoleRequest.ProtoReflect.Descriptor instead.
+func (*CreatePlatformRoleRequest) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *CreatePlatformRoleRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type ListPlatformRolesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPlatformRolesRequest) Reset() {
+	*x = ListPlatformRolesRequest{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlatformRolesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlatformRolesRequest) ProtoMessage() {}
+
+func (x *ListPlatformRolesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlatformRolesRequest.ProtoReflect.Descriptor instead.
+func (*ListPlatformRolesRequest) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{26}
+}
+
+type ListPlatformRolesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*PlatformRole        `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPlatformRolesResponse) Reset() {
+	*x = ListPlatformRolesResponse{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlatformRolesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlatformRolesResponse) ProtoMessage() {}
+
+func (x *ListPlatformRolesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlatformRolesResponse.ProtoReflect.Descriptor instead.
+func (*ListPlatformRolesResponse) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ListPlatformRolesResponse) GetItems() []*PlatformRole {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type AssignPlatformAdminRoleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AdminId       string                 `protobuf:"bytes,1,opt,name=admin_id,json=adminId,proto3" json:"admin_id,omitempty"`
+	RoleId        string                 `protobuf:"bytes,2,opt,name=role_id,json=roleId,proto3" json:"role_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssignPlatformAdminRoleRequest) Reset() {
+	*x = AssignPlatformAdminRoleRequest{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssignPlatformAdminRoleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssignPlatformAdminRoleRequest) ProtoMessage() {}
+
+func (x *AssignPlatformAdminRoleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssignPlatformAdminRoleRequest.ProtoReflect.Descriptor instead.
+func (*AssignPlatformAdminRoleRequest) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *AssignPlatformAdminRoleRequest) GetAdminId() string {
+	if x != nil {
+		return x.AdminId
+	}
+	return ""
+}
+
+func (x *AssignPlatformAdminRoleRequest) GetRoleId() string {
+	if x != nil {
+		return x.RoleId
+	}
+	return ""
+}
+
+type AssignPlatformRolePermissionsRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	RoleId          string                 `protobuf:"bytes,1,opt,name=role_id,json=roleId,proto3" json:"role_id,omitempty"`
+	PermissionCodes []string               `protobuf:"bytes,2,rep,name=permission_codes,json=permissionCodes,proto3" json:"permission_codes,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *AssignPlatformRolePermissionsRequest) Reset() {
+	*x = AssignPlatformRolePermissionsRequest{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssignPlatformRolePermissionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssignPlatformRolePermissionsRequest) ProtoMessage() {}
+
+func (x *AssignPlatformRolePermissionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssignPlatformRolePermissionsRequest.ProtoReflect.Descriptor instead.
+func (*AssignPlatformRolePermissionsRequest) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *AssignPlatformRolePermissionsRequest) GetRoleId() string {
+	if x != nil {
+		return x.RoleId
+	}
+	return ""
+}
+
+func (x *AssignPlatformRolePermissionsRequest) GetPermissionCodes() []string {
+	if x != nil {
+		return x.PermissionCodes
+	}
+	return nil
+}
+
+type ListPlatformRolePermissionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RoleId        string                 `protobuf:"bytes,1,opt,name=role_id,json=roleId,proto3" json:"role_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPlatformRolePermissionsRequest) Reset() {
+	*x = ListPlatformRolePermissionsRequest{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPlatformRolePermissionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPlatformRolePermissionsRequest) ProtoMessage() {}
+
+func (x *ListPlatformRolePermissionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPlatformRolePermissionsRequest.ProtoReflect.Descriptor instead.
+func (*ListPlatformRolePermissionsRequest) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *ListPlatformRolePermissionsRequest) GetRoleId() string {
 	if x != nil {
 		return x.RoleId
 	}
@@ -1073,7 +1653,7 @@ type TenantResponse struct {
 
 func (x *TenantResponse) Reset() {
 	*x = TenantResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[20]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1085,7 +1665,7 @@ func (x *TenantResponse) String() string {
 func (*TenantResponse) ProtoMessage() {}
 
 func (x *TenantResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[20]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1098,7 +1678,7 @@ func (x *TenantResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TenantResponse.ProtoReflect.Descriptor instead.
 func (*TenantResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{20}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *TenantResponse) GetTenant() *Tenant {
@@ -1117,7 +1697,7 @@ type UserResponse struct {
 
 func (x *UserResponse) Reset() {
 	*x = UserResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[21]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1129,7 +1709,7 @@ func (x *UserResponse) String() string {
 func (*UserResponse) ProtoMessage() {}
 
 func (x *UserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[21]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1142,7 +1722,7 @@ func (x *UserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserResponse.ProtoReflect.Descriptor instead.
 func (*UserResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{21}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *UserResponse) GetUser() *User {
@@ -1161,7 +1741,7 @@ type RoleResponse struct {
 
 func (x *RoleResponse) Reset() {
 	*x = RoleResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[22]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1173,7 +1753,7 @@ func (x *RoleResponse) String() string {
 func (*RoleResponse) ProtoMessage() {}
 
 func (x *RoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[22]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1186,7 +1766,7 @@ func (x *RoleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoleResponse.ProtoReflect.Descriptor instead.
 func (*RoleResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{22}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *RoleResponse) GetRole() *Role {
@@ -1205,7 +1785,7 @@ type PermissionResponse struct {
 
 func (x *PermissionResponse) Reset() {
 	*x = PermissionResponse{}
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[23]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1217,7 +1797,7 @@ func (x *PermissionResponse) String() string {
 func (*PermissionResponse) ProtoMessage() {}
 
 func (x *PermissionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[23]
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1230,12 +1810,100 @@ func (x *PermissionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PermissionResponse.ProtoReflect.Descriptor instead.
 func (*PermissionResponse) Descriptor() ([]byte, []int) {
-	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{23}
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *PermissionResponse) GetPermission() *Permission {
 	if x != nil {
 		return x.Permission
+	}
+	return nil
+}
+
+type PlatformAdminResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Admin         *PlatformAdmin         `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlatformAdminResponse) Reset() {
+	*x = PlatformAdminResponse{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlatformAdminResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlatformAdminResponse) ProtoMessage() {}
+
+func (x *PlatformAdminResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlatformAdminResponse.ProtoReflect.Descriptor instead.
+func (*PlatformAdminResponse) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *PlatformAdminResponse) GetAdmin() *PlatformAdmin {
+	if x != nil {
+		return x.Admin
+	}
+	return nil
+}
+
+type PlatformRoleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Role          *PlatformRole          `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlatformRoleResponse) Reset() {
+	*x = PlatformRoleResponse{}
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlatformRoleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlatformRoleResponse) ProtoMessage() {}
+
+func (x *PlatformRoleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_iam_v1_admin_iam_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlatformRoleResponse.ProtoReflect.Descriptor instead.
+func (*PlatformRoleResponse) Descriptor() ([]byte, []int) {
+	return file_api_iam_v1_admin_iam_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *PlatformRoleResponse) GetRole() *PlatformRole {
+	if x != nil {
+		return x.Role
 	}
 	return nil
 }
@@ -1265,12 +1933,24 @@ const file_api_iam_v1_admin_iam_proto_rawDesc = "" +
 	"\x04Role\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\"R\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\"h\n" +
 	"\n" +
 	"Permission\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\"U\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
+	"\x05scope\x18\x04 \x01(\tR\x05scope\"\xb2\x01\n" +
+	"\rPlatformAdmin\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x14\n" +
+	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12\x16\n" +
+	"\x06status\x18\x05 \x01(\tR\x06status\x129\n" +
+	"\n" +
+	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"2\n" +
+	"\fPlatformRole\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"U\n" +
 	"\x13CreateTenantRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04plan\x18\x02 \x01(\tR\x04plan\x12\x16\n" +
@@ -1297,10 +1977,11 @@ const file_api_iam_v1_admin_iam_proto_rawDesc = "" +
 	"\x05items\x18\x01 \x03(\v2\x10.api.iam.v1.RoleR\x05items\"E\n" +
 	"\x11AssignRoleRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x17\n" +
-	"\arole_id\x18\x02 \x01(\tR\x06roleId\"O\n" +
+	"\arole_id\x18\x02 \x01(\tR\x06roleId\"e\n" +
 	"\x17CreatePermissionRequest\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription\"\x18\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x14\n" +
+	"\x05scope\x18\x03 \x01(\tR\x05scope\"\x18\n" +
 	"\x16ListPermissionsRequest\"G\n" +
 	"\x17ListPermissionsResponse\x12,\n" +
 	"\x05items\x18\x01 \x03(\v2\x16.api.iam.v1.PermissionR\x05items\"b\n" +
@@ -1308,6 +1989,28 @@ const file_api_iam_v1_admin_iam_proto_rawDesc = "" +
 	"\arole_id\x18\x01 \x01(\tR\x06roleId\x12)\n" +
 	"\x10permission_codes\x18\x02 \x03(\tR\x0fpermissionCodes\"5\n" +
 	"\x1aListRolePermissionsRequest\x12\x17\n" +
+	"\arole_id\x18\x01 \x01(\tR\x06roleId\"\x99\x01\n" +
+	"\x1aCreatePlatformAdminRequest\x12\x14\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\x12\x14\n" +
+	"\x05phone\x18\x02 \x01(\tR\x05phone\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x12#\n" +
+	"\rpassword_hash\x18\x05 \x01(\tR\fpasswordHash\"\x1b\n" +
+	"\x19ListPlatformAdminsRequest\"M\n" +
+	"\x1aListPlatformAdminsResponse\x12/\n" +
+	"\x05items\x18\x01 \x03(\v2\x19.api.iam.v1.PlatformAdminR\x05items\"/\n" +
+	"\x19CreatePlatformRoleRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"\x1a\n" +
+	"\x18ListPlatformRolesRequest\"K\n" +
+	"\x19ListPlatformRolesResponse\x12.\n" +
+	"\x05items\x18\x01 \x03(\v2\x18.api.iam.v1.PlatformRoleR\x05items\"T\n" +
+	"\x1eAssignPlatformAdminRoleRequest\x12\x19\n" +
+	"\badmin_id\x18\x01 \x01(\tR\aadminId\x12\x17\n" +
+	"\arole_id\x18\x02 \x01(\tR\x06roleId\"j\n" +
+	"$AssignPlatformRolePermissionsRequest\x12\x17\n" +
+	"\arole_id\x18\x01 \x01(\tR\x06roleId\x12)\n" +
+	"\x10permission_codes\x18\x02 \x03(\tR\x0fpermissionCodes\"=\n" +
+	"\"ListPlatformRolePermissionsRequest\x12\x17\n" +
 	"\arole_id\x18\x01 \x01(\tR\x06roleId\"<\n" +
 	"\x0eTenantResponse\x12*\n" +
 	"\x06tenant\x18\x01 \x01(\v2\x12.api.iam.v1.TenantR\x06tenant\"4\n" +
@@ -1318,11 +2021,25 @@ const file_api_iam_v1_admin_iam_proto_rawDesc = "" +
 	"\x12PermissionResponse\x126\n" +
 	"\n" +
 	"permission\x18\x01 \x01(\v2\x16.api.iam.v1.PermissionR\n" +
-	"permission2\x84\v\n" +
-	"\bAdminIAM\x12i\n" +
-	"\fCreateTenant\x12\x1f.api.iam.v1.CreateTenantRequest\x1a\x1a.api.iam.v1.TenantResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*\"\x11/admin/v1/tenants\x12e\n" +
-	"\tGetTenant\x12\x1c.api.iam.v1.GetTenantRequest\x1a\x1a.api.iam.v1.TenantResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/admin/v1/tenants/{id}\x12i\n" +
-	"\vListTenants\x12\x1e.api.iam.v1.ListTenantsRequest\x1a\x1f.api.iam.v1.ListTenantsResponse\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/admin/v1/tenants\x12u\n" +
+	"permission\"H\n" +
+	"\x15PlatformAdminResponse\x12/\n" +
+	"\x05admin\x18\x01 \x01(\v2\x19.api.iam.v1.PlatformAdminR\x05admin\"D\n" +
+	"\x14PlatformRoleResponse\x12,\n" +
+	"\x04role\x18\x01 \x01(\v2\x18.api.iam.v1.PlatformRoleR\x04role2\xaa\f\n" +
+	"\vPlatformIAM\x12l\n" +
+	"\fCreateTenant\x12\x1f.api.iam.v1.CreateTenantRequest\x1a\x1a.api.iam.v1.TenantResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/platform/v1/tenants\x12h\n" +
+	"\tGetTenant\x12\x1c.api.iam.v1.GetTenantRequest\x1a\x1a.api.iam.v1.TenantResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/platform/v1/tenants/{id}\x12l\n" +
+	"\vListTenants\x12\x1e.api.iam.v1.ListTenantsRequest\x1a\x1f.api.iam.v1.ListTenantsResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/platform/v1/tenants\x12|\n" +
+	"\x10CreatePermission\x12#.api.iam.v1.CreatePermissionRequest\x1a\x1e.api.iam.v1.PermissionResponse\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/platform/v1/permissions\x12|\n" +
+	"\x0fListPermissions\x12\".api.iam.v1.ListPermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/platform/v1/permissions\x12\x80\x01\n" +
+	"\x13CreatePlatformAdmin\x12&.api.iam.v1.CreatePlatformAdminRequest\x1a!.api.iam.v1.PlatformAdminResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/platform/v1/admins\x12\x80\x01\n" +
+	"\x12ListPlatformAdmins\x12%.api.iam.v1.ListPlatformAdminsRequest\x1a&.api.iam.v1.ListPlatformAdminsResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/platform/v1/admins\x12|\n" +
+	"\x12CreatePlatformRole\x12%.api.iam.v1.CreatePlatformRoleRequest\x1a .api.iam.v1.PlatformRoleResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/platform/v1/roles\x12|\n" +
+	"\x11ListPlatformRoles\x12$.api.iam.v1.ListPlatformRolesRequest\x1a%.api.iam.v1.ListPlatformRolesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/platform/v1/roles\x12\x8e\x01\n" +
+	"\x17AssignPlatformAdminRole\x12*.api.iam.v1.AssignPlatformAdminRoleRequest\x1a\x16.google.protobuf.Empty\"/\x82\xd3\xe4\x93\x02):\x01*\"$/platform/v1/admins/{admin_id}/roles\x12\x9e\x01\n" +
+	"\x1dAssignPlatformRolePermissions\x120.api.iam.v1.AssignPlatformRolePermissionsRequest\x1a\x16.google.protobuf.Empty\"3\x82\xd3\xe4\x93\x02-:\x01*\"(/platform/v1/roles/{role_id}/permissions\x12\xa4\x01\n" +
+	"\x1bListPlatformRolePermissions\x12..api.iam.v1.ListPlatformRolePermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"0\x82\xd3\xe4\x93\x02*\x12(/platform/v1/roles/{role_id}/permissions2\xcd\a\n" +
+	"\tTenantIAM\x12u\n" +
 	"\n" +
 	"CreateUser\x12\x1d.api.iam.v1.CreateUserRequest\x1a\x18.api.iam.v1.UserResponse\".\x82\xd3\xe4\x93\x02(:\x01*\"#/admin/v1/tenants/{tenant_id}/users\x12u\n" +
 	"\tListUsers\x12\x1c.api.iam.v1.ListUsersRequest\x1a\x1d.api.iam.v1.ListUsersResponse\"+\x82\xd3\xe4\x93\x02%\x12#/admin/v1/tenants/{tenant_id}/users\x12a\n" +
@@ -1331,7 +2048,6 @@ const file_api_iam_v1_admin_iam_proto_rawDesc = "" +
 	"\tListRoles\x12\x1c.api.iam.v1.ListRolesRequest\x1a\x1d.api.iam.v1.ListRolesResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/admin/v1/roles\x12o\n" +
 	"\n" +
 	"AssignRole\x12\x1d.api.iam.v1.AssignRoleRequest\x1a\x16.google.protobuf.Empty\"*\x82\xd3\xe4\x93\x02$:\x01*\"\x1f/admin/v1/users/{user_id}/roles\x12y\n" +
-	"\x10CreatePermission\x12#.api.iam.v1.CreatePermissionRequest\x1a\x1e.api.iam.v1.PermissionResponse\" \x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/admin/v1/permissions\x12y\n" +
 	"\x0fListPermissions\x12\".api.iam.v1.ListPermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/admin/v1/permissions\x12\x8b\x01\n" +
 	"\x15AssignRolePermissions\x12(.api.iam.v1.AssignRolePermissionsRequest\x1a\x16.google.protobuf.Empty\"0\x82\xd3\xe4\x93\x02*:\x01*\"%/admin/v1/roles/{role_id}/permissions\x12\x91\x01\n" +
 	"\x13ListRolePermissions\x12&.api.iam.v1.ListRolePermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"-\x82\xd3\xe4\x93\x02'\x12%/admin/v1/roles/{role_id}/permissionsB3Z1github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1b\x06proto3"
@@ -1348,75 +2064,109 @@ func file_api_iam_v1_admin_iam_proto_rawDescGZIP() []byte {
 	return file_api_iam_v1_admin_iam_proto_rawDescData
 }
 
-var file_api_iam_v1_admin_iam_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_api_iam_v1_admin_iam_proto_msgTypes = make([]protoimpl.MessageInfo, 37)
 var file_api_iam_v1_admin_iam_proto_goTypes = []any{
-	(*Tenant)(nil),                       // 0: api.iam.v1.Tenant
-	(*User)(nil),                         // 1: api.iam.v1.User
-	(*Role)(nil),                         // 2: api.iam.v1.Role
-	(*Permission)(nil),                   // 3: api.iam.v1.Permission
-	(*CreateTenantRequest)(nil),          // 4: api.iam.v1.CreateTenantRequest
-	(*GetTenantRequest)(nil),             // 5: api.iam.v1.GetTenantRequest
-	(*ListTenantsRequest)(nil),           // 6: api.iam.v1.ListTenantsRequest
-	(*ListTenantsResponse)(nil),          // 7: api.iam.v1.ListTenantsResponse
-	(*CreateUserRequest)(nil),            // 8: api.iam.v1.CreateUserRequest
-	(*ListUsersRequest)(nil),             // 9: api.iam.v1.ListUsersRequest
-	(*ListUsersResponse)(nil),            // 10: api.iam.v1.ListUsersResponse
-	(*CreateRoleRequest)(nil),            // 11: api.iam.v1.CreateRoleRequest
-	(*ListRolesRequest)(nil),             // 12: api.iam.v1.ListRolesRequest
-	(*ListRolesResponse)(nil),            // 13: api.iam.v1.ListRolesResponse
-	(*AssignRoleRequest)(nil),            // 14: api.iam.v1.AssignRoleRequest
-	(*CreatePermissionRequest)(nil),      // 15: api.iam.v1.CreatePermissionRequest
-	(*ListPermissionsRequest)(nil),       // 16: api.iam.v1.ListPermissionsRequest
-	(*ListPermissionsResponse)(nil),      // 17: api.iam.v1.ListPermissionsResponse
-	(*AssignRolePermissionsRequest)(nil), // 18: api.iam.v1.AssignRolePermissionsRequest
-	(*ListRolePermissionsRequest)(nil),   // 19: api.iam.v1.ListRolePermissionsRequest
-	(*TenantResponse)(nil),               // 20: api.iam.v1.TenantResponse
-	(*UserResponse)(nil),                 // 21: api.iam.v1.UserResponse
-	(*RoleResponse)(nil),                 // 22: api.iam.v1.RoleResponse
-	(*PermissionResponse)(nil),           // 23: api.iam.v1.PermissionResponse
-	(*timestamppb.Timestamp)(nil),        // 24: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                // 25: google.protobuf.Empty
+	(*Tenant)(nil),                               // 0: api.iam.v1.Tenant
+	(*User)(nil),                                 // 1: api.iam.v1.User
+	(*Role)(nil),                                 // 2: api.iam.v1.Role
+	(*Permission)(nil),                           // 3: api.iam.v1.Permission
+	(*PlatformAdmin)(nil),                        // 4: api.iam.v1.PlatformAdmin
+	(*PlatformRole)(nil),                         // 5: api.iam.v1.PlatformRole
+	(*CreateTenantRequest)(nil),                  // 6: api.iam.v1.CreateTenantRequest
+	(*GetTenantRequest)(nil),                     // 7: api.iam.v1.GetTenantRequest
+	(*ListTenantsRequest)(nil),                   // 8: api.iam.v1.ListTenantsRequest
+	(*ListTenantsResponse)(nil),                  // 9: api.iam.v1.ListTenantsResponse
+	(*CreateUserRequest)(nil),                    // 10: api.iam.v1.CreateUserRequest
+	(*ListUsersRequest)(nil),                     // 11: api.iam.v1.ListUsersRequest
+	(*ListUsersResponse)(nil),                    // 12: api.iam.v1.ListUsersResponse
+	(*CreateRoleRequest)(nil),                    // 13: api.iam.v1.CreateRoleRequest
+	(*ListRolesRequest)(nil),                     // 14: api.iam.v1.ListRolesRequest
+	(*ListRolesResponse)(nil),                    // 15: api.iam.v1.ListRolesResponse
+	(*AssignRoleRequest)(nil),                    // 16: api.iam.v1.AssignRoleRequest
+	(*CreatePermissionRequest)(nil),              // 17: api.iam.v1.CreatePermissionRequest
+	(*ListPermissionsRequest)(nil),               // 18: api.iam.v1.ListPermissionsRequest
+	(*ListPermissionsResponse)(nil),              // 19: api.iam.v1.ListPermissionsResponse
+	(*AssignRolePermissionsRequest)(nil),         // 20: api.iam.v1.AssignRolePermissionsRequest
+	(*ListRolePermissionsRequest)(nil),           // 21: api.iam.v1.ListRolePermissionsRequest
+	(*CreatePlatformAdminRequest)(nil),           // 22: api.iam.v1.CreatePlatformAdminRequest
+	(*ListPlatformAdminsRequest)(nil),            // 23: api.iam.v1.ListPlatformAdminsRequest
+	(*ListPlatformAdminsResponse)(nil),           // 24: api.iam.v1.ListPlatformAdminsResponse
+	(*CreatePlatformRoleRequest)(nil),            // 25: api.iam.v1.CreatePlatformRoleRequest
+	(*ListPlatformRolesRequest)(nil),             // 26: api.iam.v1.ListPlatformRolesRequest
+	(*ListPlatformRolesResponse)(nil),            // 27: api.iam.v1.ListPlatformRolesResponse
+	(*AssignPlatformAdminRoleRequest)(nil),       // 28: api.iam.v1.AssignPlatformAdminRoleRequest
+	(*AssignPlatformRolePermissionsRequest)(nil), // 29: api.iam.v1.AssignPlatformRolePermissionsRequest
+	(*ListPlatformRolePermissionsRequest)(nil),   // 30: api.iam.v1.ListPlatformRolePermissionsRequest
+	(*TenantResponse)(nil),                       // 31: api.iam.v1.TenantResponse
+	(*UserResponse)(nil),                         // 32: api.iam.v1.UserResponse
+	(*RoleResponse)(nil),                         // 33: api.iam.v1.RoleResponse
+	(*PermissionResponse)(nil),                   // 34: api.iam.v1.PermissionResponse
+	(*PlatformAdminResponse)(nil),                // 35: api.iam.v1.PlatformAdminResponse
+	(*PlatformRoleResponse)(nil),                 // 36: api.iam.v1.PlatformRoleResponse
+	(*timestamppb.Timestamp)(nil),                // 37: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                        // 38: google.protobuf.Empty
 }
 var file_api_iam_v1_admin_iam_proto_depIdxs = []int32{
-	24, // 0: api.iam.v1.Tenant.created_at:type_name -> google.protobuf.Timestamp
-	24, // 1: api.iam.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: api.iam.v1.ListTenantsResponse.items:type_name -> api.iam.v1.Tenant
-	1,  // 3: api.iam.v1.ListUsersResponse.items:type_name -> api.iam.v1.User
-	2,  // 4: api.iam.v1.ListRolesResponse.items:type_name -> api.iam.v1.Role
-	3,  // 5: api.iam.v1.ListPermissionsResponse.items:type_name -> api.iam.v1.Permission
-	0,  // 6: api.iam.v1.TenantResponse.tenant:type_name -> api.iam.v1.Tenant
-	1,  // 7: api.iam.v1.UserResponse.user:type_name -> api.iam.v1.User
-	2,  // 8: api.iam.v1.RoleResponse.role:type_name -> api.iam.v1.Role
-	3,  // 9: api.iam.v1.PermissionResponse.permission:type_name -> api.iam.v1.Permission
-	4,  // 10: api.iam.v1.AdminIAM.CreateTenant:input_type -> api.iam.v1.CreateTenantRequest
-	5,  // 11: api.iam.v1.AdminIAM.GetTenant:input_type -> api.iam.v1.GetTenantRequest
-	6,  // 12: api.iam.v1.AdminIAM.ListTenants:input_type -> api.iam.v1.ListTenantsRequest
-	8,  // 13: api.iam.v1.AdminIAM.CreateUser:input_type -> api.iam.v1.CreateUserRequest
-	9,  // 14: api.iam.v1.AdminIAM.ListUsers:input_type -> api.iam.v1.ListUsersRequest
-	11, // 15: api.iam.v1.AdminIAM.CreateRole:input_type -> api.iam.v1.CreateRoleRequest
-	12, // 16: api.iam.v1.AdminIAM.ListRoles:input_type -> api.iam.v1.ListRolesRequest
-	14, // 17: api.iam.v1.AdminIAM.AssignRole:input_type -> api.iam.v1.AssignRoleRequest
-	15, // 18: api.iam.v1.AdminIAM.CreatePermission:input_type -> api.iam.v1.CreatePermissionRequest
-	16, // 19: api.iam.v1.AdminIAM.ListPermissions:input_type -> api.iam.v1.ListPermissionsRequest
-	18, // 20: api.iam.v1.AdminIAM.AssignRolePermissions:input_type -> api.iam.v1.AssignRolePermissionsRequest
-	19, // 21: api.iam.v1.AdminIAM.ListRolePermissions:input_type -> api.iam.v1.ListRolePermissionsRequest
-	20, // 22: api.iam.v1.AdminIAM.CreateTenant:output_type -> api.iam.v1.TenantResponse
-	20, // 23: api.iam.v1.AdminIAM.GetTenant:output_type -> api.iam.v1.TenantResponse
-	7,  // 24: api.iam.v1.AdminIAM.ListTenants:output_type -> api.iam.v1.ListTenantsResponse
-	21, // 25: api.iam.v1.AdminIAM.CreateUser:output_type -> api.iam.v1.UserResponse
-	10, // 26: api.iam.v1.AdminIAM.ListUsers:output_type -> api.iam.v1.ListUsersResponse
-	22, // 27: api.iam.v1.AdminIAM.CreateRole:output_type -> api.iam.v1.RoleResponse
-	13, // 28: api.iam.v1.AdminIAM.ListRoles:output_type -> api.iam.v1.ListRolesResponse
-	25, // 29: api.iam.v1.AdminIAM.AssignRole:output_type -> google.protobuf.Empty
-	23, // 30: api.iam.v1.AdminIAM.CreatePermission:output_type -> api.iam.v1.PermissionResponse
-	17, // 31: api.iam.v1.AdminIAM.ListPermissions:output_type -> api.iam.v1.ListPermissionsResponse
-	25, // 32: api.iam.v1.AdminIAM.AssignRolePermissions:output_type -> google.protobuf.Empty
-	17, // 33: api.iam.v1.AdminIAM.ListRolePermissions:output_type -> api.iam.v1.ListPermissionsResponse
-	22, // [22:34] is the sub-list for method output_type
-	10, // [10:22] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	37, // 0: api.iam.v1.Tenant.created_at:type_name -> google.protobuf.Timestamp
+	37, // 1: api.iam.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	37, // 2: api.iam.v1.PlatformAdmin.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 3: api.iam.v1.ListTenantsResponse.items:type_name -> api.iam.v1.Tenant
+	1,  // 4: api.iam.v1.ListUsersResponse.items:type_name -> api.iam.v1.User
+	2,  // 5: api.iam.v1.ListRolesResponse.items:type_name -> api.iam.v1.Role
+	3,  // 6: api.iam.v1.ListPermissionsResponse.items:type_name -> api.iam.v1.Permission
+	4,  // 7: api.iam.v1.ListPlatformAdminsResponse.items:type_name -> api.iam.v1.PlatformAdmin
+	5,  // 8: api.iam.v1.ListPlatformRolesResponse.items:type_name -> api.iam.v1.PlatformRole
+	0,  // 9: api.iam.v1.TenantResponse.tenant:type_name -> api.iam.v1.Tenant
+	1,  // 10: api.iam.v1.UserResponse.user:type_name -> api.iam.v1.User
+	2,  // 11: api.iam.v1.RoleResponse.role:type_name -> api.iam.v1.Role
+	3,  // 12: api.iam.v1.PermissionResponse.permission:type_name -> api.iam.v1.Permission
+	4,  // 13: api.iam.v1.PlatformAdminResponse.admin:type_name -> api.iam.v1.PlatformAdmin
+	5,  // 14: api.iam.v1.PlatformRoleResponse.role:type_name -> api.iam.v1.PlatformRole
+	6,  // 15: api.iam.v1.PlatformIAM.CreateTenant:input_type -> api.iam.v1.CreateTenantRequest
+	7,  // 16: api.iam.v1.PlatformIAM.GetTenant:input_type -> api.iam.v1.GetTenantRequest
+	8,  // 17: api.iam.v1.PlatformIAM.ListTenants:input_type -> api.iam.v1.ListTenantsRequest
+	17, // 18: api.iam.v1.PlatformIAM.CreatePermission:input_type -> api.iam.v1.CreatePermissionRequest
+	18, // 19: api.iam.v1.PlatformIAM.ListPermissions:input_type -> api.iam.v1.ListPermissionsRequest
+	22, // 20: api.iam.v1.PlatformIAM.CreatePlatformAdmin:input_type -> api.iam.v1.CreatePlatformAdminRequest
+	23, // 21: api.iam.v1.PlatformIAM.ListPlatformAdmins:input_type -> api.iam.v1.ListPlatformAdminsRequest
+	25, // 22: api.iam.v1.PlatformIAM.CreatePlatformRole:input_type -> api.iam.v1.CreatePlatformRoleRequest
+	26, // 23: api.iam.v1.PlatformIAM.ListPlatformRoles:input_type -> api.iam.v1.ListPlatformRolesRequest
+	28, // 24: api.iam.v1.PlatformIAM.AssignPlatformAdminRole:input_type -> api.iam.v1.AssignPlatformAdminRoleRequest
+	29, // 25: api.iam.v1.PlatformIAM.AssignPlatformRolePermissions:input_type -> api.iam.v1.AssignPlatformRolePermissionsRequest
+	30, // 26: api.iam.v1.PlatformIAM.ListPlatformRolePermissions:input_type -> api.iam.v1.ListPlatformRolePermissionsRequest
+	10, // 27: api.iam.v1.TenantIAM.CreateUser:input_type -> api.iam.v1.CreateUserRequest
+	11, // 28: api.iam.v1.TenantIAM.ListUsers:input_type -> api.iam.v1.ListUsersRequest
+	13, // 29: api.iam.v1.TenantIAM.CreateRole:input_type -> api.iam.v1.CreateRoleRequest
+	14, // 30: api.iam.v1.TenantIAM.ListRoles:input_type -> api.iam.v1.ListRolesRequest
+	16, // 31: api.iam.v1.TenantIAM.AssignRole:input_type -> api.iam.v1.AssignRoleRequest
+	18, // 32: api.iam.v1.TenantIAM.ListPermissions:input_type -> api.iam.v1.ListPermissionsRequest
+	20, // 33: api.iam.v1.TenantIAM.AssignRolePermissions:input_type -> api.iam.v1.AssignRolePermissionsRequest
+	21, // 34: api.iam.v1.TenantIAM.ListRolePermissions:input_type -> api.iam.v1.ListRolePermissionsRequest
+	31, // 35: api.iam.v1.PlatformIAM.CreateTenant:output_type -> api.iam.v1.TenantResponse
+	31, // 36: api.iam.v1.PlatformIAM.GetTenant:output_type -> api.iam.v1.TenantResponse
+	9,  // 37: api.iam.v1.PlatformIAM.ListTenants:output_type -> api.iam.v1.ListTenantsResponse
+	34, // 38: api.iam.v1.PlatformIAM.CreatePermission:output_type -> api.iam.v1.PermissionResponse
+	19, // 39: api.iam.v1.PlatformIAM.ListPermissions:output_type -> api.iam.v1.ListPermissionsResponse
+	35, // 40: api.iam.v1.PlatformIAM.CreatePlatformAdmin:output_type -> api.iam.v1.PlatformAdminResponse
+	24, // 41: api.iam.v1.PlatformIAM.ListPlatformAdmins:output_type -> api.iam.v1.ListPlatformAdminsResponse
+	36, // 42: api.iam.v1.PlatformIAM.CreatePlatformRole:output_type -> api.iam.v1.PlatformRoleResponse
+	27, // 43: api.iam.v1.PlatformIAM.ListPlatformRoles:output_type -> api.iam.v1.ListPlatformRolesResponse
+	38, // 44: api.iam.v1.PlatformIAM.AssignPlatformAdminRole:output_type -> google.protobuf.Empty
+	38, // 45: api.iam.v1.PlatformIAM.AssignPlatformRolePermissions:output_type -> google.protobuf.Empty
+	19, // 46: api.iam.v1.PlatformIAM.ListPlatformRolePermissions:output_type -> api.iam.v1.ListPermissionsResponse
+	32, // 47: api.iam.v1.TenantIAM.CreateUser:output_type -> api.iam.v1.UserResponse
+	12, // 48: api.iam.v1.TenantIAM.ListUsers:output_type -> api.iam.v1.ListUsersResponse
+	33, // 49: api.iam.v1.TenantIAM.CreateRole:output_type -> api.iam.v1.RoleResponse
+	15, // 50: api.iam.v1.TenantIAM.ListRoles:output_type -> api.iam.v1.ListRolesResponse
+	38, // 51: api.iam.v1.TenantIAM.AssignRole:output_type -> google.protobuf.Empty
+	19, // 52: api.iam.v1.TenantIAM.ListPermissions:output_type -> api.iam.v1.ListPermissionsResponse
+	38, // 53: api.iam.v1.TenantIAM.AssignRolePermissions:output_type -> google.protobuf.Empty
+	19, // 54: api.iam.v1.TenantIAM.ListRolePermissions:output_type -> api.iam.v1.ListPermissionsResponse
+	35, // [35:55] is the sub-list for method output_type
+	15, // [15:35] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_api_iam_v1_admin_iam_proto_init() }
@@ -1430,9 +2180,9 @@ func file_api_iam_v1_admin_iam_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_iam_v1_admin_iam_proto_rawDesc), len(file_api_iam_v1_admin_iam_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   24,
+			NumMessages:   37,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_api_iam_v1_admin_iam_proto_goTypes,
 		DependencyIndexes: file_api_iam_v1_admin_iam_proto_depIdxs,

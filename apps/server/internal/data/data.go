@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
@@ -36,6 +37,12 @@ func NewData(c *conf.Data) (*Data, func(), error) {
 		_ = db.Close()
 		return nil, nil, err
 	}
+	schemaCtx, schemaCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer schemaCancel()
+	if err := ensureSchemaAndSeed(schemaCtx, db); err != nil {
+		_ = db.Close()
+		return nil, nil, err
+	}
 	cleanup := func() {
 		log.Info("closing the data resources")
 		if err := db.Close(); err != nil {
@@ -43,4 +50,203 @@ func NewData(c *conf.Data) (*Data, func(), error) {
 		}
 	}
 	return &Data{DB: db}, cleanup, nil
+}
+
+func ensureSchemaAndSeed(ctx context.Context, db *sql.DB) error {
+	if err := ensureIAMSchema(ctx, db); err != nil {
+		return err
+	}
+	if err := seedIAMPermissions(ctx, db); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS tenant (
+			id VARCHAR(36) NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			type VARCHAR(32) NOT NULL DEFAULT 'enterprise',
+			plan VARCHAR(32) NOT NULL DEFAULT 'free',
+			status VARCHAR(32) NOT NULL DEFAULT 'active',
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			KEY idx_tenant_created_at (created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS user (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			email VARCHAR(255) NULL,
+			phone VARCHAR(32) NULL,
+			name VARCHAR(255) NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'active',
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_user_tenant_email (tenant_id, email),
+			KEY idx_user_tenant (tenant_id),
+			KEY idx_user_created_at (tenant_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS role (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			name VARCHAR(128) NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_role_tenant_name (tenant_id, name),
+			KEY idx_role_tenant (tenant_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS permission (
+			id VARCHAR(36) NOT NULL,
+			code VARCHAR(128) NOT NULL,
+			description VARCHAR(255) NOT NULL,
+			scope VARCHAR(32) NOT NULL DEFAULT 'platform',
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_permission_code (code)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS user_role (
+			user_id VARCHAR(36) NOT NULL,
+			role_id VARCHAR(36) NOT NULL,
+			UNIQUE KEY uniq_user_role (user_id, role_id),
+			KEY idx_user_role_user (user_id),
+			KEY idx_user_role_role (role_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS role_permission (
+			role_id VARCHAR(36) NOT NULL,
+			permission_id VARCHAR(36) NOT NULL,
+			UNIQUE KEY uniq_role_permission (role_id, permission_id),
+			KEY idx_role_permission_role (role_id),
+			KEY idx_role_permission_permission (permission_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS platform_admin (
+			id VARCHAR(36) NOT NULL,
+			email VARCHAR(255) NULL,
+			phone VARCHAR(32) NULL,
+			name VARCHAR(255) NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'active',
+			password_hash VARCHAR(255) NOT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_platform_admin_email (email)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS platform_role (
+			id VARCHAR(36) NOT NULL,
+			name VARCHAR(128) NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_platform_role_name (name)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS platform_admin_role (
+			admin_id VARCHAR(36) NOT NULL,
+			role_id VARCHAR(36) NOT NULL,
+			UNIQUE KEY uniq_platform_admin_role (admin_id, role_id),
+			KEY idx_platform_admin_role_admin (admin_id),
+			KEY idx_platform_admin_role_role (role_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS platform_role_permission (
+			role_id VARCHAR(36) NOT NULL,
+			permission_id VARCHAR(36) NOT NULL,
+			UNIQUE KEY uniq_platform_role_permission (role_id, permission_id),
+			KEY idx_platform_role_permission_role (role_id),
+			KEY idx_platform_role_permission_permission (permission_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	}
+
+	for _, stmt := range statements {
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			return err
+		}
+	}
+
+	if err := ensureColumn(ctx, db, "permission", "scope", "VARCHAR(32) NOT NULL DEFAULT 'platform'"); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, "UPDATE permission SET scope = 'platform' WHERE scope IS NULL OR scope = ''"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureColumn(ctx context.Context, db *sql.DB, table string, column string, definition string) error {
+	var count int
+	err := db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(*)
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+		table,
+		column,
+	).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	query := fmt.Sprintf("ALTER TABLE `%s` ADD COLUMN `%s` %s", table, column, definition)
+	_, err = db.ExecContext(ctx, query)
+	return err
+}
+
+type permissionSeed struct {
+	code        string
+	description string
+	scope       string
+}
+
+func seedIAMPermissions(ctx context.Context, db *sql.DB) error {
+	seeds := []permissionSeed{
+		{code: "platform.tenant.create", description: "Create tenant", scope: "platform"},
+		{code: "platform.tenant.read", description: "Read tenant", scope: "platform"},
+		{code: "platform.tenant.write", description: "Update tenant plan/status/quota", scope: "platform"},
+		{code: "platform.admin.create", description: "Create platform admin", scope: "platform"},
+		{code: "platform.admin.read", description: "Read platform admin", scope: "platform"},
+		{code: "platform.role.write", description: "Create/update platform role", scope: "platform"},
+		{code: "platform.role.read", description: "Read platform role", scope: "platform"},
+		{code: "platform.role.assign", description: "Assign platform role to admin", scope: "platform"},
+		{code: "platform.role.permission.assign", description: "Assign permissions to platform role", scope: "platform"},
+		{code: "platform.permission.read", description: "Read permission catalog", scope: "platform"},
+		{code: "platform.permission.write", description: "Create permission", scope: "platform"},
+		{code: "platform.config.read", description: "Read platform configuration", scope: "platform"},
+		{code: "platform.config.write", description: "Update platform configuration", scope: "platform"},
+		{code: "tenant.user.read", description: "Read tenant users", scope: "tenant"},
+		{code: "tenant.user.write", description: "Create/update tenant users", scope: "tenant"},
+		{code: "tenant.role.read", description: "Read tenant roles", scope: "tenant"},
+		{code: "tenant.role.write", description: "Create/update tenant roles", scope: "tenant"},
+		{code: "tenant.role.assign", description: "Assign role to user", scope: "tenant"},
+		{code: "tenant.role.permission.assign", description: "Assign permissions to role", scope: "tenant"},
+		{code: "tenant.permission.read", description: "Read tenant permission catalog", scope: "tenant"},
+		{code: "tenant.bot.read", description: "Read bots", scope: "tenant"},
+		{code: "tenant.bot.write", description: "Create/update bots", scope: "tenant"},
+		{code: "tenant.bot.delete", description: "Delete bots", scope: "tenant"},
+		{code: "tenant.bot_kb.bind", description: "Bind bot to knowledge base", scope: "tenant"},
+		{code: "tenant.bot_kb.unbind", description: "Unbind bot from knowledge base", scope: "tenant"},
+		{code: "tenant.knowledge_base.read", description: "Read knowledge bases", scope: "tenant"},
+		{code: "tenant.knowledge_base.write", description: "Create/update knowledge bases", scope: "tenant"},
+		{code: "tenant.knowledge_base.delete", description: "Delete knowledge bases", scope: "tenant"},
+		{code: "tenant.document.upload", description: "Upload documents", scope: "tenant"},
+		{code: "tenant.document.read", description: "Read documents", scope: "tenant"},
+		{code: "tenant.document.delete", description: "Delete documents", scope: "tenant"},
+		{code: "tenant.document.reindex", description: "Reindex documents", scope: "tenant"},
+		{code: "tenant.document.rollback", description: "Rollback document versions", scope: "tenant"},
+		{code: "tenant.api_key.read", description: "Read API keys", scope: "tenant"},
+		{code: "tenant.api_key.write", description: "Create/update API keys", scope: "tenant"},
+		{code: "tenant.api_key.delete", description: "Delete API keys", scope: "tenant"},
+		{code: "tenant.api_key.rotate", description: "Rotate API keys", scope: "tenant"},
+		{code: "tenant.api_usage.read", description: "Read API usage logs", scope: "tenant"},
+		{code: "tenant.analytics.read", description: "Read analytics dashboard", scope: "tenant"},
+		{code: "tenant.chat_session.read", description: "Read chat sessions", scope: "tenant"},
+		{code: "tenant.chat_message.read", description: "Read chat messages", scope: "tenant"},
+	}
+
+	for _, item := range seeds {
+		if _, err := db.ExecContext(
+			ctx,
+			"INSERT IGNORE INTO permission (id, code, description, scope) VALUES (UUID(), ?, ?, ?)",
+			item.code,
+			item.description,
+			item.scope,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
 }

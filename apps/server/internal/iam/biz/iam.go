@@ -48,6 +48,7 @@ type Permission struct {
 	ID          string
 	Code        string
 	Description string
+	Scope       string
 }
 
 // UserRole ties a user to a role.
@@ -56,18 +57,48 @@ type UserRole struct {
 	RoleID string
 }
 
+// PlatformAdmin represents a platform admin account.
+type PlatformAdmin struct {
+	ID           string
+	Email        string
+	Phone        string
+	Name         string
+	Status       string
+	PasswordHash string
+	CreatedAt    time.Time
+}
+
+// PlatformRole represents a platform role.
+type PlatformRole struct {
+	ID   string
+	Name string
+}
+
+// Permission scopes.
+const (
+	PermissionScopePlatform = "platform"
+	PermissionScopeTenant   = "tenant"
+)
+
 // Permission codes for IAM RBAC.
 const (
-	PermissionTenantCreate    = "platform.tenant.create"
-	PermissionTenantRead      = "platform.tenant.read"
-	PermissionUserWrite       = "tenant.user.write"
-	PermissionUserRead        = "tenant.user.read"
-	PermissionRoleWrite       = "tenant.role.write"
-	PermissionRoleRead        = "tenant.role.read"
-	PermissionRoleAssign      = "tenant.role.assign"
-	PermissionPermissionRead  = "tenant.permission.read"
-	PermissionPermissionWrite = "platform.permission.write"
-	PermissionRolePermAssign  = "tenant.role.permission.assign"
+	PermissionTenantCreate            = "platform.tenant.create"
+	PermissionTenantRead              = "platform.tenant.read"
+	PermissionPlatformAdminCreate     = "platform.admin.create"
+	PermissionPlatformAdminRead       = "platform.admin.read"
+	PermissionPlatformRoleWrite       = "platform.role.write"
+	PermissionPlatformRoleRead        = "platform.role.read"
+	PermissionPlatformRoleAssign      = "platform.role.assign"
+	PermissionPlatformRolePermAssign  = "platform.role.permission.assign"
+	PermissionPlatformPermissionRead  = "platform.permission.read"
+	PermissionPlatformPermissionWrite = "platform.permission.write"
+	PermissionUserWrite               = "tenant.user.write"
+	PermissionUserRead                = "tenant.user.read"
+	PermissionRoleWrite               = "tenant.role.write"
+	PermissionRoleRead                = "tenant.role.read"
+	PermissionRoleAssign              = "tenant.role.assign"
+	PermissionTenantPermissionRead    = "tenant.permission.read"
+	PermissionRolePermAssign          = "tenant.role.permission.assign"
 )
 
 // IAMRepo is a repository interface (placeholder)
@@ -76,6 +107,15 @@ type IAMRepo interface {
 	CreateTenant(ctx context.Context, tenant Tenant) (Tenant, error)
 	GetTenant(ctx context.Context, id string) (Tenant, error)
 	ListTenants(ctx context.Context) ([]Tenant, error)
+
+	CreatePlatformAdmin(ctx context.Context, admin PlatformAdmin) (PlatformAdmin, error)
+	ListPlatformAdmins(ctx context.Context) ([]PlatformAdmin, error)
+	CreatePlatformRole(ctx context.Context, role PlatformRole) (PlatformRole, error)
+	ListPlatformRoles(ctx context.Context) ([]PlatformRole, error)
+	AssignPlatformAdminRole(ctx context.Context, adminID string, roleID string) error
+	ListPlatformAdminPermissions(ctx context.Context, adminID string) ([]Permission, error)
+	AssignPlatformRolePermissions(ctx context.Context, roleID string, permissionCodes []string) error
+	ListPlatformRolePermissions(ctx context.Context, roleID string) ([]Permission, error)
 
 	CreateUser(ctx context.Context, user User) (User, error)
 	ListUsers(ctx context.Context) ([]User, error)
@@ -89,6 +129,7 @@ type IAMRepo interface {
 
 	CreatePermission(ctx context.Context, permission Permission) (Permission, error)
 	ListPermissions(ctx context.Context) ([]Permission, error)
+	ListTenantPermissions(ctx context.Context) ([]Permission, error)
 	AssignRolePermissions(ctx context.Context, roleID string, permissionCodes []string) error
 	ListRolePermissions(ctx context.Context, roleID string) ([]Permission, error)
 }
@@ -117,6 +158,41 @@ func (uc *IAMUsecase) GetTenant(ctx context.Context, id string) (Tenant, error) 
 // ListTenants lists all tenants (platform admin).
 func (uc *IAMUsecase) ListTenants(ctx context.Context) ([]Tenant, error) {
 	return uc.repo.ListTenants(ctx)
+}
+
+// CreatePlatformAdmin creates a platform admin account.
+func (uc *IAMUsecase) CreatePlatformAdmin(ctx context.Context, admin PlatformAdmin) (PlatformAdmin, error) {
+	return uc.repo.CreatePlatformAdmin(ctx, admin)
+}
+
+// ListPlatformAdmins lists platform admins.
+func (uc *IAMUsecase) ListPlatformAdmins(ctx context.Context) ([]PlatformAdmin, error) {
+	return uc.repo.ListPlatformAdmins(ctx)
+}
+
+// CreatePlatformRole creates a platform role.
+func (uc *IAMUsecase) CreatePlatformRole(ctx context.Context, role PlatformRole) (PlatformRole, error) {
+	return uc.repo.CreatePlatformRole(ctx, role)
+}
+
+// ListPlatformRoles lists platform roles.
+func (uc *IAMUsecase) ListPlatformRoles(ctx context.Context) ([]PlatformRole, error) {
+	return uc.repo.ListPlatformRoles(ctx)
+}
+
+// AssignPlatformAdminRole assigns a role to a platform admin.
+func (uc *IAMUsecase) AssignPlatformAdminRole(ctx context.Context, adminID string, roleID string) error {
+	return uc.repo.AssignPlatformAdminRole(ctx, adminID, roleID)
+}
+
+// AssignPlatformRolePermissions assigns permissions to a platform role.
+func (uc *IAMUsecase) AssignPlatformRolePermissions(ctx context.Context, roleID string, permissionCodes []string) error {
+	return uc.repo.AssignPlatformRolePermissions(ctx, roleID, permissionCodes)
+}
+
+// ListPlatformRolePermissions lists permissions for a platform role.
+func (uc *IAMUsecase) ListPlatformRolePermissions(ctx context.Context, roleID string) ([]Permission, error) {
+	return uc.repo.ListPlatformRolePermissions(ctx, roleID)
 }
 
 // CreateUser creates a tenant user.
@@ -159,6 +235,11 @@ func (uc *IAMUsecase) ListPermissions(ctx context.Context) ([]Permission, error)
 	return uc.repo.ListPermissions(ctx)
 }
 
+// ListTenantPermissions lists permissions visible to tenants.
+func (uc *IAMUsecase) ListTenantPermissions(ctx context.Context) ([]Permission, error) {
+	return uc.repo.ListTenantPermissions(ctx)
+}
+
 // AssignRolePermissions assigns permissions to a role.
 func (uc *IAMUsecase) AssignRolePermissions(ctx context.Context, roleID string, permissionCodes []string) error {
 	return uc.repo.AssignRolePermissions(ctx, roleID, permissionCodes)
@@ -178,22 +259,34 @@ func (uc *IAMUsecase) RequirePermission(ctx context.Context, permission string) 
 	if !ok || claims.Subject == "" {
 		return errors.Forbidden("RBAC_FORBIDDEN", "missing subject")
 	}
-	if hasRole(claims.Roles, "platform_admin") || hasRole(claims.Roles, "super_admin") {
-		return nil
+	if strings.HasPrefix(permission, "platform.") {
+		perms, err := uc.repo.ListPlatformAdminPermissions(ctx, claims.Subject)
+		if err != nil {
+			return err
+		}
+		for _, item := range perms {
+			if permissionMatch(item.Code, permission) {
+				return nil
+			}
+		}
+		return errors.Forbidden("RBAC_FORBIDDEN", "permission denied")
 	}
-	if hasRole(claims.Roles, "tenant_admin") && strings.HasPrefix(permission, "tenant.") {
-		return nil
-	}
-	perms, err := uc.repo.ListUserPermissions(ctx, claims.Subject)
-	if err != nil {
-		return err
-	}
-	for _, item := range perms {
-		if permissionMatch(item.Code, permission) {
+	if strings.HasPrefix(permission, "tenant.") {
+		if hasRole(claims.Roles, "tenant_admin") {
 			return nil
 		}
+		perms, err := uc.repo.ListUserPermissions(ctx, claims.Subject)
+		if err != nil {
+			return err
+		}
+		for _, item := range perms {
+			if permissionMatch(item.Code, permission) {
+				return nil
+			}
+		}
+		return errors.Forbidden("RBAC_FORBIDDEN", "permission denied")
 	}
-	return errors.Forbidden("RBAC_FORBIDDEN", "permission denied")
+	return errors.Forbidden("RBAC_FORBIDDEN", "invalid permission namespace")
 }
 
 func permissionMatch(candidate string, target string) bool {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	v1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
@@ -10,6 +11,7 @@ import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/transport"
 	"github.com/google/wire"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -17,7 +19,8 @@ import (
 
 // IAMService handles iam service layer (placeholder)
 type IAMService struct {
-	v1.UnimplementedAdminIAMServer
+	v1.UnimplementedPlatformIAMServer
+	v1.UnimplementedTenantIAMServer
 	uc  *biz.IAMUsecase
 	log *log.Helper
 }
@@ -65,6 +68,101 @@ func (s *IAMService) ListTenants(ctx context.Context, req *v1.ListTenantsRequest
 	resp := &v1.ListTenantsResponse{Items: make([]*v1.Tenant, 0, len(tenants))}
 	for _, item := range tenants {
 		resp.Items = append(resp.Items, toTenant(item))
+	}
+	return resp, nil
+}
+
+func (s *IAMService) CreatePlatformAdmin(ctx context.Context, req *v1.CreatePlatformAdminRequest) (*v1.PlatformAdminResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformAdminCreate); err != nil {
+		return nil, err
+	}
+	admin := biz.PlatformAdmin{
+		Email:        req.GetEmail(),
+		Phone:        req.GetPhone(),
+		Name:         req.GetName(),
+		Status:       req.GetStatus(),
+		PasswordHash: req.GetPasswordHash(),
+	}
+	created, err := s.uc.CreatePlatformAdmin(ctx, admin)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.PlatformAdminResponse{Admin: toPlatformAdmin(created)}, nil
+}
+
+func (s *IAMService) ListPlatformAdmins(ctx context.Context, req *v1.ListPlatformAdminsRequest) (*v1.ListPlatformAdminsResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformAdminRead); err != nil {
+		return nil, err
+	}
+	admins, err := s.uc.ListPlatformAdmins(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp := &v1.ListPlatformAdminsResponse{Items: make([]*v1.PlatformAdmin, 0, len(admins))}
+	for _, item := range admins {
+		resp.Items = append(resp.Items, toPlatformAdmin(item))
+	}
+	return resp, nil
+}
+
+func (s *IAMService) CreatePlatformRole(ctx context.Context, req *v1.CreatePlatformRoleRequest) (*v1.PlatformRoleResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleWrite); err != nil {
+		return nil, err
+	}
+	role := biz.PlatformRole{Name: req.GetName()}
+	created, err := s.uc.CreatePlatformRole(ctx, role)
+	if err != nil {
+		return nil, err
+	}
+	return &v1.PlatformRoleResponse{Role: toPlatformRole(created)}, nil
+}
+
+func (s *IAMService) ListPlatformRoles(ctx context.Context, req *v1.ListPlatformRolesRequest) (*v1.ListPlatformRolesResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleRead); err != nil {
+		return nil, err
+	}
+	roles, err := s.uc.ListPlatformRoles(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp := &v1.ListPlatformRolesResponse{Items: make([]*v1.PlatformRole, 0, len(roles))}
+	for _, item := range roles {
+		resp.Items = append(resp.Items, toPlatformRole(item))
+	}
+	return resp, nil
+}
+
+func (s *IAMService) AssignPlatformAdminRole(ctx context.Context, req *v1.AssignPlatformAdminRoleRequest) (*emptypb.Empty, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleAssign); err != nil {
+		return nil, err
+	}
+	if err := s.uc.AssignPlatformAdminRole(ctx, req.GetAdminId(), req.GetRoleId()); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (s *IAMService) AssignPlatformRolePermissions(ctx context.Context, req *v1.AssignPlatformRolePermissionsRequest) (*emptypb.Empty, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRolePermAssign); err != nil {
+		return nil, err
+	}
+	if err := s.uc.AssignPlatformRolePermissions(ctx, req.GetRoleId(), req.GetPermissionCodes()); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (s *IAMService) ListPlatformRolePermissions(ctx context.Context, req *v1.ListPlatformRolePermissionsRequest) (*v1.ListPermissionsResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleRead); err != nil {
+		return nil, err
+	}
+	permissions, err := s.uc.ListPlatformRolePermissions(ctx, req.GetRoleId())
+	if err != nil {
+		return nil, err
+	}
+	resp := &v1.ListPermissionsResponse{Items: make([]*v1.Permission, 0, len(permissions))}
+	for _, item := range permissions {
+		resp.Items = append(resp.Items, toPermission(item))
 	}
 	return resp, nil
 }
@@ -158,12 +256,20 @@ func (s *IAMService) AssignRole(ctx context.Context, req *v1.AssignRoleRequest) 
 }
 
 func (s *IAMService) CreatePermission(ctx context.Context, req *v1.CreatePermissionRequest) (*v1.PermissionResponse, error) {
-	if err := s.uc.RequirePermission(ctx, biz.PermissionPermissionWrite); err != nil {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformPermissionWrite); err != nil {
 		return nil, err
+	}
+	scope := strings.TrimSpace(req.GetScope())
+	if scope == "" {
+		return nil, errors.BadRequest("PERMISSION_SCOPE_REQUIRED", "permission scope required")
+	}
+	if scope != biz.PermissionScopePlatform && scope != biz.PermissionScopeTenant {
+		return nil, errors.BadRequest("PERMISSION_SCOPE_INVALID", "invalid permission scope")
 	}
 	permission := biz.Permission{
 		Code:        req.GetCode(),
 		Description: req.GetDescription(),
+		Scope:       scope,
 	}
 	created, err := s.uc.CreatePermission(ctx, permission)
 	if err != nil {
@@ -173,10 +279,21 @@ func (s *IAMService) CreatePermission(ctx context.Context, req *v1.CreatePermiss
 }
 
 func (s *IAMService) ListPermissions(ctx context.Context, req *v1.ListPermissionsRequest) (*v1.ListPermissionsResponse, error) {
-	if err := s.uc.RequirePermission(ctx, biz.PermissionPermissionRead); err != nil {
-		return nil, err
+	var (
+		permissions []biz.Permission
+		err         error
+	)
+	if isPlatformOperation(ctx) {
+		if err = s.uc.RequirePermission(ctx, biz.PermissionPlatformPermissionRead); err != nil {
+			return nil, err
+		}
+		permissions, err = s.uc.ListPermissions(ctx)
+	} else {
+		if err = s.uc.RequirePermission(ctx, biz.PermissionTenantPermissionRead); err != nil {
+			return nil, err
+		}
+		permissions, err = s.uc.ListTenantPermissions(ctx)
 	}
-	permissions, err := s.uc.ListPermissions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -218,11 +335,22 @@ func (s *IAMService) ListRolePermissions(ctx context.Context, req *v1.ListRolePe
 	return resp, nil
 }
 
+func isPlatformOperation(ctx context.Context) bool {
+	tr, ok := transport.FromServerContext(ctx)
+	if !ok {
+		return false
+	}
+	return strings.Contains(tr.Operation(), "PlatformIAM")
+}
+
 func ensureTenantScope(ctx context.Context, tenantID string) (context.Context, error) {
 	if tenantID == "" {
 		return ctx, nil
 	}
 	claims, _ := auth.ClaimsFromContext(ctx)
+	if claims != nil && isPlatformRole(claims.Roles) {
+		return tenant.WithTenantID(ctx, tenantID), nil
+	}
 	if claims != nil && claims.TenantID != "" && claims.TenantID != tenantID {
 		return nil, errors.Forbidden("TENANT_MISMATCH", "tenant mismatch")
 	}
@@ -234,6 +362,15 @@ func requireTenantContext(ctx context.Context) error {
 		return errors.Forbidden("TENANT_MISSING", "tenant missing")
 	}
 	return nil
+}
+
+func isPlatformRole(roles []string) bool {
+	for _, role := range roles {
+		if role == "platform_admin" || role == "super_admin" {
+			return true
+		}
+	}
+	return false
 }
 
 func toTimestamp(value time.Time) *timestamppb.Timestamp {
@@ -283,13 +420,38 @@ func toRole(value biz.Role) *v1.Role {
 }
 
 func toPermission(value biz.Permission) *v1.Permission {
-	if value.ID == "" && value.Code == "" && value.Description == "" {
+	if value.ID == "" && value.Code == "" && value.Description == "" && value.Scope == "" {
 		return nil
 	}
 	return &v1.Permission{
 		Id:          value.ID,
 		Code:        value.Code,
 		Description: value.Description,
+		Scope:       value.Scope,
+	}
+}
+
+func toPlatformAdmin(value biz.PlatformAdmin) *v1.PlatformAdmin {
+	if value.ID == "" && value.Email == "" && value.Phone == "" && value.Name == "" {
+		return nil
+	}
+	return &v1.PlatformAdmin{
+		Id:        value.ID,
+		Email:     value.Email,
+		Phone:     value.Phone,
+		Name:      value.Name,
+		Status:    value.Status,
+		CreatedAt: toTimestamp(value.CreatedAt),
+	}
+}
+
+func toPlatformRole(value biz.PlatformRole) *v1.PlatformRole {
+	if value.ID == "" && value.Name == "" {
+		return nil
+	}
+	return &v1.PlatformRole{
+		Id:   value.ID,
+		Name: value.Name,
 	}
 }
 

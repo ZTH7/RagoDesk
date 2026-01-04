@@ -124,23 +124,45 @@
 
 ---
 
-## 3. 管理后台 API（企业内部）
+## 3. 平台 API（Platform）
 
-### 3.0 租户与成员
-- `POST /admin/v1/tenants`
-- `GET /admin/v1/tenants`
-- `GET /admin/v1/tenants/{id}`
+### 3.1 租户管理
+- `POST /platform/v1/tenants`
+- `GET /platform/v1/tenants`
+- `GET /platform/v1/tenants/{id}`
+
+### 3.2 权限目录
+- `POST /platform/v1/permissions`（`scope=platform|tenant`）
+- `GET /platform/v1/permissions`
+
+### 3.3 平台管理员
+- `POST /platform/v1/admins`
+- `GET /platform/v1/admins`
+- `POST /platform/v1/admins/{id}/roles`
+
+### 3.4 平台角色
+- `POST /platform/v1/roles`
+- `GET /platform/v1/roles`
+- `POST /platform/v1/roles/{id}/permissions`
+- `GET /platform/v1/roles/{id}/permissions`
+
+---
+
+## 4. 管理后台 API（Tenant Admin）
+
+### 4.1 成员与角色
 - `POST /admin/v1/tenants/{id}/users`（邀请成员）
 - `GET /admin/v1/tenants/{id}/users`
 - `POST /admin/v1/roles`
 - `GET /admin/v1/roles`
 - `POST /admin/v1/users/{id}/roles`（分配角色）
-- `POST /admin/v1/permissions`
-- `GET /admin/v1/permissions`
+
+### 4.2 权限分配
+- `GET /admin/v1/permissions`（仅租户可见权限）
 - `POST /admin/v1/roles/{id}/permissions`（分配权限）
 - `GET /admin/v1/roles/{id}/permissions`
 
-### 3.1 机器人管理
+### 4.3 机器人管理
 - `POST /admin/v1/bots`
 - `GET /admin/v1/bots`
 - `PATCH /admin/v1/bots/{id}`
@@ -149,21 +171,21 @@
 - `POST /admin/v1/bots/{id}/knowledge_bases`（绑定）
 - `DELETE /admin/v1/bots/{id}/knowledge_bases/{kb_id}`（解绑）
 
-### 3.2 知识库管理
+### 4.4 知识库管理
 - `POST /admin/v1/knowledge_bases`
 - `GET /admin/v1/knowledge_bases`
 - `POST /admin/v1/documents/upload`
 - `GET /admin/v1/documents/{id}`
 - `POST /admin/v1/documents/{id}/reindex`
 
-### 3.3 API Key 管理
+### 4.5 API Key 管理
 - `POST /admin/v1/api_keys`
 - `GET /admin/v1/api_keys`
 - `PATCH /admin/v1/api_keys/{id}`
 - `DELETE /admin/v1/api_keys/{id}`
 > 支持 scope 配置与 Key 轮换（可保留历史 Key 过渡期）
 
-### 3.4 统计看板
+### 4.6 统计看板
 - `GET /admin/v1/analytics/overview`
 - `GET /admin/v1/analytics/latency`
 
