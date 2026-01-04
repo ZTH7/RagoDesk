@@ -285,6 +285,48 @@ func (r *knowledgeRepo) GetDocument(ctx context.Context, id string) (biz.Documen
 	return doc, nil
 }
 
+func (r *knowledgeRepo) ListDocuments(ctx context.Context, kbID string, limit int, offset int) ([]biz.Document, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	query := `SELECT id, tenant_id, kb_id, title, source_type, status, current_version, created_at, updated_at
+		FROM document WHERE tenant_id = ?`
+	args := []any{tenantID}
+	if strings.TrimSpace(kbID) != "" {
+		query += " AND kb_id = ?"
+		args = append(args, kbID)
+	}
+	query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+	args = append(args, limit, offset)
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.Document, 0)
+	for rows.Next() {
+		var doc biz.Document
+		if err := rows.Scan(
+			&doc.ID,
+			&doc.TenantID,
+			&doc.KBID,
+			&doc.Title,
+			&doc.SourceType,
+			&doc.Status,
+			&doc.CurrentVersion,
+			&doc.CreatedAt,
+			&doc.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, doc)
+	}
+	return items, rows.Err()
+}
+
 func (r *knowledgeRepo) UpdateDocumentIndexState(ctx context.Context, documentID string, status string, currentVersion int32) error {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
@@ -467,6 +509,8 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 			"kb_id":               req.KBID,
 			"document_id":         req.DocumentID,
 			"document_version_id": req.DocumentVersionID,
+			"document_title":      strings.TrimSpace(req.DocumentTitle),
+			"source_type":         strings.TrimSpace(req.SourceType),
 			"chunk_id":            ch.ID,
 			"chunk_index":         ch.ChunkIndex,
 			"token_count":         ch.TokenCount,
@@ -556,6 +600,82 @@ func (r *knowledgeRepo) RollbackDocument(ctx context.Context, documentID string,
 		documentID,
 	)
 	return err
+}
+
+func (r *knowledgeRepo) DeleteDocument(ctx context.Context, documentID string) error {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return err
+	}
+	doc, err := r.GetDocument(ctx, documentID)
+	if err != nil {
+		return err
+	}
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.ExecContext(
+		ctx,
+		`DELETE e FROM embedding e
+		 JOIN doc_chunk c ON e.chunk_id = c.id
+		 WHERE e.tenant_id = ? AND c.document_id = ?`,
+		tenantID,
+		documentID,
+	); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(
+		ctx,
+		"DELETE FROM doc_chunk WHERE tenant_id = ? AND document_id = ?",
+		tenantID,
+		documentID,
+	); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(
+		ctx,
+		"DELETE FROM document_version WHERE tenant_id = ? AND document_id = ?",
+		tenantID,
+		documentID,
+	); err != nil {
+		return err
+	}
+	res, err := tx.ExecContext(
+		ctx,
+		"DELETE FROM document WHERE tenant_id = ? AND id = ?",
+		tenantID,
+		documentID,
+	)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err == nil && rows == 0 {
+		return kerrors.NotFound("DOC_NOT_FOUND", "document not found")
+	}
+	if err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	if r.qdrant != nil && r.collection != "" {
+		filter := qdrantFilter{
+			Must: []qdrantCondition{
+				qdrantMatchCondition("tenant_id", tenantID),
+				qdrantMatchCondition("document_id", doc.ID),
+			},
+		}
+		if err := r.qdrant.DeletePoints(ctx, r.collection, filter); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *knowledgeRepo) ListBotKnowledgeBases(ctx context.Context, botID string) ([]biz.BotKnowledgeBase, error) {

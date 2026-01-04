@@ -1,13 +1,22 @@
 package biz
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"math/rand/v2"
+	"net/http"
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -25,6 +34,7 @@ const (
 	PermissionKnowledgeBaseWrite = "tenant.knowledge_base.write"
 	PermissionDocumentUpload     = "tenant.document.upload"
 	PermissionDocumentRead       = "tenant.document.read"
+	PermissionDocumentDelete     = "tenant.document.delete"
 	PermissionDocumentReindex    = "tenant.document.reindex"
 	PermissionDocumentRollback   = "tenant.document.rollback"
 	PermissionBotRead            = "tenant.bot.read"
@@ -123,11 +133,20 @@ type EmbeddedChunk struct {
 	Vector []float32
 }
 
+// EmbeddingProvider embeds text into vector representations.
+type EmbeddingProvider interface {
+	Embed(ctx context.Context, inputs []string) ([][]float32, error)
+	Model() string
+	Dim() int
+}
+
 // IndexDocumentVersionRequest describes indexing input for a document version.
 type IndexDocumentVersionRequest struct {
 	KBID              string
 	DocumentID        string
 	DocumentVersionID string
+	DocumentTitle     string
+	SourceType        string
 	EmbeddingModel    string
 	EmbeddingDim      int
 	Chunks            []EmbeddedChunk
@@ -156,6 +175,9 @@ type KnowledgeRepo interface {
 	IndexDocumentVersion(ctx context.Context, req IndexDocumentVersionRequest) error
 	RollbackDocument(ctx context.Context, documentID string, version int32) error
 
+	ListDocuments(ctx context.Context, kbID string, limit int, offset int) ([]Document, error)
+	DeleteDocument(ctx context.Context, documentID string) error
+
 	ListBotKnowledgeBases(ctx context.Context, botID string) ([]BotKnowledgeBase, error)
 	BindBotKnowledgeBase(ctx context.Context, link BotKnowledgeBase) (BotKnowledgeBase, error)
 	UnbindBotKnowledgeBase(ctx context.Context, botID string, kbID string) error
@@ -168,14 +190,23 @@ type KnowledgeUsecase struct {
 
 	queue        IngestionQueue
 	asyncEnabled bool
+
+	embedder           EmbeddingProvider
+	chunkSizeTokens    int
+	chunkOverlapTokens int
 }
 
 // NewKnowledgeUsecase creates a new KnowledgeUsecase
 func NewKnowledgeUsecase(repo KnowledgeRepo, queue IngestionQueue, logger log.Logger) *KnowledgeUsecase {
+	opts := loadIngestionOptions()
+	embedder := newEmbeddingProvider(opts)
 	uc := &KnowledgeUsecase{
-		repo:  repo,
-		queue: queue,
-		log:   log.NewHelper(logger),
+		repo:               repo,
+		queue:              queue,
+		log:                log.NewHelper(logger),
+		embedder:           embedder,
+		chunkSizeTokens:    opts.chunkSizeTokens,
+		chunkOverlapTokens: opts.chunkOverlapTokens,
 	}
 	uc.asyncEnabled = asyncEnabled(queue)
 	return uc
@@ -212,6 +243,17 @@ func (uc *KnowledgeUsecase) ListKnowledgeBases(ctx context.Context) ([]Knowledge
 	return uc.repo.ListKnowledgeBases(ctx)
 }
 
+func (uc *KnowledgeUsecase) ListDocuments(ctx context.Context, kbID string, limit int32, offset int32) ([]Document, error) {
+	kbID = strings.TrimSpace(kbID)
+	if limit <= 0 || limit > 200 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return uc.repo.ListDocuments(ctx, kbID, int(limit), int(offset))
+}
+
 func (uc *KnowledgeUsecase) ListBotKnowledgeBases(ctx context.Context, botID string) ([]BotKnowledgeBase, error) {
 	botID = strings.TrimSpace(botID)
 	if botID == "" {
@@ -238,6 +280,14 @@ func (uc *KnowledgeUsecase) DeleteKnowledgeBase(ctx context.Context, id string) 
 		return errors.BadRequest("KB_ID_MISSING", "knowledge base id missing")
 	}
 	return uc.repo.DeleteKnowledgeBase(ctx, id)
+}
+
+func (uc *KnowledgeUsecase) DeleteDocument(ctx context.Context, id string) error {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return errors.BadRequest("DOC_ID_MISSING", "document id missing")
+	}
+	return uc.repo.DeleteDocument(ctx, id)
 }
 
 func (uc *KnowledgeUsecase) BindBotKnowledgeBase(ctx context.Context, botID, kbID string, priority int32, weight float64) (BotKnowledgeBase, error) {
@@ -444,17 +494,33 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 	if err != nil {
 		return err
 	}
-	content := prepareContentNormalized(doc.SourceType, version.RawText)
+	sourceType := normalizeSourceType(doc.SourceType)
+	parsed, err := parseContent(ctx, sourceType, version.RawText)
+	if err != nil {
+		_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusFailed, err.Error())
+		_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)
+		return err
+	}
+	content := prepareContentNormalized(sourceType, parsed)
 	if content == "" {
 		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}
-	embedded := embedChunks(content, version.ID, defaultChunkSizeRunes, defaultChunkOverlapRunes, defaultEmbeddingDim)
+	chunks := buildChunks(content, version.ID, uc.chunkSizeTokens, uc.chunkOverlapTokens)
+	if len(chunks) == 0 {
+		return errors.BadRequest("DOC_CHUNKS_EMPTY", "document chunks empty")
+	}
+	embedded, err := uc.embedChunks(ctx, chunks)
+	if err != nil {
+		return err
+	}
 	indexReq := IndexDocumentVersionRequest{
 		KBID:              job.KBID,
 		DocumentID:        job.DocumentID,
 		DocumentVersionID: version.ID,
-		EmbeddingModel:    defaultEmbeddingModel,
-		EmbeddingDim:      defaultEmbeddingDim,
+		DocumentTitle:     doc.Title,
+		SourceType:        sourceType,
+		EmbeddingModel:    uc.embedder.Model(),
+		EmbeddingDim:      uc.embedder.Dim(),
 		Chunks:            embedded,
 	}
 	if err := uc.repo.IndexDocumentVersion(ctx, indexReq); err != nil {
@@ -468,18 +534,236 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 }
 
 const (
-	defaultChunkSizeRunes    = 800
-	defaultChunkOverlapRunes = 100
-	defaultEmbeddingModel    = "fake-embedding-v1"
-	defaultEmbeddingDim      = 384
+	defaultChunkSizeTokens    = 400
+	defaultChunkOverlapTokens = 50
+	defaultEmbeddingModel     = "fake-embedding-v1"
+	defaultEmbeddingDim       = 384
+	defaultEmbeddingProvider  = "fake"
 )
 
-func embedChunks(rawText, docVersionID string, chunkSize, overlap, embeddingDim int) []EmbeddedChunk {
+type ingestionOptions struct {
+	chunkSizeTokens    int
+	chunkOverlapTokens int
+	embeddingModel     string
+	embeddingDim       int
+	embeddingProvider  string
+	embeddingEndpoint  string
+	embeddingAPIKey    string
+	embeddingTimeoutMs int
+}
+
+func loadIngestionOptions() ingestionOptions {
+	provider := envString("RAGDESK_EMBEDDING_PROVIDER", defaultEmbeddingProvider)
+	embeddingDim := defaultEmbeddingDim
+	if raw := strings.TrimSpace(os.Getenv("RAGDESK_EMBEDDING_DIM")); raw != "" {
+		if parsed, err := strconv.Atoi(raw); err == nil {
+			embeddingDim = parsed
+		}
+	} else if strings.EqualFold(provider, "openai") || strings.EqualFold(provider, "http") {
+		embeddingDim = 0
+	}
+	opts := ingestionOptions{
+		chunkSizeTokens:    envInt("RAGDESK_CHUNK_SIZE_TOKENS", defaultChunkSizeTokens),
+		chunkOverlapTokens: envInt("RAGDESK_CHUNK_OVERLAP_TOKENS", defaultChunkOverlapTokens),
+		embeddingModel:     envString("RAGDESK_EMBEDDING_MODEL", defaultEmbeddingModel),
+		embeddingDim:       embeddingDim,
+		embeddingProvider:  provider,
+		embeddingEndpoint:  envString("RAGDESK_EMBEDDING_ENDPOINT", ""),
+		embeddingAPIKey:    envString("RAGDESK_EMBEDDING_API_KEY", ""),
+		embeddingTimeoutMs: envInt("RAGDESK_EMBEDDING_TIMEOUT_MS", 15000),
+	}
+	if opts.chunkSizeTokens <= 0 {
+		opts.chunkSizeTokens = defaultChunkSizeTokens
+	}
+	if opts.chunkOverlapTokens < 0 {
+		opts.chunkOverlapTokens = defaultChunkOverlapTokens
+	}
+	if opts.embeddingDim < 0 {
+		opts.embeddingDim = defaultEmbeddingDim
+	}
+	return opts
+}
+
+func newEmbeddingProvider(opts ingestionOptions) EmbeddingProvider {
+	switch strings.ToLower(strings.TrimSpace(opts.embeddingProvider)) {
+	case "", "fake":
+		return fakeEmbeddingProvider{
+			model: opts.embeddingModel,
+			dim:   opts.embeddingDim,
+		}
+	case "openai", "http":
+		endpoint := strings.TrimSpace(opts.embeddingEndpoint)
+		if endpoint == "" {
+			return fakeEmbeddingProvider{
+				model: opts.embeddingModel,
+				dim:   opts.embeddingDim,
+			}
+		}
+		return &openAIEmbeddingProvider{
+			endpoint: strings.TrimRight(endpoint, "/"),
+			apiKey:   opts.embeddingAPIKey,
+			model:    opts.embeddingModel,
+			dim:      opts.embeddingDim,
+			client: &http.Client{
+				Timeout: time.Duration(opts.embeddingTimeoutMs) * time.Millisecond,
+			},
+		}
+	default:
+		// fallback to fake provider for now
+		return fakeEmbeddingProvider{
+			model: opts.embeddingModel,
+			dim:   opts.embeddingDim,
+		}
+	}
+}
+
+type fakeEmbeddingProvider struct {
+	model string
+	dim   int
+}
+
+func (p fakeEmbeddingProvider) Embed(ctx context.Context, inputs []string) ([][]float32, error) {
+	out := make([][]float32, 0, len(inputs))
+	for _, text := range inputs {
+		out = append(out, deterministicEmbedding(text, p.dim))
+	}
+	return out, nil
+}
+
+func (p fakeEmbeddingProvider) Model() string {
+	if p.model == "" {
+		return defaultEmbeddingModel
+	}
+	return p.model
+}
+
+func (p fakeEmbeddingProvider) Dim() int {
+	if p.dim <= 0 {
+		return defaultEmbeddingDim
+	}
+	return p.dim
+}
+
+type openAIEmbeddingProvider struct {
+	endpoint string
+	apiKey   string
+	model    string
+	dim      int
+	client   *http.Client
+}
+
+type openAIEmbeddingRequest struct {
+	Model string   `json:"model"`
+	Input []string `json:"input"`
+}
+
+type openAIEmbeddingResponse struct {
+	Data []struct {
+		Embedding []float64 `json:"embedding"`
+	} `json:"data"`
+}
+
+func (p *openAIEmbeddingProvider) Embed(ctx context.Context, inputs []string) ([][]float32, error) {
+	if p == nil || p.endpoint == "" {
+		return nil, errors.InternalServer("EMBEDDING_ENDPOINT_MISSING", "embedding endpoint missing")
+	}
+	if p.client == nil {
+		p.client = &http.Client{Timeout: 15 * time.Second}
+	}
+	reqBody := openAIEmbeddingRequest{
+		Model: p.Model(),
+		Input: inputs,
+	}
+	raw, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+	url := p.endpoint
+	if !strings.HasSuffix(url, "/embeddings") {
+		url = url + "/embeddings"
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(raw))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if p.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.apiKey)
+	}
+	resp, err := p.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, errors.InternalServer("EMBEDDING_REQUEST_FAILED", "embedding request failed")
+	}
+	var parsed openAIEmbeddingResponse
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return nil, err
+	}
+	out := make([][]float32, 0, len(parsed.Data))
+	for _, item := range parsed.Data {
+		vec := make([]float32, 0, len(item.Embedding))
+		for _, v := range item.Embedding {
+			vec = append(vec, float32(v))
+		}
+		out = append(out, vec)
+	}
+	if len(out) > 0 && p.dim <= 0 {
+		p.dim = len(out[0])
+	}
+	return out, nil
+}
+
+func (p *openAIEmbeddingProvider) Model() string {
+	if p.model == "" {
+		return defaultEmbeddingModel
+	}
+	return p.model
+}
+
+func (p *openAIEmbeddingProvider) Dim() int {
+	if p.dim <= 0 {
+		return defaultEmbeddingDim
+	}
+	return p.dim
+}
+
+func (uc *KnowledgeUsecase) embedChunks(ctx context.Context, chunks []DocChunk) ([]EmbeddedChunk, error) {
+	if len(chunks) == 0 {
+		return nil, nil
+	}
+	if uc.embedder == nil {
+		uc.embedder = fakeEmbeddingProvider{model: defaultEmbeddingModel, dim: defaultEmbeddingDim}
+	}
+	texts := make([]string, 0, len(chunks))
+	for _, ch := range chunks {
+		texts = append(texts, ch.Content)
+	}
+	vectors, err := uc.embedder.Embed(ctx, texts)
+	if err != nil {
+		return nil, err
+	}
+	if len(vectors) != len(chunks) {
+		return nil, errors.InternalServer("EMBEDDING_COUNT_MISMATCH", "embedding count mismatch")
+	}
+	out := make([]EmbeddedChunk, 0, len(chunks))
+	for i, ch := range chunks {
+		out = append(out, EmbeddedChunk{
+			Chunk:  ch,
+			Vector: vectors[i],
+		})
+	}
+	return out, nil
+}
+
+func buildChunks(rawText, docVersionID string, chunkSize, overlap int) []DocChunk {
 	chunkSize = clampInt(chunkSize, 1, 8192)
 	overlap = clampInt(overlap, 0, chunkSize-1)
-	parts := splitByRunes(rawText, chunkSize, overlap)
+	parts := splitByTokens(rawText, chunkSize, overlap)
 
-	out := make([]EmbeddedChunk, 0, len(parts))
+	out := make([]DocChunk, 0, len(parts))
 	for i, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
@@ -492,26 +776,32 @@ func embedChunks(rawText, docVersionID string, chunkSize, overlap, embeddingDim 
 			ID:          chunkID,
 			ChunkIndex:  chunkIndex,
 			Content:     part,
-			TokenCount:  int32(runeTokenCount(part)),
+			TokenCount:  int32(estimateTokenCount(part)),
 			ContentHash: sha256Hex(part),
 			Language:    detectLanguage(part),
 			CreatedAt:   createdAt,
 		}
-		out = append(out, EmbeddedChunk{
-			Chunk:  chunk,
-			Vector: deterministicEmbedding(part, embeddingDim),
-		})
+		out = append(out, chunk)
 	}
 	return out
 }
 
-func splitByRunes(s string, chunkSize, overlap int) []string {
+type tokenSpan struct {
+	start int
+	end   int
+}
+
+func splitByTokens(s string, chunkSize, overlap int) []string {
 	runes := []rune(s)
 	if len(runes) == 0 {
 		return nil
 	}
+	tokens := tokenizeSpans(runes)
+	if len(tokens) == 0 {
+		return nil
+	}
 	if chunkSize <= 0 {
-		chunkSize = len(runes)
+		chunkSize = len(tokens)
 	}
 	if overlap < 0 {
 		overlap = 0
@@ -523,29 +813,49 @@ func splitByRunes(s string, chunkSize, overlap int) []string {
 	if step <= 0 {
 		step = chunkSize
 	}
-	out := make([]string, 0, (len(runes)+step-1)/step)
-	for start := 0; start < len(runes); start += step {
+	out := make([]string, 0, (len(tokens)+step-1)/step)
+	for start := 0; start < len(tokens); start += step {
 		end := start + chunkSize
-		if end > len(runes) {
-			end = len(runes)
+		if end > len(tokens) {
+			end = len(tokens)
 		}
-		out = append(out, string(runes[start:end]))
-		if end == len(runes) {
+		startIdx := tokens[start].start
+		endIdx := tokens[end-1].end
+		out = append(out, string(runes[startIdx:endIdx]))
+		if end == len(tokens) {
 			break
 		}
 	}
 	return out
 }
 
-func runeTokenCount(s string) int {
-	count := 0
-	for _, r := range s {
-		if unicode.IsSpace(r) {
-			continue
+func tokenizeSpans(runes []rune) []tokenSpan {
+	out := make([]tokenSpan, 0, len(runes)/2+1)
+	for i := 0; i < len(runes); {
+		r := runes[i]
+		switch {
+		case isCJK(r):
+			out = append(out, tokenSpan{start: i, end: i + 1})
+			i++
+		case unicode.IsLetter(r) || unicode.IsDigit(r):
+			start := i
+			i++
+			for i < len(runes) {
+				if isCJK(runes[i]) || !(unicode.IsLetter(runes[i]) || unicode.IsDigit(runes[i])) {
+					break
+				}
+				i++
+			}
+			out = append(out, tokenSpan{start: start, end: i})
+		default:
+			i++
 		}
-		count++
 	}
-	return count
+	return out
+}
+
+func estimateTokenCount(s string) int {
+	return len(tokenizeSpans([]rune(s)))
 }
 
 func detectLanguage(s string) string {
@@ -621,6 +931,26 @@ func asyncEnabled(queue IngestionQueue) bool {
 	}
 }
 
+func envString(key string, fallback string) string {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+func envInt(key string, fallback int) int {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
 func tenantIDFromContext(ctx context.Context) (string, error) {
 	if value, ok := tenant.TenantID(ctx); ok {
 		return value, nil
@@ -678,6 +1008,113 @@ func prepareContentNormalized(sourceType, content string) string {
 		content = stripHTMLTags(content)
 	}
 	return cleanContent(content)
+}
+
+const maxDocumentBytes = 5 << 20
+
+func parseContent(ctx context.Context, sourceType, raw string) (string, error) {
+	switch sourceType {
+	case "url":
+		return fetchURLText(ctx, raw)
+	case "doc":
+		return parseDocxBase64(raw)
+	default:
+		// pdf / text / markdown / html fall back to raw text
+		return raw, nil
+	}
+}
+
+func fetchURLText(ctx context.Context, raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", errors.BadRequest("DOC_URL_EMPTY", "document url missing")
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return "", errors.BadRequest("DOC_URL_INVALID", "document url invalid")
+	}
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parsed.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", errors.BadRequest("DOC_URL_FETCH_FAILED", "document url fetch failed")
+	}
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxDocumentBytes))
+	if err != nil {
+		return "", err
+	}
+	contentType := strings.ToLower(resp.Header.Get("Content-Type"))
+	text := string(body)
+	if strings.Contains(contentType, "text/html") {
+		text = stripHTMLTags(text)
+	}
+	return text, nil
+}
+
+func parseDocxBase64(raw string) (string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", errors.BadRequest("DOCX_CONTENT_EMPTY", "docx content missing")
+	}
+	payload, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return "", errors.BadRequest("DOCX_BASE64_INVALID", "docx content must be base64")
+	}
+	readerAt := bytes.NewReader(payload)
+	zr, err := zip.NewReader(readerAt, int64(len(payload)))
+	if err != nil {
+		return "", err
+	}
+	var xmlFile *zip.File
+	for _, f := range zr.File {
+		if f.Name == "word/document.xml" {
+			xmlFile = f
+			break
+		}
+	}
+	if xmlFile == nil {
+		return "", errors.BadRequest("DOCX_XML_MISSING", "docx document xml missing")
+	}
+	rc, err := xmlFile.Open()
+	if err != nil {
+		return "", err
+	}
+	defer rc.Close()
+	xmlBytes, err := io.ReadAll(io.LimitReader(rc, maxDocumentBytes))
+	if err != nil {
+		return "", err
+	}
+	decoder := xml.NewDecoder(bytes.NewReader(xmlBytes))
+	var builder strings.Builder
+	for {
+		tok, err := decoder.Token()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", err
+		}
+		start, ok := tok.(xml.StartElement)
+		if !ok || start.Name.Local != "t" {
+			continue
+		}
+		var text string
+		if err := decoder.DecodeElement(&text, &start); err != nil {
+			return "", err
+		}
+		if text != "" {
+			builder.WriteString(text)
+			builder.WriteString(" ")
+		}
+	}
+	return builder.String(), nil
 }
 
 func stripMarkdown(input string) string {

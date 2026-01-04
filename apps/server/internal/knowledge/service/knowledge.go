@@ -109,6 +109,24 @@ func (s *KnowledgeService) ListKnowledgeBases(ctx context.Context, req *v1.ListK
 	return resp, nil
 }
 
+func (s *KnowledgeService) ListDocuments(ctx context.Context, req *v1.ListDocumentsRequest) (*v1.ListDocumentsResponse, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionDocumentRead); err != nil {
+		return nil, err
+	}
+	items, err := s.uc.ListDocuments(ctx, req.GetKbId(), req.GetLimit(), req.GetOffset())
+	if err != nil {
+		return nil, err
+	}
+	resp := &v1.ListDocumentsResponse{Items: make([]*v1.Document, 0, len(items))}
+	for _, item := range items {
+		resp.Items = append(resp.Items, toDocument(item))
+	}
+	return resp, nil
+}
+
 func (s *KnowledgeService) ListBotKnowledgeBases(ctx context.Context, req *v1.ListBotKnowledgeBasesRequest) (*v1.ListBotKnowledgeBasesResponse, error) {
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err
@@ -190,6 +208,19 @@ func (s *KnowledgeService) GetDocument(ctx context.Context, req *v1.GetDocumentR
 		resp.Versions = append(resp.Versions, toDocumentVersion(item))
 	}
 	return resp, nil
+}
+
+func (s *KnowledgeService) DeleteDocument(ctx context.Context, req *v1.DeleteDocumentRequest) (*emptypb.Empty, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionDocumentDelete); err != nil {
+		return nil, err
+	}
+	if err := s.uc.DeleteDocument(ctx, req.GetId()); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (s *KnowledgeService) ReindexDocument(ctx context.Context, req *v1.ReindexDocumentRequest) (*emptypb.Empty, error) {

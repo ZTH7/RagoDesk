@@ -42,6 +42,23 @@ type qdrantUpsertRequest struct {
 	Points []qdrantPoint `json:"points"`
 }
 
+type qdrantMatchValue struct {
+	Value any `json:"value"`
+}
+
+type qdrantCondition struct {
+	Key   string            `json:"key"`
+	Match *qdrantMatchValue `json:"match,omitempty"`
+}
+
+type qdrantFilter struct {
+	Must []qdrantCondition `json:"must,omitempty"`
+}
+
+type qdrantDeleteRequest struct {
+	Filter qdrantFilter `json:"filter"`
+}
+
 func (c *qdrantClient) EnsureCollection(ctx context.Context, collection string, dim int) error {
 	collection = strings.TrimSpace(collection)
 	if collection == "" {
@@ -135,6 +152,45 @@ func (c *qdrantClient) UpsertPoints(ctx context.Context, collection string, poin
 		return kerrors.InternalServer("QDRANT_UPSERT_FAILED", fmt.Sprintf("qdrant upsert failed: %s", body))
 	}
 	return nil
+}
+
+func (c *qdrantClient) DeletePoints(ctx context.Context, collection string, filter qdrantFilter) error {
+	collection = strings.TrimSpace(collection)
+	if collection == "" {
+		return kerrors.InternalServer("QDRANT_COLLECTION_MISSING", "qdrant collection missing")
+	}
+	if len(filter.Must) == 0 {
+		return nil
+	}
+	raw, err := json.Marshal(qdrantDeleteRequest{Filter: filter})
+	if err != nil {
+		return err
+	}
+	deleteURL := c.endpoint + "/collections/" + url.PathEscape(collection) + "/points/delete?wait=true"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, deleteURL, bytes.NewReader(raw))
+	if err != nil {
+		return err
+	}
+	c.applyAuth(req)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body := readBodyLimit(resp.Body, 16<<10)
+		return kerrors.InternalServer("QDRANT_DELETE_FAILED", fmt.Sprintf("qdrant delete failed: %s", body))
+	}
+	return nil
+}
+
+func qdrantMatchCondition(key string, value any) qdrantCondition {
+	return qdrantCondition{
+		Key:   key,
+		Match: &qdrantMatchValue{Value: value},
+	}
 }
 
 func (c *qdrantClient) applyAuth(req *http.Request) {

@@ -43,12 +43,40 @@
 
 ---
 
+## 3.1 当前实现（Phase 2 已落地）
+
+- 入口：`/admin/v1/documents/upload`（写 `document` + `document_version`，触发 ingestion）
+- 执行方式：RabbitMQ 入队 + `apps/server/cmd/ingester` 消费（API 进程只负责入队）
+- 解析/清洗：
+- `text/markdown/html` 走清洗（HTML strip + 规范化空白）
+- `url` 走 HTTP GET 拉取（HTML 自动 strip）
+- `docx` 以 base64 传入，解析 `word/document.xml`
+- `pdf`/`doc` 目前视为纯文本（待完善）
+- Chunking：token-based 估算切分 + overlap（可通过环境变量配置）
+- Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`
+- 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
+- 删除：`DELETE /admin/v1/documents/{id}` 会清理 MySQL 元数据 + Qdrant points（按 `tenant_id` + `document_id` filter）
+
+**当前可配置（env）**
+- `RAGDESK_CHUNK_SIZE_TOKENS`
+- `RAGDESK_CHUNK_OVERLAP_TOKENS`
+- `RAGDESK_EMBEDDING_PROVIDER`（`fake`/`openai`）
+- `RAGDESK_EMBEDDING_ENDPOINT`
+- `RAGDESK_EMBEDDING_API_KEY`
+- `RAGDESK_EMBEDDING_MODEL`
+- `RAGDESK_EMBEDDING_DIM`
+- `RAGDESK_EMBEDDING_TIMEOUT_MS`
+- `RAGDESK_INGESTION_MAX_RETRIES`
+- `RAGDESK_INGESTION_BACKOFF_MS`
+
+---
+
 ## 4. 检索/索引的数据契约（chunk schema / metadata / 增量与重建）
 
 - 目标：让“切分 → 向量化 → 检索 → 引用”可追溯、可删除、可重建；避免后期补字段导致返工。
 - 最小可用契约（基础）：
 - `chunk schema`（MySQL）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `created_at`
-- `vector payload`（VectorDB）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`
+- `vector payload`（VectorDB）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`
 - `refs schema`（用于引用来源）：`document_id`, `document_version_id`, `chunk_id`, `score`, `rank`, `snippet(optional)`
 - Chunking 默认（基础）：固定窗口（token-based）+ overlap。
 - Chunking 可配置项（优化）：`chunk_size_tokens`, `chunk_overlap_tokens`, `split_strategy`（fixed/semantic）, `min_chunk_tokens`, `max_chunk_tokens`，并允许按 KB/文档覆盖。

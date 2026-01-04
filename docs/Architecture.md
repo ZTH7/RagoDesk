@@ -134,12 +134,55 @@ RAG->>API: answer + confidence + refs
 API-->>Client: reply
 ```
 
-### 3.3 统计分析流程
+### 3.3 Knowledge & RAG 细节架构（实现视图）
+
+#### 3.3.1 Ingestion 处理链路
+```mermaid
+flowchart LR
+  Client[Admin API] -->|Upload / Reindex| KSvc[Knowledge Service]
+  KSvc -->|write metadata| MySQL[(MySQL)]
+  KSvc -->|enqueue job| MQ[(RabbitMQ)]
+  MQ --> Worker[Ingestion Worker]
+  Worker --> Parser[Parse/Clean]
+  Parser --> Chunker[Chunking]
+  Chunker --> Embed[Embedding Provider]
+  Embed --> Qdrant[(Qdrant)]
+  Worker -->|write chunks/embedding meta| MySQL
+  KSvc -->|raw content| Object[(Object Storage)]
+```
+
+#### 3.3.2 在线 RAG 链路
+```mermaid
+sequenceDiagram
+participant Client
+participant API
+participant RAG
+participant VectorDB
+participant LLM
+
+Client->>API: POST /api/v1/message
+API->>RAG: resolve bot_kb + build prompt
+RAG->>VectorDB: query embedding + retrieve
+VectorDB-->>RAG: chunks + scores
+RAG->>LLM: prompt + refs
+LLM-->>RAG: answer
+RAG->>API: answer + confidence + refs
+API-->>Client: reply
+```
+
+#### 3.3.3 数据契约与内部参数（摘要）
+- MySQL `doc_chunk`：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `created_at`
+- Qdrant payload：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`
+- Chunking（默认）：token-based 切分 + overlap
+- 可配置参数：`RAGDESK_CHUNK_SIZE_TOKENS`, `RAGDESK_CHUNK_OVERLAP_TOKENS`, `RAGDESK_EMBEDDING_PROVIDER`, `RAGDESK_EMBEDDING_MODEL`, `RAGDESK_EMBEDDING_DIM`, `RAGDESK_EMBEDDING_ENDPOINT`, `RAGDESK_EMBEDDING_API_KEY`, `RAGDESK_EMBEDDING_TIMEOUT_MS`, `RAGDESK_INGESTION_MAX_RETRIES`, `RAGDESK_INGESTION_BACKOFF_MS`
+- 详细契约见 `docs/RAG.md`
+
+### 3.4 统计分析流程
 - 事件写入：会话/消息/召回
 - 实时指标：Redis + Prometheus
 - 离线聚合：定时作业写入 `analytics_daily`
 
-### 3.4 RAG 评测与反馈闭环
+### 3.5 RAG 评测与反馈闭环
 - 采集用户反馈（点赞/踩/纠错）并关联 `chat_message`
 - 形成评测集与质检任务（抽样/回放/自动评测）
 - 指标看板：Recall@K、MRR、nDCG、Faithfulness、Answer Relevancy
