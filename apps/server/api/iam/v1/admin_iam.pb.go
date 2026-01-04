@@ -31,6 +31,7 @@ type Tenant struct {
 	Plan          string                 `protobuf:"bytes,3,opt,name=plan,proto3" json:"plan,omitempty"`
 	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Type          string                 `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -98,6 +99,13 @@ func (x *Tenant) GetCreatedAt() *timestamppb.Timestamp {
 		return x.CreatedAt
 	}
 	return nil
+}
+
+func (x *Tenant) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
 }
 
 type User struct {
@@ -461,6 +469,7 @@ type CreateTenantRequest struct {
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Plan          string                 `protobuf:"bytes,2,opt,name=plan,proto3" json:"plan,omitempty"`
 	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	Type          string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -512,6 +521,13 @@ func (x *CreateTenantRequest) GetPlan() string {
 func (x *CreateTenantRequest) GetStatus() string {
 	if x != nil {
 		return x.Status
+	}
+	return ""
+}
+
+func (x *CreateTenantRequest) GetType() string {
+	if x != nil {
+		return x.Type
 	}
 	return ""
 }
@@ -1913,14 +1929,15 @@ var File_api_iam_v1_admin_iam_proto protoreflect.FileDescriptor
 const file_api_iam_v1_admin_iam_proto_rawDesc = "" +
 	"\n" +
 	"\x1aapi/iam/v1/admin_iam.proto\x12\n" +
-	"api.iam.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x93\x01\n" +
+	"api.iam.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa7\x01\n" +
 	"\x06Tenant\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04plan\x18\x03 \x01(\tR\x04plan\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xc6\x01\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x12\n" +
+	"\x04type\x18\x06 \x01(\tR\x04type\"\xc6\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x14\n" +
@@ -1950,11 +1967,12 @@ const file_api_iam_v1_admin_iam_proto_rawDesc = "" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"2\n" +
 	"\fPlatformRole\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"U\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"i\n" +
 	"\x13CreateTenantRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04plan\x18\x02 \x01(\tR\x04plan\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\tR\x06status\"\"\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12\x12\n" +
+	"\x04type\x18\x04 \x01(\tR\x04type\"\"\n" +
 	"\x10GetTenantRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x14\n" +
 	"\x12ListTenantsRequest\"?\n" +

@@ -61,6 +61,7 @@
   - Admin API 触发上传
   - 写 `document` / `document_version`
   - 异步任务：清洗、切分、向量化、入向量库
+  - 索引数据契约：chunk 元信息 + 向量库 payload（按 `document_version` 幂等可重建，详见 `docs/RAG.md`）
   - 元数据抽取与索引构建（向量索引 + 元数据索引）
   - 维护 `bot_kb` 关联关系
   - 幂等与重试：按 `document_version` 保证可重入
@@ -68,10 +69,10 @@
   - 消费 `chat_message` 输入
   - 通过 `bot_kb` 解析可用知识库
   - 检索策略：按 `bot_kb` 权重/优先级组合召回
-  - 调用向量库召回 + 混合检索（向量 + 关键词）+ 可选重排
+  - 调用向量库召回 + 混合检索（向量 + 关键词）+ 可选重排（多 KB 并发检索 → 合并/去重）
   - Prompt 模板 + 系统指令控制 + LLM
   - 输出 `answer + refs + confidence`
-  - Eino Pipeline 负责链路编排与可观测性埋点
+  - Eino Pipeline 负责链路编排与可观测性埋点（embedding/retrieve/rerank/prompt/llm 分步耗时与统计）
   - 成本与延迟优化：缓存、并发、批量 embedding
   - 多语言与多模型路由（模型选择、Prompt 选择、向量模型一致性校验）
 - **Conversation**

@@ -13,6 +13,7 @@ import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/google/wire"
 )
@@ -39,14 +40,18 @@ func (r *iamRepo) CreateTenant(ctx context.Context, tenantModel biz.Tenant) (biz
 	if tenantModel.ID == "" {
 		tenantModel.ID = uuid.NewString()
 	}
+	if tenantModel.Type == "" {
+		tenantModel.Type = "enterprise"
+	}
 	if tenantModel.CreatedAt.IsZero() {
 		tenantModel.CreatedAt = time.Now()
 	}
 	_, err := r.db.ExecContext(
 		ctx,
-		"INSERT INTO tenant (id, name, plan, status, created_at) VALUES (?, ?, ?, ?, ?)",
+		"INSERT INTO tenant (id, name, type, plan, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
 		tenantModel.ID,
 		tenantModel.Name,
+		tenantModel.Type,
 		tenantModel.Plan,
 		tenantModel.Status,
 		tenantModel.CreatedAt,
@@ -62,9 +67,9 @@ func (r *iamRepo) GetTenant(ctx context.Context, id string) (biz.Tenant, error) 
 	var tenantModel biz.Tenant
 	err := r.db.QueryRowContext(
 		ctx,
-		"SELECT id, name, plan, status, created_at FROM tenant WHERE id = ?",
+		"SELECT id, name, type, plan, status, created_at FROM tenant WHERE id = ?",
 		id,
-	).Scan(&tenantModel.ID, &tenantModel.Name, &tenantModel.Plan, &tenantModel.Status, &tenantModel.CreatedAt)
+	).Scan(&tenantModel.ID, &tenantModel.Name, &tenantModel.Type, &tenantModel.Plan, &tenantModel.Status, &tenantModel.CreatedAt)
 	if err != nil {
 		if stderrors.Is(err, sql.ErrNoRows) {
 			return biz.Tenant{}, kerrors.NotFound("TENANT_NOT_FOUND", "tenant not found")
@@ -76,7 +81,7 @@ func (r *iamRepo) GetTenant(ctx context.Context, id string) (biz.Tenant, error) 
 
 func (r *iamRepo) ListTenants(ctx context.Context) ([]biz.Tenant, error) {
 	// TODO: platform admin auth & audit.
-	rows, err := r.db.QueryContext(ctx, "SELECT id, name, plan, status, created_at FROM tenant ORDER BY created_at DESC")
+	rows, err := r.db.QueryContext(ctx, "SELECT id, name, type, plan, status, created_at FROM tenant ORDER BY created_at DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +90,7 @@ func (r *iamRepo) ListTenants(ctx context.Context) ([]biz.Tenant, error) {
 	items := make([]biz.Tenant, 0)
 	for rows.Next() {
 		var tenantModel biz.Tenant
-		if err := rows.Scan(&tenantModel.ID, &tenantModel.Name, &tenantModel.Plan, &tenantModel.Status, &tenantModel.CreatedAt); err != nil {
+		if err := rows.Scan(&tenantModel.ID, &tenantModel.Name, &tenantModel.Type, &tenantModel.Plan, &tenantModel.Status, &tenantModel.CreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, tenantModel)
@@ -488,8 +493,8 @@ func (r *iamRepo) ListUserRoles(ctx context.Context, userID string) ([]biz.Role,
 		ctx,
 		`SELECT r.id, r.tenant_id, r.name
 		FROM user_role ur
-		JOIN role r ON ur.role_id = r.id
-		JOIN user u ON ur.user_id = u.id
+		JOIN `+"`role`"+` r ON ur.role_id = r.id
+		JOIN `+"`user`"+` u ON ur.user_id = u.id
 		WHERE u.id = ? AND u.tenant_id = ? AND r.tenant_id = u.tenant_id`,
 		userID,
 		tenantID,
@@ -518,7 +523,7 @@ func (r *iamRepo) ListUserPermissions(ctx context.Context, userID string) ([]biz
 	rows, err := r.db.QueryContext(
 		ctx,
 		`SELECT DISTINCT p.id, p.code, p.description, p.scope
-		FROM user u
+		FROM `+"`user`"+` u
 		JOIN user_role ur ON u.id = ur.user_id
 		JOIN role_permission rp ON ur.role_id = rp.role_id
 		JOIN permission p ON rp.permission_id = p.id
@@ -559,7 +564,8 @@ func (r *iamRepo) CreatePermission(ctx context.Context, permission biz.Permissio
 		permission.Scope,
 	)
 	if err != nil {
-		if strings.Contains(err.Error(), "Duplicate") {
+		var mysqlErr *mysql.MySQLError
+		if stderrors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
 			return r.getPermissionByCode(ctx, permission.Code)
 		}
 		return biz.Permission{}, err
@@ -688,7 +694,7 @@ func (r *iamRepo) ListRolePermissions(ctx context.Context, roleID string) ([]biz
 		`SELECT p.id, p.code, p.description, p.scope
 		FROM role_permission rp
 		JOIN permission p ON rp.permission_id = p.id
-		JOIN role r ON rp.role_id = r.id
+		JOIN `+"`role`"+` r ON rp.role_id = r.id
 		WHERE r.id = ? AND r.tenant_id = ? AND p.scope = ?`,
 		roleID,
 		tenantID,

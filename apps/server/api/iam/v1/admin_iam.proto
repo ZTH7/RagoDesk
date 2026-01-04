@@ -137,6 +137,7 @@ message Tenant {
   string plan = 3;
   string status = 4;
   google.protobuf.Timestamp created_at = 5;
+  string type = 6;
 }
 
 message User {
@@ -180,6 +181,7 @@ message CreateTenantRequest {
   string name = 1;
   string plan = 2;
   string status = 3;
+  string type = 4;
 }
 
 message GetTenantRequest {

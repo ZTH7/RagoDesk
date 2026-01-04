@@ -34,8 +34,16 @@ func (s *IAMService) CreateTenant(ctx context.Context, req *v1.CreateTenantReque
 	if err := s.uc.RequirePermission(ctx, biz.PermissionTenantCreate); err != nil {
 		return nil, err
 	}
+	tenantType := strings.TrimSpace(req.GetType())
+	if tenantType == "" {
+		tenantType = "enterprise"
+	}
+	if tenantType != "enterprise" && tenantType != "personal" {
+		return nil, errors.BadRequest("TENANT_TYPE_INVALID", "invalid tenant type")
+	}
 	tenantModel := biz.Tenant{
 		Name:   req.GetName(),
+		Type:   tenantType,
 		Plan:   req.GetPlan(),
 		Status: req.GetStatus(),
 	}
@@ -381,12 +389,13 @@ func toTimestamp(value time.Time) *timestamppb.Timestamp {
 }
 
 func toTenant(value biz.Tenant) *v1.Tenant {
-	if value.ID == "" && value.Name == "" && value.Plan == "" && value.Status == "" {
+	if value.ID == "" && value.Name == "" && value.Type == "" && value.Plan == "" && value.Status == "" {
 		return nil
 	}
 	return &v1.Tenant{
 		Id:        value.ID,
 		Name:      value.Name,
+		Type:      value.Type,
 		Plan:      value.Plan,
 		Status:    value.Status,
 		CreatedAt: toTimestamp(value.CreatedAt),

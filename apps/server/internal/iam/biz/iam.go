@@ -20,6 +20,7 @@ type IAM struct {
 type Tenant struct {
 	ID        string
 	Name      string
+	Type      string
 	Plan      string
 	Status    string
 	CreatedAt time.Time

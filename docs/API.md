@@ -128,6 +128,7 @@
 
 ### 3.1 租户管理
 - `POST /platform/v1/tenants`
+  - body: `name`, `plan`, `status`, `type`（`personal|enterprise`，默认 `enterprise`）
 - `GET /platform/v1/tenants`
 - `GET /platform/v1/tenants/{id}`
 

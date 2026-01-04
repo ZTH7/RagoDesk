@@ -44,3 +44,9 @@ dist/
 
 # Local docker data
 deploy/data/
+
+# Local Go build cache (used when default cache path is restricted)
+.gocache/
+
+# Temp files accidentally created by tools (e.g. gofmt/crash leftovers)
+*.go.[0-9]*

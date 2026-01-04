@@ -74,7 +74,7 @@ func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
 			PRIMARY KEY (id),
 			KEY idx_tenant_created_at (created_at)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
-		`CREATE TABLE IF NOT EXISTS user (
+		`CREATE TABLE IF NOT EXISTS ` + "`user`" + ` (
 			id VARCHAR(36) NOT NULL,
 			tenant_id VARCHAR(36) NOT NULL,
 			email VARCHAR(255) NULL,
@@ -87,7 +87,7 @@ func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
 			KEY idx_user_tenant (tenant_id),
 			KEY idx_user_created_at (tenant_id, created_at)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
-		`CREATE TABLE IF NOT EXISTS role (
+		`CREATE TABLE IF NOT EXISTS ` + "`role`" + ` (
 			id VARCHAR(36) NOT NULL,
 			tenant_id VARCHAR(36) NOT NULL,
 			name VARCHAR(128) NOT NULL,
@@ -154,6 +154,13 @@ func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
 		if _, err := db.ExecContext(ctx, stmt); err != nil {
 			return err
 		}
+	}
+
+	if err := ensureColumn(ctx, db, "tenant", "type", "VARCHAR(32) NOT NULL DEFAULT 'enterprise'"); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, "UPDATE tenant SET `type` = 'enterprise' WHERE `type` IS NULL OR `type` = ''"); err != nil {
+		return err
 	}
 
 	if err := ensureColumn(ctx, db, "permission", "scope", "VARCHAR(32) NOT NULL DEFAULT 'platform'"); err != nil {
