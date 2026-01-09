@@ -185,6 +185,7 @@
 - `DELETE /admin/v1/documents/{id}`
 - `POST /admin/v1/documents/{id}/reindex`
 - `POST /admin/v1/documents/{id}/rollback`
+上传请求字段：`kb_id`, `title`, `source_type`, `raw_uri`（OSS URI 或预签 URL）
 
 ### 4.5 API Key 管理
 - `POST /admin/v1/api_keys`

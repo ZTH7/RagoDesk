@@ -42,6 +42,7 @@
 - Tables: `knowledge_base`, `document`, `document_version`, `doc_chunk`, `embedding`
 - Table: `bot_kb` (bot-to-knowledge-base association)
 - Object storage adapter (S3/MinIO)
+- Upload strategy: clients upload to OSS and pass `raw_uri` only (no raw text in MySQL)
 - Async ingestion job (RabbitMQ/Redis) + worker skeleton
 - Pipeline: upload → parse/clean → split → embed → upsert to vector DB
 - Chunking/索引数据契约（MVP 版，详见 `docs/RAG.md`）

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	stderrors "errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -353,20 +352,18 @@ func (r *knowledgeRepo) CreateDocumentVersion(ctx context.Context, v biz.Documen
 		v.ID = uuid.NewString()
 	}
 	v.TenantID = tenantID
+	if v.Version <= 0 {
+		return biz.DocumentVersion{}, kerrors.BadRequest("DOC_VERSION_INVALID", "document version invalid")
+	}
+	rawURI := strings.TrimSpace(v.RawURI)
+	if rawURI == "" {
+		return biz.DocumentVersion{}, kerrors.BadRequest("DOC_RAW_URI_MISSING", "document raw_uri missing")
+	}
 	if v.Status == "" {
 		v.Status = biz.DocumentVersionStatusProcessing
 	}
 	if v.CreatedAt.IsZero() {
 		v.CreatedAt = time.Now()
-	}
-	rawURI := strings.TrimSpace(v.RawURI)
-	if rawURI == "" && v.RawText != "" && r.storage != nil {
-		key := fmt.Sprintf("tenant/%s/document/%s/version/%d.txt", tenantID, v.DocumentID, v.Version)
-		if uri, err := r.storage.Put(ctx, key, []byte(v.RawText)); err == nil {
-			rawURI = uri
-		} else if r.log != nil {
-			r.log.Warnf("object storage put failed: %v", err)
-		}
 	}
 	_, err = r.db.ExecContext(
 		ctx,
@@ -376,7 +373,7 @@ func (r *knowledgeRepo) CreateDocumentVersion(ctx context.Context, v biz.Documen
 		v.TenantID,
 		v.DocumentID,
 		v.Version,
-		v.RawText,
+		"",
 		rawURI,
 		v.Status,
 		v.ErrorReason,
@@ -390,6 +387,7 @@ func (r *knowledgeRepo) CreateDocumentVersion(ctx context.Context, v biz.Documen
 		return biz.DocumentVersion{}, err
 	}
 	v.RawURI = rawURI
+	v.RawText = ""
 	return v, nil
 }
 
@@ -436,6 +434,24 @@ func (r *knowledgeRepo) GetDocumentVersionByNumber(ctx context.Context, document
 		return biz.DocumentVersion{}, err
 	}
 	return v, nil
+}
+
+func (r *knowledgeRepo) LoadDocumentContent(ctx context.Context, v biz.DocumentVersion) ([]byte, error) {
+	rawURI := strings.TrimSpace(v.RawURI)
+	if rawURI == "" {
+		return nil, kerrors.BadRequest("DOC_RAW_URI_MISSING", "document raw_uri missing")
+	}
+	if r.storage == nil {
+		return nil, kerrors.InternalServer("OBJECT_STORAGE_MISSING", "object storage not configured")
+	}
+	payload, err := r.storage.Get(ctx, rawURI)
+	if err != nil {
+		return nil, err
+	}
+	if len(payload) == 0 {
+		return nil, kerrors.BadRequest("DOC_CONTENT_EMPTY", "document content empty")
+	}
+	return payload, nil
 }
 
 func (r *knowledgeRepo) ListDocumentVersions(ctx context.Context, documentID string) ([]biz.DocumentVersion, error) {

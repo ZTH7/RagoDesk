@@ -23,6 +23,7 @@
 - 队列/重试/幂等的工程化：dead-letter、退避、去重键、任务可观测与人工重放
 - hybrid + rerank：融合策略、alpha 权重、默认重排模型与可配置化
 - Prompt registry 与 A/B：版本化、灰度、回滚、效果对比
+- 清洗规则与原文存储策略：支持 tenant/KB 级清洗 profile（页眉页脚、噪音模式、结构化提取）；
 
 ---
 
@@ -45,17 +46,17 @@
 
 ## 3.1 当前实现（Phase 2 已落地）
 
-- 入口：`/admin/v1/documents/upload`（写 `document` + `document_version`，触发 ingestion）
-- 执行方式：RabbitMQ 入队 + `apps/server/cmd/ingester` 消费（API 进程只负责入队）
+- 入口：`/admin/v1/documents/upload`（写 `document` + `document_version`，触发 ingestion；必填 `raw_uri`）
+- 执行方式：RabbitMQ（优先）或 Redis 入队 + `apps/server/cmd/ingester` 消费（API 进程只负责入队）
 - 解析/清洗：
 - `text/markdown/html` 走清洗（HTML strip + 规范化空白）
 - `url` 走 HTTP GET 拉取（HTML 自动 strip）
-- `docx` 以 base64 传入，解析 `word/document.xml`
-- `pdf`/`doc` 目前视为纯文本（待完善）
+- `docx`/`pdf`/`doc`：从 `raw_uri` 读取原文件（OSS 或预签 URL），按格式 best-effort 提取文本
 - Chunking：token-based 估算切分 + overlap（可通过环境变量配置）
 - Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`；离线文档 embedding 支持批量处理
 - 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
 - 重试：RabbitMQ retry queue（TTL + DLX）+ DLQ，指数退避
+- 原文存储：上传直达 OSS，仅保存 `raw_uri`（读取时按需回源）
 - 删除：`DELETE /admin/v1/documents/{id}` 会清理 MySQL 元数据 + Qdrant points（按 `tenant_id` + `document_id` filter）+ 原始文档存储（`raw_uri`）
 
 **当前可配置（env）**
@@ -79,7 +80,7 @@
 - 最小可用契约（基础）：
 - `chunk schema`（MySQL）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `created_at`
 - `vector payload`（VectorDB）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`
-- `refs schema`（用于引用来源）：`document_id`, `document_version_id`, `chunk_id`, `score`, `rank`, `snippet(optional)`
+- `refs schema`（用于引用来源）：`document_id`, `document_version_id`, `chunk_id`, `score`, `rank`, `snippet(optional)`（代码见 `apps/server/internal/rag/biz/refs.go`）
 - Chunking 默认（基础）：固定窗口（token-based）+ overlap。
 - Chunking 可配置项（优化）：`chunk_size_tokens`, `chunk_overlap_tokens`, `split_strategy`（fixed/semantic）, `min_chunk_tokens`, `max_chunk_tokens`，并允许按 KB/文档覆盖。
 - 增量更新（优化）：document 更新生成新 `document_version_id`，索引采取 append-only；上线后再逐步完善“版本可见性”（例如只检索 latest version）。

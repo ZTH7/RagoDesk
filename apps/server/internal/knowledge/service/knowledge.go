@@ -179,7 +179,7 @@ func (s *KnowledgeService) UploadDocument(ctx context.Context, req *v1.UploadDoc
 	if err := s.iamUC.RequirePermission(ctx, biz.PermissionDocumentUpload); err != nil {
 		return nil, err
 	}
-	doc, ver, err := s.uc.UploadDocument(ctx, req.GetKbId(), req.GetTitle(), req.GetSourceType(), req.GetContent())
+	doc, ver, err := s.uc.UploadDocument(ctx, req.GetKbId(), req.GetTitle(), req.GetSourceType(), req.GetRawUri())
 	if err != nil {
 		return nil, err
 	}

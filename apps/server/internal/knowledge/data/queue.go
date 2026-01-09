@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
 	"github.com/go-kratos/kratos/v2/log"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -38,71 +40,70 @@ type rabbitQueue struct {
 }
 
 func NewIngestionQueue(cfg *conf.Data, logger log.Logger) biz.IngestionQueue {
-	if cfg == nil || cfg.Rabbitmq == nil || cfg.Rabbitmq.Addr == "" {
+	if cfg == nil {
 		return nil
 	}
-	helper := log.NewHelper(logger)
-	conn, err := amqp.Dial(cfg.Rabbitmq.Addr)
-	if err != nil {
-		helper.Warnf("rabbitmq dial failed: %v", err)
-		return nil
+	if cfg.Rabbitmq != nil && cfg.Rabbitmq.Addr != "" {
+		helper := log.NewHelper(logger)
+		conn, err := amqp.Dial(cfg.Rabbitmq.Addr)
+		if err != nil {
+			helper.Warnf("rabbitmq dial failed: %v", err)
+		} else {
+			ch, err := conn.Channel()
+			if err != nil {
+				helper.Warnf("rabbitmq channel failed: %v", err)
+				_ = conn.Close()
+			} else {
+				if _, err := ch.QueueDeclare(
+					ingestionQueueName,
+					true,
+					false,
+					false,
+					false,
+					nil,
+				); err != nil {
+					helper.Warnf("rabbitmq declare queue failed: %v", err)
+					_ = ch.Close()
+					_ = conn.Close()
+				} else if _, err := ch.QueueDeclare(
+					ingestionRetryQueueName,
+					true,
+					false,
+					false,
+					false,
+					amqp.Table{
+						"x-dead-letter-exchange":    "",
+						"x-dead-letter-routing-key": ingestionQueueName,
+					},
+				); err != nil {
+					helper.Warnf("rabbitmq declare retry queue failed: %v", err)
+					_ = ch.Close()
+					_ = conn.Close()
+				} else if _, err := ch.QueueDeclare(
+					ingestionDLQName,
+					true,
+					false,
+					false,
+					false,
+					nil,
+				); err != nil {
+					helper.Warnf("rabbitmq declare dlq failed: %v", err)
+					_ = ch.Close()
+					_ = conn.Close()
+				} else {
+					return &rabbitQueue{
+						conn:  conn,
+						ch:    ch,
+						queue: ingestionQueueName,
+						retry: ingestionRetryQueueName,
+						dlq:   ingestionDLQName,
+						log:   helper,
+					}
+				}
+			}
+		}
 	}
-	ch, err := conn.Channel()
-	if err != nil {
-		helper.Warnf("rabbitmq channel failed: %v", err)
-		_ = conn.Close()
-		return nil
-	}
-	if _, err := ch.QueueDeclare(
-		ingestionQueueName,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	); err != nil {
-		helper.Warnf("rabbitmq declare queue failed: %v", err)
-		_ = ch.Close()
-		_ = conn.Close()
-		return nil
-	}
-	if _, err := ch.QueueDeclare(
-		ingestionRetryQueueName,
-		true,
-		false,
-		false,
-		false,
-		amqp.Table{
-			"x-dead-letter-exchange":    "",
-			"x-dead-letter-routing-key": ingestionQueueName,
-		},
-	); err != nil {
-		helper.Warnf("rabbitmq declare retry queue failed: %v", err)
-		_ = ch.Close()
-		_ = conn.Close()
-		return nil
-	}
-	if _, err := ch.QueueDeclare(
-		ingestionDLQName,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	); err != nil {
-		helper.Warnf("rabbitmq declare dlq failed: %v", err)
-		_ = ch.Close()
-		_ = conn.Close()
-		return nil
-	}
-	return &rabbitQueue{
-		conn:  conn,
-		ch:    ch,
-		queue: ingestionQueueName,
-		retry: ingestionRetryQueueName,
-		dlq:   ingestionDLQName,
-		log:   helper,
-	}
+	return newRedisQueue(cfg, logger)
 }
 
 func (q *rabbitQueue) Enqueue(ctx context.Context, job biz.IngestionJob) error {
@@ -265,4 +266,150 @@ func (q *rabbitQueue) Close() error {
 		return q.conn.Close()
 	}
 	return nil
+}
+
+type redisQueue struct {
+	client *redis.Client
+	queue  string
+	dlq    string
+	log    *log.Helper
+}
+
+type redisIngestionPayload struct {
+	Job   biz.IngestionJob `json:"job"`
+	Retry int              `json:"retry,omitempty"`
+}
+
+func newRedisQueue(cfg *conf.Data, logger log.Logger) biz.IngestionQueue {
+	if cfg == nil || cfg.Redis == nil || cfg.Redis.Addr == "" {
+		return nil
+	}
+	helper := log.NewHelper(logger)
+	options := &redis.Options{
+		Addr: cfg.Redis.Addr,
+	}
+	if cfg.Redis.Network != "" {
+		options.Network = cfg.Redis.Network
+	}
+	if cfg.Redis.ReadTimeout != nil {
+		options.ReadTimeout = cfg.Redis.ReadTimeout.AsDuration()
+	}
+	if cfg.Redis.WriteTimeout != nil {
+		options.WriteTimeout = cfg.Redis.WriteTimeout.AsDuration()
+	}
+	client := redis.NewClient(options)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := client.Ping(ctx).Err(); err != nil {
+		helper.Warnf("redis ping failed: %v", err)
+		_ = client.Close()
+		return nil
+	}
+	return &redisQueue{
+		client: client,
+		queue:  ingestionQueueName,
+		dlq:    ingestionDLQName,
+		log:    helper,
+	}
+}
+
+func (q *redisQueue) Enqueue(ctx context.Context, job biz.IngestionJob) error {
+	payload, err := json.Marshal(redisIngestionPayload{Job: job})
+	if err != nil {
+		return err
+	}
+	return q.client.RPush(ctx, q.queue, payload).Err()
+}
+
+func (q *redisQueue) Start(ctx context.Context, handler func(context.Context, biz.IngestionJob) error) error {
+	go func() {
+		maxRetries := ingestionMaxRetries()
+		backoffBase := ingestionBackoff()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			result, err := q.client.BRPop(ctx, time.Second, q.queue).Result()
+			if err != nil {
+				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, redis.Nil) {
+					continue
+				}
+				q.log.Warnf("redis brpop failed: %v", err)
+				continue
+			}
+			if len(result) < 2 {
+				continue
+			}
+			job, retry, err := decodeRedisPayload(result[1])
+			if err != nil {
+				q.log.Warnf("redis payload decode failed: %v", err)
+				continue
+			}
+			if err := handler(context.Background(), job); err != nil {
+				if retry < maxRetries {
+					delay := backoffBase
+					if retry > 0 {
+						delay = backoffBase * time.Duration(1<<retry)
+					}
+					q.requeueWithDelay(job, retry+1, delay)
+				} else {
+					q.pushDLQ(job, retry)
+				}
+			}
+		}
+	}()
+	return nil
+}
+
+func (q *redisQueue) requeueWithDelay(job biz.IngestionJob, retry int, delay time.Duration) {
+	payload, err := json.Marshal(redisIngestionPayload{Job: job, Retry: retry})
+	if err != nil {
+		q.log.Warnf("redis requeue marshal failed: %v", err)
+		return
+	}
+	if delay <= 0 {
+		if err := q.client.RPush(context.Background(), q.queue, payload).Err(); err != nil {
+			q.log.Warnf("redis requeue failed: %v", err)
+		}
+		return
+	}
+	time.AfterFunc(delay, func() {
+		if err := q.client.RPush(context.Background(), q.queue, payload).Err(); err != nil {
+			q.log.Warnf("redis delayed requeue failed: %v", err)
+		}
+	})
+}
+
+func (q *redisQueue) pushDLQ(job biz.IngestionJob, retry int) {
+	payload, err := json.Marshal(redisIngestionPayload{Job: job, Retry: retry})
+	if err != nil {
+		q.log.Warnf("redis dlq marshal failed: %v", err)
+		return
+	}
+	if err := q.client.RPush(context.Background(), q.dlq, payload).Err(); err != nil {
+		q.log.Warnf("redis dlq push failed: %v", err)
+	}
+}
+
+func decodeRedisPayload(raw string) (biz.IngestionJob, int, error) {
+	var payload redisIngestionPayload
+	if err := json.Unmarshal([]byte(raw), &payload); err == nil {
+		if payload.Job.DocumentID != "" || payload.Job.DocumentVersionID != "" {
+			return payload.Job, payload.Retry, nil
+		}
+	}
+	var job biz.IngestionJob
+	if err := json.Unmarshal([]byte(raw), &job); err != nil {
+		return biz.IngestionJob{}, 0, err
+	}
+	return job, 0, nil
+}
+
+func (q *redisQueue) Close() error {
+	if q.client == nil {
+		return nil
+	}
+	return q.client.Close()
 }

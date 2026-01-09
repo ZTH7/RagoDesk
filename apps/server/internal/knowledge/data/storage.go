@@ -1,13 +1,15 @@
 package data
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
@@ -16,37 +18,25 @@ import (
 )
 
 type objectStorage interface {
-	Put(ctx context.Context, key string, content []byte) (string, error)
 	Delete(ctx context.Context, uri string) error
+	Get(ctx context.Context, uri string) ([]byte, error)
 }
 
 type noopStorage struct{}
-
-func (noopStorage) Put(ctx context.Context, key string, content []byte) (string, error) {
-	return "", nil
-}
 
 func (noopStorage) Delete(ctx context.Context, uri string) error {
 	return nil
 }
 
-type localStorage struct {
-	baseDir string
+func (noopStorage) Get(ctx context.Context, uri string) ([]byte, error) {
+	if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
+		return httpGetBytes(ctx, uri)
+	}
+	return nil, nil
 }
 
-func (l localStorage) Put(ctx context.Context, key string, content []byte) (string, error) {
-	if l.baseDir == "" {
-		return "", nil
-	}
-	safeKey := filepath.FromSlash(strings.TrimPrefix(key, "/"))
-	path := filepath.Join(l.baseDir, safeKey)
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return "", err
-	}
-	if err := os.WriteFile(path, content, 0o644); err != nil {
-		return "", err
-	}
-	return "file://" + path, nil
+type localStorage struct {
+	baseDir string
 }
 
 func (l localStorage) Delete(ctx context.Context, uri string) error {
@@ -69,31 +59,30 @@ func (l localStorage) Delete(ctx context.Context, uri string) error {
 	return nil
 }
 
+func (l localStorage) Get(ctx context.Context, uri string) ([]byte, error) {
+	if uri == "" {
+		return nil, nil
+	}
+	if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
+		return httpGetBytes(ctx, uri)
+	}
+	path := strings.TrimPrefix(uri, "file://")
+	if path == uri {
+		path = strings.TrimPrefix(path, "/")
+		if l.baseDir != "" && !filepath.IsAbs(path) {
+			path = filepath.Join(l.baseDir, filepath.FromSlash(path))
+		}
+	}
+	if path == "" {
+		return nil, nil
+	}
+	return os.ReadFile(path)
+}
+
 type s3Storage struct {
 	client *minio.Client
 	bucket string
 	region string
-}
-
-func (s s3Storage) Put(ctx context.Context, key string, content []byte) (string, error) {
-	object := strings.TrimPrefix(key, "/")
-	exists, err := s.client.BucketExists(ctx, s.bucket)
-	if err != nil {
-		return "", err
-	}
-	if !exists {
-		if err := s.client.MakeBucket(ctx, s.bucket, minio.MakeBucketOptions{Region: s.region}); err != nil {
-			return "", err
-		}
-	}
-	reader := bytes.NewReader(content)
-	_, err = s.client.PutObject(ctx, s.bucket, object, reader, int64(len(content)), minio.PutObjectOptions{
-		ContentType: "text/plain",
-	})
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("s3://%s/%s", s.bucket, object), nil
 }
 
 func (s s3Storage) Delete(ctx context.Context, uri string) error {
@@ -114,6 +103,54 @@ func (s s3Storage) Delete(ctx context.Context, uri string) error {
 		return nil
 	}
 	return s.client.RemoveObject(ctx, bucket, object, minio.RemoveObjectOptions{})
+}
+
+func (s s3Storage) Get(ctx context.Context, uri string) ([]byte, error) {
+	if s.client == nil || uri == "" {
+		return nil, nil
+	}
+	if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
+		return httpGetBytes(ctx, uri)
+	}
+	bucket := s.bucket
+	object := ""
+	if strings.HasPrefix(uri, "s3://") {
+		if parsed, err := url.Parse(uri); err == nil {
+			if parsed.Host != "" {
+				bucket = parsed.Host
+			}
+			object = strings.TrimPrefix(parsed.Path, "/")
+		}
+	}
+	if object == "" {
+		return nil, nil
+	}
+	obj, err := s.client.GetObject(ctx, bucket, object, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer obj.Close()
+	return io.ReadAll(obj)
+}
+
+func httpGetBytes(ctx context.Context, uri string) ([]byte, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	client := &http.Client{Timeout: 15 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("object get failed: %s", resp.Status)
+	}
+	return io.ReadAll(resp.Body)
 }
 
 func newObjectStorage(cfg *conf.Data, logger *log.Helper) objectStorage {

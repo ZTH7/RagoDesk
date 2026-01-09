@@ -185,7 +185,7 @@ message UploadDocumentRequest {
   string kb_id = 1;
   string title = 2;
   string source_type = 3;
-  string content = 4;
+  string raw_uri = 4;
 }
 
 message UploadDocumentResponse {

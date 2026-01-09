@@ -146,6 +146,7 @@ type KnowledgeRepo interface {
 	GetDocumentVersionByNumber(ctx context.Context, documentID string, version int32) (DocumentVersion, error)
 	ListDocumentVersions(ctx context.Context, documentID string) ([]DocumentVersion, error)
 	UpdateDocumentVersionStatus(ctx context.Context, versionID string, status string, errorReason string) error
+	LoadDocumentContent(ctx context.Context, version DocumentVersion) ([]byte, error)
 
 	IndexDocumentVersion(ctx context.Context, req IndexDocumentVersionRequest) error
 	RollbackDocument(ctx context.Context, documentID string, version int32) error
@@ -302,19 +303,19 @@ func (uc *KnowledgeUsecase) UnbindBotKnowledgeBase(ctx context.Context, botID, k
 	return uc.repo.UnbindBotKnowledgeBase(ctx, botID, kbID)
 }
 
-func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sourceType, content string) (Document, DocumentVersion, error) {
+func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sourceType, rawURI string) (Document, DocumentVersion, error) {
 	kbID = strings.TrimSpace(kbID)
 	title = strings.TrimSpace(title)
 	sourceType = normalizeSourceType(sourceType)
-	content = strings.TrimSpace(content)
+	rawURI = strings.TrimSpace(rawURI)
 	if kbID == "" {
 		return Document{}, DocumentVersion{}, errors.BadRequest("KB_ID_MISSING", "kb_id missing")
 	}
 	if title == "" {
 		return Document{}, DocumentVersion{}, errors.BadRequest("DOC_TITLE_MISSING", "title missing")
 	}
-	if content == "" {
-		return Document{}, DocumentVersion{}, errors.BadRequest("DOC_CONTENT_MISSING", "content missing")
+	if rawURI == "" {
+		return Document{}, DocumentVersion{}, errors.BadRequest("DOC_RAW_URI_MISSING", "raw_uri missing")
 	}
 	// Ensure KB exists (tenant scoped).
 	if _, err := uc.repo.GetKnowledgeBase(ctx, kbID); err != nil {
@@ -338,7 +339,7 @@ func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sou
 	ver, err := uc.repo.CreateDocumentVersion(ctx, DocumentVersion{
 		DocumentID: doc.ID,
 		Version:    1,
-		RawText:    content,
+		RawURI:     rawURI,
 		Status:     DocumentVersionStatusProcessing,
 	})
 	if err != nil {
@@ -396,11 +397,14 @@ func (uc *KnowledgeUsecase) ReindexDocument(ctx context.Context, id string) (Doc
 	if err != nil {
 		return DocumentVersion{}, err
 	}
+	if strings.TrimSpace(current.RawURI) == "" {
+		return DocumentVersion{}, errors.BadRequest("DOC_RAW_URI_MISSING", "document raw_uri missing")
+	}
 	nextVersion := doc.CurrentVersion + 1
 	ver, err := uc.repo.CreateDocumentVersion(ctx, DocumentVersion{
 		DocumentID: id,
 		Version:    nextVersion,
-		RawText:    current.RawText,
+		RawURI:     current.RawURI,
 		Status:     DocumentVersionStatusProcessing,
 	})
 	if err != nil {
@@ -472,7 +476,21 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 		return err
 	}
 	sourceType := normalizeSourceType(doc.SourceType)
-	parsed, err := parseContent(ctx, sourceType, version.RawText)
+	var rawInput []byte
+	if sourceType == "url" {
+		rawInput = []byte(strings.TrimSpace(version.RawURI))
+	} else {
+		rawInput, err = uc.repo.LoadDocumentContent(ctx, version)
+		if err != nil {
+			_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusFailed, err.Error())
+			_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)
+			return err
+		}
+	}
+	if len(rawInput) == 0 {
+		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
+	}
+	parsed, err := parseContentBytes(ctx, sourceType, rawInput)
 	if err != nil {
 		_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusFailed, err.Error())
 		_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)

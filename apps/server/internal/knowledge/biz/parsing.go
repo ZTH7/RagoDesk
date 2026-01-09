@@ -4,15 +4,20 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"encoding/base64"
+	"encoding/binary"
 	"encoding/xml"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf16"
 
 	"github.com/go-kratos/kratos/v2/errors"
+	"rsc.io/pdf"
 )
 
 const maxDocumentBytes = 5 << 20
@@ -47,15 +52,17 @@ func prepareContentNormalized(sourceType, content string) string {
 	return cleanContent(content)
 }
 
-func parseContent(ctx context.Context, sourceType, raw string) (string, error) {
+func parseContentBytes(ctx context.Context, sourceType string, raw []byte) (string, error) {
 	switch sourceType {
 	case "url":
-		return fetchURLText(ctx, raw)
+		return fetchURLText(ctx, strings.TrimSpace(string(raw)))
 	case "doc":
-		return parseDocxBase64(raw)
+		return parseDocBytes(raw)
+	case "pdf":
+		return parsePDFBytes(raw)
 	default:
-		// pdf / text / markdown / html fall back to raw text
-		return raw, nil
+		// text / markdown / html fall back to raw text
+		return string(raw), nil
 	}
 }
 
@@ -93,14 +100,23 @@ func fetchURLText(ctx context.Context, raw string) (string, error) {
 	return text, nil
 }
 
-func parseDocxBase64(raw string) (string, error) {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return "", errors.BadRequest("DOCX_CONTENT_EMPTY", "docx content missing")
+func parseDocBytes(payload []byte) (string, error) {
+	if len(payload) == 0 {
+		return "", errors.BadRequest("DOC_CONTENT_EMPTY", "doc content missing")
 	}
-	payload, err := base64.StdEncoding.DecodeString(raw)
-	if err != nil {
-		return "", errors.BadRequest("DOCX_BASE64_INVALID", "docx content must be base64")
+	if looksLikeZip(payload) {
+		return parseDocxBytes(payload)
+	}
+	text := extractDocBinaryText(payload)
+	if strings.TrimSpace(text) == "" {
+		return "", errors.BadRequest("DOC_PARSE_FAILED", "doc content parse failed")
+	}
+	return text, nil
+}
+
+func parseDocxBytes(payload []byte) (string, error) {
+	if len(payload) == 0 {
+		return "", errors.BadRequest("DOCX_CONTENT_EMPTY", "docx content missing")
 	}
 	readerAt := bytes.NewReader(payload)
 	zr, err := zip.NewReader(readerAt, int64(len(payload)))
@@ -150,6 +166,118 @@ func parseDocxBase64(raw string) (string, error) {
 		}
 	}
 	return builder.String(), nil
+}
+
+func parsePDFBytes(payload []byte) (string, error) {
+	if len(payload) == 0 {
+		return "", errors.BadRequest("PDF_CONTENT_EMPTY", "pdf content missing")
+	}
+	tmpFile, err := os.CreateTemp("", "ragdesk-*.pdf")
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
+	if _, err := tmpFile.Write(payload); err != nil {
+		_ = tmpFile.Close()
+		return "", err
+	}
+	if err := tmpFile.Close(); err != nil {
+		return "", err
+	}
+	reader, err := pdf.Open(filepath.Clean(tmpFile.Name()))
+	if err != nil {
+		return "", err
+	}
+	var builder strings.Builder
+	for i := 1; i <= reader.NumPage(); i++ {
+		page := reader.Page(i)
+		if page.V.IsNull() {
+			continue
+		}
+		content := page.Content()
+		for _, text := range content.Text {
+			if text.S == "" {
+				continue
+			}
+			builder.WriteString(text.S)
+			builder.WriteString(" ")
+		}
+		builder.WriteString("\n")
+	}
+	return builder.String(), nil
+}
+
+func looksLikeZip(payload []byte) bool {
+	return len(payload) >= 4 && payload[0] == 'P' && payload[1] == 'K' && payload[2] == 0x03 && payload[3] == 0x04
+}
+
+func extractDocBinaryText(payload []byte) string {
+	utf16Text := extractUTF16Text(payload)
+	asciiText := extractASCIIText(payload)
+	if len(utf16Text) >= len(asciiText) {
+		return utf16Text
+	}
+	return asciiText
+}
+
+func extractUTF16Text(payload []byte) string {
+	if len(payload) < 4 {
+		return ""
+	}
+	count := len(payload) / 2
+	u16 := make([]uint16, 0, count)
+	for i := 0; i+1 < len(payload); i += 2 {
+		u16 = append(u16, binary.LittleEndian.Uint16(payload[i:]))
+	}
+	runes := utf16.Decode(u16)
+	return filterPrintable(runes)
+}
+
+func extractASCIIText(payload []byte) string {
+	if len(payload) == 0 {
+		return ""
+	}
+	var out []string
+	buf := make([]byte, 0, 128)
+	flush := func() {
+		if len(buf) >= 3 {
+			out = append(out, string(buf))
+		}
+		buf = buf[:0]
+	}
+	for _, b := range payload {
+		if b >= 32 && b < 127 {
+			buf = append(buf, b)
+			continue
+		}
+		flush()
+	}
+	flush()
+	return strings.Join(out, " ")
+}
+
+func filterPrintable(runes []rune) string {
+	var builder strings.Builder
+	lastSpace := false
+	for _, r := range runes {
+		if r == 0 || r == '\uFFFD' {
+			continue
+		}
+		if unicode.IsSpace(r) {
+			if !lastSpace {
+				builder.WriteRune(' ')
+				lastSpace = true
+			}
+			continue
+		}
+		if unicode.IsPrint(r) {
+			builder.WriteRune(r)
+			lastSpace = false
+		}
+	}
+	return strings.TrimSpace(builder.String())
 }
 
 func cleanContent(input string) string {

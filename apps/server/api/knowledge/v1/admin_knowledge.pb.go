@@ -957,7 +957,7 @@ type UploadDocumentRequest struct {
 	KbId          string                 `protobuf:"bytes,1,opt,name=kb_id,json=kbId,proto3" json:"kb_id,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	SourceType    string                 `protobuf:"bytes,3,opt,name=source_type,json=sourceType,proto3" json:"source_type,omitempty"`
-	Content       string                 `protobuf:"bytes,4,opt,name=content,proto3" json:"content,omitempty"`
+	RawUri        string                 `protobuf:"bytes,4,opt,name=raw_uri,json=rawUri,proto3" json:"raw_uri,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1013,9 +1013,9 @@ func (x *UploadDocumentRequest) GetSourceType() string {
 	return ""
 }
 
-func (x *UploadDocumentRequest) GetContent() string {
+func (x *UploadDocumentRequest) GetRawUri() string {
 	if x != nil {
-		return x.Content
+		return x.RawUri
 	}
 	return ""
 }
@@ -1500,13 +1500,13 @@ const file_api_knowledge_v1_admin_knowledge_proto_rawDesc = "" +
 	"\x15KnowledgeBaseResponse\x12F\n" +
 	"\x0eknowledge_base\x18\x01 \x01(\v2\x1f.api.knowledge.v1.KnowledgeBaseR\rknowledgeBase\"U\n" +
 	"\x18BotKnowledgeBaseResponse\x129\n" +
-	"\x06bot_kb\x18\x01 \x01(\v2\".api.knowledge.v1.BotKnowledgeBaseR\x05botKb\"}\n" +
+	"\x06bot_kb\x18\x01 \x01(\v2\".api.knowledge.v1.BotKnowledgeBaseR\x05botKb\"|\n" +
 	"\x15UploadDocumentRequest\x12\x13\n" +
 	"\x05kb_id\x18\x01 \x01(\tR\x04kbId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1f\n" +
 	"\vsource_type\x18\x03 \x01(\tR\n" +
-	"sourceType\x12\x18\n" +
-	"\acontent\x18\x04 \x01(\tR\acontent\"\x8d\x01\n" +
+	"sourceType\x12\x17\n" +
+	"\araw_uri\x18\x04 \x01(\tR\x06rawUri\"\x8d\x01\n" +
 	"\x16UploadDocumentResponse\x126\n" +
 	"\bdocument\x18\x01 \x01(\v2\x1a.api.knowledge.v1.DocumentR\bdocument\x12;\n" +
 	"\aversion\x18\x02 \x01(\v2!.api.knowledge.v1.DocumentVersionR\aversion\"$\n" +
