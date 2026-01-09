@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -14,7 +15,11 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-const ingestionQueueName = "ragdesk.ingestion"
+const (
+	ingestionQueueName      = "ragdesk.ingestion"
+	ingestionRetryQueueName = "ragdesk.ingestion.retry"
+	ingestionDLQName        = "ragdesk.ingestion.dlq"
+)
 const (
 	ingestionRetryHeader = "x-retry"
 	defaultMaxRetries    = 3
@@ -27,6 +32,8 @@ type rabbitQueue struct {
 	conn  *amqp.Connection
 	ch    *amqp.Channel
 	queue string
+	retry string
+	dlq   string
 	log   *log.Helper
 }
 
@@ -59,10 +66,41 @@ func NewIngestionQueue(cfg *conf.Data, logger log.Logger) biz.IngestionQueue {
 		_ = conn.Close()
 		return nil
 	}
+	if _, err := ch.QueueDeclare(
+		ingestionRetryQueueName,
+		true,
+		false,
+		false,
+		false,
+		amqp.Table{
+			"x-dead-letter-exchange":    "",
+			"x-dead-letter-routing-key": ingestionQueueName,
+		},
+	); err != nil {
+		helper.Warnf("rabbitmq declare retry queue failed: %v", err)
+		_ = ch.Close()
+		_ = conn.Close()
+		return nil
+	}
+	if _, err := ch.QueueDeclare(
+		ingestionDLQName,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	); err != nil {
+		helper.Warnf("rabbitmq declare dlq failed: %v", err)
+		_ = ch.Close()
+		_ = conn.Close()
+		return nil
+	}
 	return &rabbitQueue{
 		conn:  conn,
 		ch:    ch,
 		queue: ingestionQueueName,
+		retry: ingestionRetryQueueName,
+		dlq:   ingestionDLQName,
 		log:   helper,
 	}
 }
@@ -72,7 +110,7 @@ func (q *rabbitQueue) Enqueue(ctx context.Context, job biz.IngestionJob) error {
 	if err != nil {
 		return err
 	}
-	return q.publish(ctx, payload, amqp.Table{})
+	return q.publish(ctx, q.queue, payload, amqp.Table{}, 0)
 }
 
 func (q *rabbitQueue) Start(ctx context.Context, handler func(context.Context, biz.IngestionJob) error) error {
@@ -114,19 +152,22 @@ func (q *rabbitQueue) Start(ctx context.Context, handler func(context.Context, b
 						if retry > 0 {
 							delay = backoffBase * time.Duration(1<<retry)
 						}
-						if delay > 0 {
-							time.Sleep(delay)
-						}
 						headers := cloneHeaders(msg.Headers)
 						headers[ingestionRetryHeader] = retry + 1
-						if err := q.publish(context.Background(), msg.Body, headers); err != nil {
+						if err := q.publish(context.Background(), q.retry, msg.Body, headers, delay); err != nil {
 							_ = msg.Nack(false, true)
 							continue
 						}
 						_ = msg.Ack(false)
 						continue
 					}
-					_ = msg.Nack(false, false)
+					headers := cloneHeaders(msg.Headers)
+					headers[ingestionRetryHeader] = retry
+					if err := q.publish(context.Background(), q.dlq, msg.Body, headers, 0); err != nil {
+						_ = msg.Nack(false, true)
+						continue
+					}
+					_ = msg.Ack(false)
 					continue
 				}
 				_ = msg.Ack(false)
@@ -136,23 +177,27 @@ func (q *rabbitQueue) Start(ctx context.Context, handler func(context.Context, b
 	return nil
 }
 
-func (q *rabbitQueue) publish(ctx context.Context, payload []byte, headers amqp.Table) error {
+func (q *rabbitQueue) publish(ctx context.Context, queue string, payload []byte, headers amqp.Table, delay time.Duration) error {
 	if headers == nil {
 		headers = amqp.Table{}
+	}
+	pub := amqp.Publishing{
+		ContentType:  "application/json",
+		DeliveryMode: amqp.Persistent,
+		Timestamp:    time.Now(),
+		Body:         payload,
+		Headers:      headers,
+	}
+	if delay > 0 {
+		pub.Expiration = fmt.Sprintf("%d", delay.Milliseconds())
 	}
 	return q.ch.PublishWithContext(
 		ctx,
 		"",
-		q.queue,
+		queue,
 		false,
 		false,
-		amqp.Publishing{
-			ContentType:  "application/json",
-			DeliveryMode: amqp.Persistent,
-			Timestamp:    time.Now(),
-			Body:         payload,
-			Headers:      headers,
-		},
+		pub,
 	)
 }
 

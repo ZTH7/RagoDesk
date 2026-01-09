@@ -17,12 +17,17 @@ import (
 
 type objectStorage interface {
 	Put(ctx context.Context, key string, content []byte) (string, error)
+	Delete(ctx context.Context, uri string) error
 }
 
 type noopStorage struct{}
 
 func (noopStorage) Put(ctx context.Context, key string, content []byte) (string, error) {
 	return "", nil
+}
+
+func (noopStorage) Delete(ctx context.Context, uri string) error {
+	return nil
 }
 
 type localStorage struct {
@@ -42,6 +47,26 @@ func (l localStorage) Put(ctx context.Context, key string, content []byte) (stri
 		return "", err
 	}
 	return "file://" + path, nil
+}
+
+func (l localStorage) Delete(ctx context.Context, uri string) error {
+	if uri == "" {
+		return nil
+	}
+	path := strings.TrimPrefix(uri, "file://")
+	if path == uri {
+		path = strings.TrimPrefix(path, "/")
+		if l.baseDir != "" && !filepath.IsAbs(path) {
+			path = filepath.Join(l.baseDir, filepath.FromSlash(path))
+		}
+	}
+	if path == "" {
+		return nil
+	}
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
 }
 
 type s3Storage struct {
@@ -69,6 +94,26 @@ func (s s3Storage) Put(ctx context.Context, key string, content []byte) (string,
 		return "", err
 	}
 	return fmt.Sprintf("s3://%s/%s", s.bucket, object), nil
+}
+
+func (s s3Storage) Delete(ctx context.Context, uri string) error {
+	if s.client == nil || uri == "" {
+		return nil
+	}
+	bucket := s.bucket
+	object := ""
+	if strings.HasPrefix(uri, "s3://") {
+		if parsed, err := url.Parse(uri); err == nil {
+			if parsed.Host != "" {
+				bucket = parsed.Host
+			}
+			object = strings.TrimPrefix(parsed.Path, "/")
+		}
+	}
+	if object == "" {
+		return nil
+	}
+	return s.client.RemoveObject(ctx, bucket, object, minio.RemoveObjectOptions{})
 }
 
 func newObjectStorage(cfg *conf.Data, logger *log.Helper) objectStorage {

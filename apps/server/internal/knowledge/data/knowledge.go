@@ -611,6 +611,33 @@ func (r *knowledgeRepo) DeleteDocument(ctx context.Context, documentID string) e
 	if err != nil {
 		return err
 	}
+	rawURIs := make([]string, 0)
+	{
+		rows, err := r.db.QueryContext(
+			ctx,
+			"SELECT raw_uri FROM document_version WHERE tenant_id = ? AND document_id = ? AND raw_uri <> ''",
+			tenantID,
+			documentID,
+		)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			var uri string
+			if err := rows.Scan(&uri); err != nil {
+				_ = rows.Close()
+				return err
+			}
+			if uri != "" {
+				rawURIs = append(rawURIs, uri)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			_ = rows.Close()
+			return err
+		}
+		_ = rows.Close()
+	}
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -662,6 +689,14 @@ func (r *knowledgeRepo) DeleteDocument(ctx context.Context, documentID string) e
 	}
 	if err := tx.Commit(); err != nil {
 		return err
+	}
+
+	if r.storage != nil {
+		for _, uri := range rawURIs {
+			if err := r.storage.Delete(ctx, uri); err != nil {
+				return err
+			}
+		}
 	}
 
 	if r.qdrant != nil && r.collection != "" {

@@ -53,9 +53,10 @@
 - `docx` 以 base64 传入，解析 `word/document.xml`
 - `pdf`/`doc` 目前视为纯文本（待完善）
 - Chunking：token-based 估算切分 + overlap（可通过环境变量配置）
-- Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`
+- Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`；离线文档 embedding 支持批量处理
 - 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
-- 删除：`DELETE /admin/v1/documents/{id}` 会清理 MySQL 元数据 + Qdrant points（按 `tenant_id` + `document_id` filter）
+- 重试：RabbitMQ retry queue（TTL + DLX）+ DLQ，指数退避
+- 删除：`DELETE /admin/v1/documents/{id}` 会清理 MySQL 元数据 + Qdrant points（按 `tenant_id` + `document_id` filter）+ 原始文档存储（`raw_uri`）
 
 **当前可配置（env）**
 - `RAGDESK_CHUNK_SIZE_TOKENS`
@@ -66,6 +67,7 @@
 - `RAGDESK_EMBEDDING_MODEL`
 - `RAGDESK_EMBEDDING_DIM`
 - `RAGDESK_EMBEDDING_TIMEOUT_MS`
+- `RAGDESK_EMBEDDING_BATCH_SIZE`
 - `RAGDESK_INGESTION_MAX_RETRIES`
 - `RAGDESK_INGESTION_BACKOFF_MS`
 

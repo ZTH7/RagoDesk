@@ -93,6 +93,7 @@
 - **同步路径**：用户请求 → RAG → 回复（要求低延迟）
 - **异步路径**：文档处理 / 统计聚合（高吞吐、可重试）
 - **执行方式**：由独立 ingestion worker（`apps/server/cmd/ingester`）消费 RabbitMQ；API 进程设置 `RAGDESK_INGESTION_ASYNC=1` 仅负责入队
+- **重试机制**：使用 retry queue（TTL + DLX）+ DLQ，按指数退避控制重试间隔
 
 ### 2.3 RAG 责任边界
 - **Knowledge & Ingestion**：负责文档处理、切分、向量化、索引构建与更新；不参与在线生成。
@@ -174,7 +175,7 @@ API-->>Client: reply
 - MySQL `doc_chunk`：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `created_at`
 - Qdrant payload：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`
 - Chunking（默认）：token-based 切分 + overlap
-- 可配置参数：`RAGDESK_CHUNK_SIZE_TOKENS`, `RAGDESK_CHUNK_OVERLAP_TOKENS`, `RAGDESK_EMBEDDING_PROVIDER`, `RAGDESK_EMBEDDING_MODEL`, `RAGDESK_EMBEDDING_DIM`, `RAGDESK_EMBEDDING_ENDPOINT`, `RAGDESK_EMBEDDING_API_KEY`, `RAGDESK_EMBEDDING_TIMEOUT_MS`, `RAGDESK_INGESTION_MAX_RETRIES`, `RAGDESK_INGESTION_BACKOFF_MS`
+- 可配置参数：`RAGDESK_CHUNK_SIZE_TOKENS`, `RAGDESK_CHUNK_OVERLAP_TOKENS`, `RAGDESK_EMBEDDING_PROVIDER`, `RAGDESK_EMBEDDING_MODEL`, `RAGDESK_EMBEDDING_DIM`, `RAGDESK_EMBEDDING_ENDPOINT`, `RAGDESK_EMBEDDING_API_KEY`, `RAGDESK_EMBEDDING_TIMEOUT_MS`, `RAGDESK_EMBEDDING_BATCH_SIZE`, `RAGDESK_INGESTION_MAX_RETRIES`, `RAGDESK_INGESTION_BACKOFF_MS`
 - 详细契约见 `docs/RAG.md`
 
 ### 3.4 统计分析流程
