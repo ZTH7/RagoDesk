@@ -48,13 +48,6 @@ func NewKnowledgeRepo(data *internaldata.Data, cfg *conf.Data, logger log.Logger
 	}
 }
 
-func (r *knowledgeRepo) Ping(ctx context.Context) error {
-	if r.db == nil {
-		return kerrors.InternalServer("DB_MISSING", "database not initialized")
-	}
-	return r.db.PingContext(ctx)
-}
-
 func (r *knowledgeRepo) CreateKnowledgeBase(ctx context.Context, kb biz.KnowledgeBase) (biz.KnowledgeBase, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {

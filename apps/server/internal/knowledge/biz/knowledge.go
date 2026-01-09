@@ -99,7 +99,6 @@ type IngestionQueue interface {
 	Enqueue(ctx context.Context, job IngestionJob) error
 	Start(ctx context.Context, handler func(context.Context, IngestionJob) error) error
 	Close() error
-	Health(ctx context.Context) error
 }
 
 // DocChunk is a chunk of a document version.
@@ -136,8 +135,6 @@ type IndexDocumentVersionRequest struct {
 
 // KnowledgeRepo persists knowledge entities and writes to vector store.
 type KnowledgeRepo interface {
-	Ping(context.Context) error
-
 	CreateKnowledgeBase(ctx context.Context, kb KnowledgeBase) (KnowledgeBase, error)
 	GetKnowledgeBase(ctx context.Context, id string) (KnowledgeBase, error)
 	ListKnowledgeBases(ctx context.Context) ([]KnowledgeBase, error)
@@ -411,6 +408,9 @@ func (uc *KnowledgeUsecase) ReindexDocument(ctx context.Context, id string) (Doc
 	if err != nil {
 		return DocumentVersion{}, err
 	}
+	if strings.TrimSpace(current.IndexConfigHash) == strings.TrimSpace(uc.indexConfigHash) {
+		return DocumentVersion{}, errors.New(412, "DOC_REINDEX_NOT_NEEDED", "index config unchanged")
+	}
 	if strings.TrimSpace(current.RawURI) == "" {
 		return DocumentVersion{}, errors.BadRequest("DOC_RAW_URI_MISSING", "document raw_uri missing")
 	}
@@ -556,6 +556,7 @@ func (uc *KnowledgeUsecase) parseAndChunk(ctx context.Context, sourceType string
 		cleaner = DefaultCleaningStrategy{}
 	}
 	parsed = cleaner.Normalize(sourceType, parsed)
+	parsed = enrichParsedDocument(parsed)
 	if len(parsed.Blocks) == 0 {
 		return nil, errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}

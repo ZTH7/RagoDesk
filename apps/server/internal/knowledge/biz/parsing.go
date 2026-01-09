@@ -6,11 +6,13 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -26,6 +28,8 @@ const maxDocumentBytes = 5 << 20
 type CleaningStrategy interface {
 	Normalize(sourceType string, doc ParsedDocument) ParsedDocument
 }
+
+var numberedHeadingRe = regexp.MustCompile(`^\s*\d+(?:\.\d+)*[)\.]?\s+(.+)$`)
 
 // DefaultCleaningStrategy applies built-in normalization rules.
 type DefaultCleaningStrategy struct{}
@@ -59,7 +63,9 @@ func prepareContentNormalized(sourceType, content string) string {
 	case "markdown":
 		content = stripMarkdown(content)
 	case "html":
-		content = stripHTMLTags(content)
+		if strings.Contains(content, "<") {
+			content = stripHTMLTags(content)
+		}
 	}
 	return cleanContent(content)
 }
@@ -72,21 +78,33 @@ func parseDocument(ctx context.Context, sourceType string, raw []byte, meta Docu
 		if err != nil {
 			return ParsedDocument{}, err
 		}
-		doc.Blocks = []DocumentBlock{{Text: text}}
+		blocks, title := splitTextBlocks(text)
+		if doc.Meta.Title == "" {
+			doc.Meta.Title = title
+		}
+		doc.Blocks = blocks
 		return doc, nil
 	case "doc":
 		text, err := parseDocBytes(raw)
 		if err != nil {
 			return ParsedDocument{}, err
 		}
-		doc.Blocks = []DocumentBlock{{Text: text}}
+		blocks, title := splitTextBlocks(text)
+		if doc.Meta.Title == "" {
+			doc.Meta.Title = title
+		}
+		doc.Blocks = blocks
 		return doc, nil
 	case "docx":
 		text, err := parseDocxBytes(raw)
 		if err != nil {
 			return ParsedDocument{}, err
 		}
-		doc.Blocks = []DocumentBlock{{Text: text}}
+		blocks, title := splitTextBlocks(text)
+		if doc.Meta.Title == "" {
+			doc.Meta.Title = title
+		}
+		doc.Blocks = blocks
 		return doc, nil
 	case "pdf":
 		blocks, err := parsePDFBlocks(raw)
@@ -102,9 +120,21 @@ func parseDocument(ctx context.Context, sourceType string, raw []byte, meta Docu
 		}
 		doc.Blocks = blocks
 		return doc, nil
+	case "html":
+		text := stripHTMLTags(string(raw))
+		blocks, title := splitTextBlocks(text)
+		if doc.Meta.Title == "" {
+			doc.Meta.Title = title
+		}
+		doc.Blocks = blocks
+		return doc, nil
 	default:
-		// text / markdown / html fall back to raw text
-		doc.Blocks = []DocumentBlock{{Text: string(raw)}}
+		// text fall back to raw text
+		blocks, title := splitTextBlocks(string(raw))
+		if doc.Meta.Title == "" {
+			doc.Meta.Title = title
+		}
+		doc.Blocks = blocks
 		return doc, nil
 	}
 }
@@ -123,6 +153,18 @@ func normalizeParsedDocument(sourceType string, doc ParsedDocument) ParsedDocume
 		cleaned = append(cleaned, block)
 	}
 	doc.Blocks = cleaned
+	return doc
+}
+
+func enrichParsedDocument(doc ParsedDocument) ParsedDocument {
+	if doc.Meta.Title == "" {
+		doc.Meta.Title = inferTitleFromBlocks(doc.Blocks)
+	}
+	for i, block := range doc.Blocks {
+		if block.PageNo > 0 && strings.TrimSpace(block.Section) == "" {
+			doc.Blocks[i].Section = fmt.Sprintf("Page %d", block.PageNo)
+		}
+	}
 	return doc
 }
 
@@ -212,17 +254,22 @@ func parseDocxBytes(payload []byte) (string, error) {
 			}
 			return "", err
 		}
-		start, ok := tok.(xml.StartElement)
-		if !ok || start.Name.Local != "t" {
-			continue
-		}
-		var text string
-		if err := decoder.DecodeElement(&text, &start); err != nil {
-			return "", err
-		}
-		if text != "" {
-			builder.WriteString(text)
-			builder.WriteString(" ")
+		switch t := tok.(type) {
+		case xml.StartElement:
+			if t.Name.Local == "t" {
+				var text string
+				if err := decoder.DecodeElement(&text, &t); err != nil {
+					return "", err
+				}
+				if text != "" {
+					builder.WriteString(text)
+					builder.WriteString(" ")
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "p" {
+				builder.WriteString("\n")
+			}
 		}
 	}
 	return builder.String(), nil
@@ -380,6 +427,129 @@ func parseMarkdownBlocks(raw string) ([]DocumentBlock, string) {
 		blocks = append(blocks, DocumentBlock{Text: raw})
 	}
 	return blocks, title
+}
+
+func splitTextBlocks(raw string) ([]DocumentBlock, string) {
+	normalized := strings.ReplaceAll(raw, "\r\n", "\n")
+	normalized = strings.ReplaceAll(normalized, "\r", "\n")
+	lines := strings.Split(normalized, "\n")
+	blocks := make([]DocumentBlock, 0)
+	section := ""
+	title := ""
+	buf := make([]string, 0, 8)
+	flush := func() {
+		if len(buf) == 0 {
+			return
+		}
+		blocks = append(blocks, DocumentBlock{
+			Text:    strings.Join(buf, "\n"),
+			Section: section,
+		})
+		buf = buf[:0]
+	}
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			flush()
+			continue
+		}
+		if heading, ok := detectHeading(trimmed); ok {
+			if title == "" {
+				title = heading
+			}
+			flush()
+			section = heading
+			continue
+		}
+		buf = append(buf, line)
+	}
+	flush()
+	if len(blocks) == 0 && strings.TrimSpace(raw) != "" {
+		blocks = append(blocks, DocumentBlock{Text: raw})
+	}
+	return blocks, title
+}
+
+func detectHeading(line string) (string, bool) {
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" {
+		return "", false
+	}
+	if strings.HasPrefix(trimmed, "#") {
+		heading := strings.TrimSpace(strings.TrimLeft(trimmed, "#"))
+		if heading != "" {
+			return heading, true
+		}
+	}
+	if len([]rune(trimmed)) > 120 {
+		return "", false
+	}
+	if match := numberedHeadingRe.FindStringSubmatch(trimmed); match != nil {
+		heading := strings.TrimSpace(match[1])
+		if heading != "" {
+			return heading, true
+		}
+	}
+	if strings.HasSuffix(trimmed, ":") && len([]rune(trimmed)) <= 80 {
+		heading := strings.TrimSpace(strings.TrimSuffix(trimmed, ":"))
+		if heading != "" {
+			return heading, true
+		}
+	}
+	if isAllCapsHeading(trimmed) {
+		return trimmed, true
+	}
+	return "", false
+}
+
+func isAllCapsHeading(line string) bool {
+	if len([]rune(line)) > 80 {
+		return false
+	}
+	letters := 0
+	for _, r := range line {
+		if unicode.IsLetter(r) {
+			letters++
+			if unicode.IsLower(r) {
+				return false
+			}
+		}
+	}
+	return letters >= 3
+}
+
+func inferTitleFromBlocks(blocks []DocumentBlock) string {
+	for _, block := range blocks {
+		lines := strings.Split(block.Text, "\n")
+		for _, line := range lines {
+			candidate := strings.TrimSpace(line)
+			if candidate == "" {
+				continue
+			}
+			if !hasLetterOrDigit(candidate) {
+				continue
+			}
+			return shortenTitle(candidate, 120)
+		}
+	}
+	return ""
+}
+
+func hasLetterOrDigit(s string) bool {
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func shortenTitle(s string, max int) string {
+	runes := []rune(strings.TrimSpace(s))
+	if len(runes) <= max {
+		return strings.TrimSpace(s)
+	}
+	return strings.TrimSpace(string(runes[:max]))
 }
 
 func cleanContent(input string) string {

@@ -274,13 +274,6 @@ func (q *rabbitQueue) Close() error {
 	return nil
 }
 
-func (q *rabbitQueue) Health(ctx context.Context) error {
-	if q.conn == nil || q.conn.IsClosed() {
-		return errors.New("rabbitmq connection closed")
-	}
-	return nil
-}
-
 type redisQueue struct {
 	client      *redis.Client
 	queue       string
@@ -437,13 +430,6 @@ func (q *redisQueue) Close() error {
 		return nil
 	}
 	return q.client.Close()
-}
-
-func (q *redisQueue) Health(ctx context.Context) error {
-	if q.client == nil {
-		return errors.New("redis client missing")
-	}
-	return q.client.Ping(ctx).Err()
 }
 
 func resolveIngestionRuntimeConfig(cfg *conf.Data) (int, time.Duration, int) {

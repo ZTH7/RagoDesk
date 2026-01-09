@@ -47,7 +47,7 @@
 - Pipeline: upload → parse/clean → split → embed → upsert to vector DB
 - Chunking/索引数据契约（MVP 版，详见 `docs/RAG.md`）
 - Chunking策略：结构优先（按 block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%）
-- Metadata extraction (basic) + index build (vector + metadata)
+- Metadata extraction (basic: title/section/page/source) + index build (vector + metadata)
 - Status tracking + idempotency (by `document_version`)
 - Admin API: KB CRUD / document upload / reindex / rollback
 
