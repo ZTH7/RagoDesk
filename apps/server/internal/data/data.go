@@ -208,7 +208,6 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 			tenant_id VARCHAR(36) NOT NULL,
 			document_id VARCHAR(36) NOT NULL,
 			version INT NOT NULL,
-			raw_text LONGTEXT NOT NULL,
 			raw_uri VARCHAR(1024) NULL,
 			status VARCHAR(32) NOT NULL,
 			error_message TEXT NULL,
@@ -229,6 +228,9 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 			token_count INT NOT NULL,
 			content_hash VARCHAR(64) NOT NULL,
 			language VARCHAR(32) NOT NULL DEFAULT '',
+			section VARCHAR(255) NULL,
+			page_no INT NULL,
+			source_uri VARCHAR(1024) NULL,
 			created_at DATETIME NOT NULL,
 			PRIMARY KEY (id),
 			UNIQUE KEY uniq_chunk_version_index (document_version_id, chunk_index),
@@ -265,7 +267,19 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 			return err
 		}
 	}
+	if err := ensureDropColumn(ctx, db, "document_version", "raw_text"); err != nil {
+		return err
+	}
 	if err := ensureColumn(ctx, db, "document_version", "raw_uri", "VARCHAR(1024) NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "doc_chunk", "section", "VARCHAR(255) NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "doc_chunk", "page_no", "INT NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "doc_chunk", "source_uri", "VARCHAR(1024) NULL"); err != nil {
 		return err
 	}
 	return nil
@@ -288,6 +302,27 @@ func ensureColumn(ctx context.Context, db *sql.DB, table string, column string, 
 		return nil
 	}
 	query := fmt.Sprintf("ALTER TABLE `%s` ADD COLUMN `%s` %s", table, column, definition)
+	_, err = db.ExecContext(ctx, query)
+	return err
+}
+
+func ensureDropColumn(ctx context.Context, db *sql.DB, table string, column string) error {
+	var count int
+	err := db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(*)
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+		table,
+		column,
+	).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return nil
+	}
+	query := fmt.Sprintf("ALTER TABLE `%s` DROP COLUMN `%s`", table, column)
 	_, err = db.ExecContext(ctx, query)
 	return err
 }

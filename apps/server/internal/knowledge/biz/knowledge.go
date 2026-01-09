@@ -76,7 +76,6 @@ type DocumentVersion struct {
 	TenantID    string
 	DocumentID  string
 	Version     int32
-	RawText     string
 	RawURI      string
 	Status      string
 	ErrorReason string
@@ -106,6 +105,9 @@ type DocChunk struct {
 	TokenCount  int32
 	ContentHash string
 	Language    string
+	Section     string
+	PageNo      int32
+	SourceURI   string
 	CreatedAt   time.Time
 }
 
@@ -490,17 +492,22 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 	if len(rawInput) == 0 {
 		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}
-	parsed, err := parseContentBytes(ctx, sourceType, rawInput)
+	meta := DocumentMeta{
+		Title:      doc.Title,
+		SourceURI:  strings.TrimSpace(version.RawURI),
+		SourceType: sourceType,
+	}
+	parsed, err := parseDocument(ctx, sourceType, rawInput, meta)
 	if err != nil {
 		_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusFailed, err.Error())
 		_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)
 		return err
 	}
-	content := prepareContentNormalized(sourceType, parsed)
-	if content == "" {
+	parsed = normalizeParsedDocument(sourceType, parsed)
+	if len(parsed.Blocks) == 0 {
 		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}
-	chunks := buildChunks(content, version.ID, uc.chunkSizeTokens, uc.chunkOverlapTokens)
+	chunks := buildChunksFromBlocks(parsed.Blocks, parsed.Meta, version.ID, uc.chunkSizeTokens, uc.chunkOverlapTokens)
 	if len(chunks) == 0 {
 		return errors.BadRequest("DOC_CHUNKS_EMPTY", "document chunks empty")
 	}

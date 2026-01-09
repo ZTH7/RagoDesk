@@ -11,30 +11,51 @@ import (
 	"github.com/google/uuid"
 )
 
-func buildChunks(rawText, docVersionID string, chunkSize, overlap int) []DocChunk {
-	chunkSize = clampInt(chunkSize, 1, 8192)
+func buildChunksFromBlocks(blocks []DocumentBlock, meta DocumentMeta, docVersionID string, chunkSize, overlap int) []DocChunk {
+	chunkSize = clampInt(chunkSize, 64, 8192)
 	overlap = clampInt(overlap, 0, chunkSize-1)
-	parts := splitByTokens(rawText, chunkSize, overlap)
 
-	out := make([]DocChunk, 0, len(parts))
-	for i, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "" {
+	out := make([]DocChunk, 0)
+	var index int32
+	state := chunkState{}
+
+	for _, block := range blocks {
+		rawText := strings.TrimSpace(block.Text)
+		if rawText == "" {
 			continue
 		}
-		chunkIndex := int32(i)
-		chunkID := deterministicChunkID(docVersionID, chunkIndex)
-		createdAt := time.Now()
-		chunk := DocChunk{
-			ID:          chunkID,
-			ChunkIndex:  chunkIndex,
-			Content:     part,
-			TokenCount:  int32(estimateTokenCount(part)),
-			ContentHash: sha256Hex(part),
-			Language:    detectLanguage(part),
-			CreatedAt:   createdAt,
+		if isStructureBoundary(state, block) {
+			index = flushChunk(&out, &state, meta, docVersionID, index)
 		}
-		out = append(out, chunk)
+
+		segments := splitBlockSegments(rawText, chunkSize)
+		for _, segment := range segments {
+			segment = strings.TrimSpace(segment)
+			if segment == "" {
+				continue
+			}
+			segmentTokens := estimateTokenCount(segment)
+			if state.tokens > 0 && state.tokens+segmentTokens > chunkSize {
+				content, section, pageNo, nextIndex := flushChunkWithContent(&out, &state, meta, docVersionID, index)
+				index = nextIndex
+				if overlap > 0 {
+					overlapText := tailByTokens(content, overlap)
+					if overlapText != "" && estimateTokenCount(overlapText)+segmentTokens <= chunkSize {
+						state.section = section
+						state.pageNo = pageNo
+						state.addPart(overlapText)
+					}
+				}
+			}
+			if state.tokens == 0 {
+				state.section = block.Section
+				state.pageNo = block.PageNo
+			}
+			state.addPart(segment)
+		}
+	}
+	if state.tokens > 0 {
+		index = flushChunk(&out, &state, meta, docVersionID, index)
 	}
 	return out
 }
@@ -82,6 +103,79 @@ func splitByTokens(s string, chunkSize, overlap int) []string {
 	return out
 }
 
+func splitBlockSegments(text string, maxTokens int) []string {
+	maxTokens = clampInt(maxTokens, 64, 8192)
+	sentences := splitBySentences(text)
+	if len(sentences) == 0 {
+		return nil
+	}
+	segments := make([]string, 0)
+	buf := make([]string, 0, 8)
+	tokenCount := 0
+	flush := func() {
+		if len(buf) == 0 {
+			return
+		}
+		segments = append(segments, strings.TrimSpace(strings.Join(buf, " ")))
+		buf = buf[:0]
+		tokenCount = 0
+	}
+	for _, sentence := range sentences {
+		sentence = strings.TrimSpace(sentence)
+		if sentence == "" {
+			continue
+		}
+		tokens := estimateTokenCount(sentence)
+		if tokens > maxTokens {
+			flush()
+			parts := splitByTokens(sentence, maxTokens, 0)
+			for _, part := range parts {
+				part = strings.TrimSpace(part)
+				if part != "" {
+					segments = append(segments, part)
+				}
+			}
+			continue
+		}
+		if tokenCount+tokens > maxTokens && len(buf) > 0 {
+			flush()
+		}
+		buf = append(buf, sentence)
+		tokenCount += tokens
+	}
+	flush()
+	return segments
+}
+
+func splitBySentences(text string) []string {
+	var out []string
+	var buf strings.Builder
+	flush := func() {
+		segment := strings.TrimSpace(buf.String())
+		if segment != "" {
+			out = append(out, segment)
+		}
+		buf.Reset()
+	}
+	for _, r := range text {
+		buf.WriteRune(r)
+		if isSentenceBoundary(r) {
+			flush()
+		}
+	}
+	flush()
+	return out
+}
+
+func isSentenceBoundary(r rune) bool {
+	switch r {
+	case '.', '!', '?', ';', '。', '！', '？', '；', '\n', '\r':
+		return true
+	default:
+		return false
+	}
+}
+
 func tokenizeSpans(runes []rune) []tokenSpan {
 	out := make([]tokenSpan, 0, len(runes)/2+1)
 	for i := 0; i < len(runes); {
@@ -109,6 +203,22 @@ func tokenizeSpans(runes []rune) []tokenSpan {
 
 func estimateTokenCount(s string) int {
 	return len(tokenizeSpans([]rune(s)))
+}
+
+func tailByTokens(s string, tokens int) string {
+	if tokens <= 0 || s == "" {
+		return ""
+	}
+	runes := []rune(s)
+	spans := tokenizeSpans(runes)
+	if len(spans) == 0 {
+		return ""
+	}
+	if tokens >= len(spans) {
+		return strings.TrimSpace(s)
+	}
+	start := spans[len(spans)-tokens].start
+	return strings.TrimSpace(string(runes[start:]))
 }
 
 func detectLanguage(s string) string {
@@ -154,4 +264,81 @@ func clampInt(v, lo, hi int) int {
 		return hi
 	}
 	return v
+}
+
+type chunkState struct {
+	parts   []string
+	tokens  int
+	section string
+	pageNo  int32
+}
+
+func (s *chunkState) addPart(text string) {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return
+	}
+	if s.parts == nil {
+		s.parts = make([]string, 0, 4)
+	}
+	s.parts = append(s.parts, text)
+	s.tokens += estimateTokenCount(text)
+}
+
+func (s *chunkState) reset() {
+	s.parts = nil
+	s.tokens = 0
+	s.section = ""
+	s.pageNo = 0
+}
+
+func isStructureBoundary(state chunkState, block DocumentBlock) bool {
+	if state.tokens == 0 {
+		return false
+	}
+	if block.PageNo != 0 {
+		if state.pageNo == 0 || state.pageNo != block.PageNo {
+			return true
+		}
+	}
+	if block.Section != "" {
+		if state.section == "" || state.section != block.Section {
+			return true
+		}
+	}
+	return false
+}
+
+func flushChunk(out *[]DocChunk, state *chunkState, meta DocumentMeta, docVersionID string, index int32) int32 {
+	_, _, _, next := flushChunkWithContent(out, state, meta, docVersionID, index)
+	return next
+}
+
+func flushChunkWithContent(out *[]DocChunk, state *chunkState, meta DocumentMeta, docVersionID string, index int32) (string, string, int32, int32) {
+	if state.tokens == 0 {
+		return "", "", 0, index
+	}
+	content := strings.TrimSpace(strings.Join(state.parts, "\n\n"))
+	if content == "" {
+		state.reset()
+		return "", "", 0, index
+	}
+	createdAt := time.Now()
+	chunk := DocChunk{
+		ID:          deterministicChunkID(docVersionID, index),
+		ChunkIndex:  index,
+		Content:     content,
+		TokenCount:  int32(estimateTokenCount(content)),
+		ContentHash: sha256Hex(content),
+		Language:    detectLanguage(content),
+		Section:     state.section,
+		PageNo:      state.pageNo,
+		SourceURI:   meta.SourceURI,
+		CreatedAt:   createdAt,
+	}
+	*out = append(*out, chunk)
+	section := state.section
+	pageNo := state.pageNo
+	state.reset()
+	return content, section, pageNo, index + 1
 }

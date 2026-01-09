@@ -172,9 +172,9 @@ API-->>Client: reply
 ```
 
 #### 3.3.3 数据契约与内部参数（摘要）
-- MySQL `doc_chunk`：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `created_at`
-- Qdrant payload：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`
-- Chunking（默认）：token-based 切分 + overlap
+- MySQL `doc_chunk`：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`
+- Qdrant payload：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`
+- Chunking（默认）：结构优先（block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%）
 - 可配置参数：`RAGDESK_CHUNK_SIZE_TOKENS`, `RAGDESK_CHUNK_OVERLAP_TOKENS`, `RAGDESK_EMBEDDING_PROVIDER`, `RAGDESK_EMBEDDING_MODEL`, `RAGDESK_EMBEDDING_DIM`, `RAGDESK_EMBEDDING_ENDPOINT`, `RAGDESK_EMBEDDING_API_KEY`, `RAGDESK_EMBEDDING_TIMEOUT_MS`, `RAGDESK_EMBEDDING_BATCH_SIZE`, `RAGDESK_INGESTION_MAX_RETRIES`, `RAGDESK_INGESTION_BACKOFF_MS`
 - 详细契约见 `docs/RAG.md`
 

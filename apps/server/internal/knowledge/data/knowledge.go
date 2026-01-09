@@ -367,13 +367,12 @@ func (r *knowledgeRepo) CreateDocumentVersion(ctx context.Context, v biz.Documen
 	}
 	_, err = r.db.ExecContext(
 		ctx,
-		`INSERT INTO document_version (id, tenant_id, document_id, version, raw_text, raw_uri, status, error_message, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO document_version (id, tenant_id, document_id, version, raw_uri, status, error_message, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		v.ID,
 		v.TenantID,
 		v.DocumentID,
 		v.Version,
-		"",
 		rawURI,
 		v.Status,
 		v.ErrorReason,
@@ -387,7 +386,6 @@ func (r *knowledgeRepo) CreateDocumentVersion(ctx context.Context, v biz.Documen
 		return biz.DocumentVersion{}, err
 	}
 	v.RawURI = rawURI
-	v.RawText = ""
 	return v, nil
 }
 
@@ -399,11 +397,11 @@ func (r *knowledgeRepo) GetDocumentVersion(ctx context.Context, id string) (biz.
 	var v biz.DocumentVersion
 	err = r.db.QueryRowContext(
 		ctx,
-		`SELECT id, tenant_id, document_id, version, raw_text, raw_uri, status, error_message, created_at
+		`SELECT id, tenant_id, document_id, version, raw_uri, status, error_message, created_at
 		FROM document_version WHERE tenant_id = ? AND id = ?`,
 		tenantID,
 		id,
-	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawText, &v.RawURI, &v.Status, &v.ErrorReason, &v.CreatedAt)
+	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawURI, &v.Status, &v.ErrorReason, &v.CreatedAt)
 	if err != nil {
 		if stderrors.Is(err, sql.ErrNoRows) {
 			return biz.DocumentVersion{}, kerrors.NotFound("DOC_VERSION_NOT_FOUND", "document version not found")
@@ -421,12 +419,12 @@ func (r *knowledgeRepo) GetDocumentVersionByNumber(ctx context.Context, document
 	var v biz.DocumentVersion
 	err = r.db.QueryRowContext(
 		ctx,
-		`SELECT id, tenant_id, document_id, version, raw_text, raw_uri, status, error_message, created_at
+		`SELECT id, tenant_id, document_id, version, raw_uri, status, error_message, created_at
 		FROM document_version WHERE tenant_id = ? AND document_id = ? AND version = ?`,
 		tenantID,
 		documentID,
 		version,
-	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawText, &v.RawURI, &v.Status, &v.ErrorReason, &v.CreatedAt)
+	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawURI, &v.Status, &v.ErrorReason, &v.CreatedAt)
 	if err != nil {
 		if stderrors.Is(err, sql.ErrNoRows) {
 			return biz.DocumentVersion{}, kerrors.NotFound("DOC_VERSION_NOT_FOUND", "document version not found")
@@ -532,6 +530,9 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 			"token_count":         ch.TokenCount,
 			"content_hash":        ch.ContentHash,
 			"language":            ch.Language,
+			"section":             ch.Section,
+			"page_no":             ch.PageNo,
+			"source_uri":          ch.SourceURI,
 			"created_at":          ch.CreatedAt.UnixMilli(),
 		}
 		points = append(points, qdrantPoint{
@@ -555,13 +556,16 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 		_, err = tx.ExecContext(
 			ctx,
 			`INSERT INTO doc_chunk
-				(id, tenant_id, kb_id, document_id, document_version_id, chunk_index, content, token_count, content_hash, language, created_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				(id, tenant_id, kb_id, document_id, document_version_id, chunk_index, content, token_count, content_hash, language, section, page_no, source_uri, created_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON DUPLICATE KEY UPDATE
 				content = VALUES(content),
 				token_count = VALUES(token_count),
 				content_hash = VALUES(content_hash),
-				language = VALUES(language)`,
+				language = VALUES(language),
+				section = VALUES(section),
+				page_no = VALUES(page_no),
+				source_uri = VALUES(source_uri)`,
 			ch.ID,
 			tenantID,
 			req.KBID,
@@ -572,6 +576,9 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 			ch.TokenCount,
 			ch.ContentHash,
 			ch.Language,
+			ch.Section,
+			ch.PageNo,
+			ch.SourceURI,
 			ch.CreatedAt,
 		)
 		if err != nil {

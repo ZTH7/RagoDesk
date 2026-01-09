@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	defaultChunkSizeTokens    = 400
-	defaultChunkOverlapTokens = 50
+	defaultChunkSizeTokens    = 800
+	defaultChunkOverlapTokens = 100
 	defaultEmbeddingModel     = "fake-embedding-v1"
 	defaultEmbeddingDim       = 384
 	defaultEmbeddingProvider  = "fake"

@@ -52,7 +52,7 @@
 - `text/markdown/html` 走清洗（HTML strip + 规范化空白）
 - `url` 走 HTTP GET 拉取（HTML 自动 strip）
 - `docx`/`pdf`/`doc`：从 `raw_uri` 读取原文件（OSS 或预签 URL），按格式 best-effort 提取文本
-- Chunking：token-based 估算切分 + overlap（可通过环境变量配置）
+- Chunking：结构优先（block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%，可通过环境变量配置）
 - Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`；离线文档 embedding 支持批量处理
 - 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
 - 重试：RabbitMQ retry queue（TTL + DLX）+ DLQ，指数退避
@@ -78,10 +78,10 @@
 
 - 目标：让“切分 → 向量化 → 检索 → 引用”可追溯、可删除、可重建；避免后期补字段导致返工。
 - 最小可用契约（基础）：
-- `chunk schema`（MySQL）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `created_at`
-- `vector payload`（VectorDB）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`
+- `chunk schema`（MySQL）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`
+- `vector payload`（VectorDB）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`
 - `refs schema`（用于引用来源）：`document_id`, `document_version_id`, `chunk_id`, `score`, `rank`, `snippet(optional)`（代码见 `apps/server/internal/rag/biz/refs.go`）
-- Chunking 默认（基础）：固定窗口（token-based）+ overlap。
+- Chunking 默认（基础）：结构优先（block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%）。
 - Chunking 可配置项（优化）：`chunk_size_tokens`, `chunk_overlap_tokens`, `split_strategy`（fixed/semantic）, `min_chunk_tokens`, `max_chunk_tokens`，并允许按 KB/文档覆盖。
 - 增量更新（优化）：document 更新生成新 `document_version_id`，索引采取 append-only；上线后再逐步完善“版本可见性”（例如只检索 latest version）。
 - 重建索引（优化）：以下变化触发全量 rebuild 或新索引：embedding 模型/维度、chunking 策略、payload schema、hybrid/rerank 关键参数。
@@ -92,8 +92,8 @@
 
 - MVP 推荐：单 collection（例如 `ragdesk_chunks`）+ payload 强制过滤 `tenant_id` + `kb_id IN (...)`。
 - 备选（更强隔离）：`collection per tenant` 或 `collection per kb`，优点是天然隔离，缺点是 collection 数量增多、生命周期管理更复杂。
-- payload 字段（必须）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `created_at`。
-- payload 字段（可选）：`tags`, `title`, `section`, `source_type`, `page_no`。
+- payload 字段（必须）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`。
+- payload 字段（可选）：`tags`, `title`, `source_type`。
 - 删除策略（基础）：按 `document_version_id` filter delete；回滚/重建索引走同一逻辑。
 - 更新策略：document 更新必然生成新 `document_version_id`；避免“原地更新”导致引用不可追溯。
 
@@ -138,6 +138,7 @@
 - retrieval cache：key = `tenant_id + bot_id + kb_set + params + query_embedding_hash`，TTL 极短；命中可显著降延迟。
 - response cache：只对“无个性化/无敏感上下文”的问答启用，并用 prompt/model 版本做 cache key。
 - 失效机制：通过 `kb_index_version` 或 `document_version` 的变更触发失效，避免索引更新后返回旧结果。
+- 配置策略（优化 Phase）：默认平台级配置（chunking/embedding/timeout）。后续可考虑“租户级覆盖”，但需要配套索引重建、权限与灰度机制。
 
 ---
 

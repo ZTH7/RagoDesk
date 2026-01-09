@@ -195,8 +195,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `tenant_id`
 - `document_id`
 - `version` (int)
-- `raw_text` (MVP: 直接存 MySQL；后续可切换到 object storage 并改为 path)
-- `raw_uri` (可选：object storage path)
+- `raw_uri` (必填：object storage path / 预签 URL)
 - `status` (processing/ready/failed)
 - `error_message`
 - `created_at`
@@ -212,6 +211,9 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `token_count`
 - `content_hash`
 - `language`
+- `section` (可选)
+- `page_no` (可选)
+- `source_uri` (原文来源)
 - `created_at`
 
 **embedding**

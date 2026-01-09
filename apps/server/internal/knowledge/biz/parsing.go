@@ -52,18 +52,66 @@ func prepareContentNormalized(sourceType, content string) string {
 	return cleanContent(content)
 }
 
-func parseContentBytes(ctx context.Context, sourceType string, raw []byte) (string, error) {
+func parseDocument(ctx context.Context, sourceType string, raw []byte, meta DocumentMeta) (ParsedDocument, error) {
+	doc := ParsedDocument{Meta: meta}
 	switch sourceType {
 	case "url":
-		return fetchURLText(ctx, strings.TrimSpace(string(raw)))
+		text, err := fetchURLText(ctx, strings.TrimSpace(string(raw)))
+		if err != nil {
+			return ParsedDocument{}, err
+		}
+		doc.Blocks = []DocumentBlock{{Text: text}}
+		return doc, nil
 	case "doc":
-		return parseDocBytes(raw)
+		text, err := parseDocBytes(raw)
+		if err != nil {
+			return ParsedDocument{}, err
+		}
+		doc.Blocks = []DocumentBlock{{Text: text}}
+		return doc, nil
+	case "docx":
+		text, err := parseDocxBytes(raw)
+		if err != nil {
+			return ParsedDocument{}, err
+		}
+		doc.Blocks = []DocumentBlock{{Text: text}}
+		return doc, nil
 	case "pdf":
-		return parsePDFBytes(raw)
+		blocks, err := parsePDFBlocks(raw)
+		if err != nil {
+			return ParsedDocument{}, err
+		}
+		doc.Blocks = blocks
+		return doc, nil
+	case "markdown":
+		blocks, title := parseMarkdownBlocks(string(raw))
+		if doc.Meta.Title == "" {
+			doc.Meta.Title = title
+		}
+		doc.Blocks = blocks
+		return doc, nil
 	default:
 		// text / markdown / html fall back to raw text
-		return string(raw), nil
+		doc.Blocks = []DocumentBlock{{Text: string(raw)}}
+		return doc, nil
 	}
+}
+
+func normalizeParsedDocument(sourceType string, doc ParsedDocument) ParsedDocument {
+	if len(doc.Blocks) == 0 {
+		return doc
+	}
+	cleaned := make([]DocumentBlock, 0, len(doc.Blocks))
+	for _, block := range doc.Blocks {
+		text := prepareContentNormalized(sourceType, block.Text)
+		if strings.TrimSpace(text) == "" {
+			continue
+		}
+		block.Text = text
+		cleaned = append(cleaned, block)
+	}
+	doc.Blocks = cleaned
+	return doc
 }
 
 func fetchURLText(ctx context.Context, raw string) (string, error) {
@@ -168,35 +216,36 @@ func parseDocxBytes(payload []byte) (string, error) {
 	return builder.String(), nil
 }
 
-func parsePDFBytes(payload []byte) (string, error) {
+func parsePDFBlocks(payload []byte) ([]DocumentBlock, error) {
 	if len(payload) == 0 {
-		return "", errors.BadRequest("PDF_CONTENT_EMPTY", "pdf content missing")
+		return nil, errors.BadRequest("PDF_CONTENT_EMPTY", "pdf content missing")
 	}
 	tmpFile, err := os.CreateTemp("", "ragdesk-*.pdf")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer func() {
 		_ = os.Remove(tmpFile.Name())
 	}()
 	if _, err := tmpFile.Write(payload); err != nil {
 		_ = tmpFile.Close()
-		return "", err
+		return nil, err
 	}
 	if err := tmpFile.Close(); err != nil {
-		return "", err
+		return nil, err
 	}
 	reader, err := pdf.Open(filepath.Clean(tmpFile.Name()))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	var builder strings.Builder
+	blocks := make([]DocumentBlock, 0, reader.NumPage())
 	for i := 1; i <= reader.NumPage(); i++ {
 		page := reader.Page(i)
 		if page.V.IsNull() {
 			continue
 		}
 		content := page.Content()
+		var builder strings.Builder
 		for _, text := range content.Text {
 			if text.S == "" {
 				continue
@@ -204,9 +253,12 @@ func parsePDFBytes(payload []byte) (string, error) {
 			builder.WriteString(text.S)
 			builder.WriteString(" ")
 		}
-		builder.WriteString("\n")
+		blocks = append(blocks, DocumentBlock{
+			Text:   builder.String(),
+			PageNo: int32(i),
+		})
 	}
-	return builder.String(), nil
+	return blocks, nil
 }
 
 func looksLikeZip(payload []byte) bool {
@@ -278,6 +330,44 @@ func filterPrintable(runes []rune) string {
 		}
 	}
 	return strings.TrimSpace(builder.String())
+}
+
+func parseMarkdownBlocks(raw string) ([]DocumentBlock, string) {
+	lines := strings.Split(raw, "\n")
+	blocks := make([]DocumentBlock, 0)
+	section := ""
+	title := ""
+	buf := make([]string, 0, 16)
+	flush := func() {
+		if len(buf) == 0 {
+			return
+		}
+		blocks = append(blocks, DocumentBlock{
+			Text:    strings.Join(buf, "\n"),
+			Section: section,
+		})
+		buf = buf[:0]
+	}
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "#") {
+			heading := strings.TrimSpace(strings.TrimLeft(trimmed, "#"))
+			if heading != "" {
+				if title == "" {
+					title = heading
+				}
+				flush()
+				section = heading
+				continue
+			}
+		}
+		buf = append(buf, line)
+	}
+	flush()
+	if len(blocks) == 0 {
+		blocks = append(blocks, DocumentBlock{Text: raw})
+	}
+	return blocks, title
 }
 
 func cleanContent(input string) string {
