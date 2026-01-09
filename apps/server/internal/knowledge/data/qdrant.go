@@ -32,31 +32,14 @@ func newQdrantClient(endpoint string, apiKey string) *qdrantClient {
 	}
 }
 
-type qdrantPoint struct {
-	ID      string         `json:"id"`
-	Vector  []float32      `json:"vector"`
-	Payload map[string]any `json:"payload,omitempty"`
-}
+var _ VectorStore = (*qdrantClient)(nil)
 
 type qdrantUpsertRequest struct {
-	Points []qdrantPoint `json:"points"`
-}
-
-type qdrantMatchValue struct {
-	Value any `json:"value"`
-}
-
-type qdrantCondition struct {
-	Key   string            `json:"key"`
-	Match *qdrantMatchValue `json:"match,omitempty"`
-}
-
-type qdrantFilter struct {
-	Must []qdrantCondition `json:"must,omitempty"`
+	Points []VectorPoint `json:"points"`
 }
 
 type qdrantDeleteRequest struct {
-	Filter qdrantFilter `json:"filter"`
+	Filter VectorFilter `json:"filter"`
 }
 
 func (c *qdrantClient) EnsureCollection(ctx context.Context, collection string, dim int) error {
@@ -121,7 +104,7 @@ func (c *qdrantClient) EnsureCollection(ctx context.Context, collection string, 
 	return nil
 }
 
-func (c *qdrantClient) UpsertPoints(ctx context.Context, collection string, points []qdrantPoint) error {
+func (c *qdrantClient) UpsertPoints(ctx context.Context, collection string, points []VectorPoint) error {
 	collection = strings.TrimSpace(collection)
 	if collection == "" {
 		return kerrors.InternalServer("QDRANT_COLLECTION_MISSING", "qdrant collection missing")
@@ -154,7 +137,7 @@ func (c *qdrantClient) UpsertPoints(ctx context.Context, collection string, poin
 	return nil
 }
 
-func (c *qdrantClient) DeletePoints(ctx context.Context, collection string, filter qdrantFilter) error {
+func (c *qdrantClient) DeletePoints(ctx context.Context, collection string, filter VectorFilter) error {
 	collection = strings.TrimSpace(collection)
 	if collection == "" {
 		return kerrors.InternalServer("QDRANT_COLLECTION_MISSING", "qdrant collection missing")
@@ -184,13 +167,6 @@ func (c *qdrantClient) DeletePoints(ctx context.Context, collection string, filt
 		return kerrors.InternalServer("QDRANT_DELETE_FAILED", fmt.Sprintf("qdrant delete failed: %s", body))
 	}
 	return nil
-}
-
-func qdrantMatchCondition(key string, value any) qdrantCondition {
-	return qdrantCondition{
-		Key:   key,
-		Match: &qdrantMatchValue{Value: value},
-	}
 }
 
 func (c *qdrantClient) applyAuth(req *http.Request) {

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -72,14 +74,15 @@ type Document struct {
 
 // DocumentVersion represents a versioned document content.
 type DocumentVersion struct {
-	ID          string
-	TenantID    string
-	DocumentID  string
-	Version     int32
-	RawURI      string
-	Status      string
-	ErrorReason string
-	CreatedAt   time.Time
+	ID              string
+	TenantID        string
+	DocumentID      string
+	Version         int32
+	RawURI          string
+	IndexConfigHash string
+	Status          string
+	ErrorReason     string
+	CreatedAt       time.Time
 }
 
 // IngestionJob describes a document ingestion task.
@@ -95,6 +98,8 @@ type IngestionJob struct {
 type IngestionQueue interface {
 	Enqueue(ctx context.Context, job IngestionJob) error
 	Start(ctx context.Context, handler func(context.Context, IngestionJob) error) error
+	Close() error
+	Health(ctx context.Context) error
 }
 
 // DocChunk is a chunk of a document version.
@@ -169,15 +174,18 @@ type KnowledgeUsecase struct {
 	queue        IngestionQueue
 	asyncEnabled bool
 
-	embedder           EmbeddingProvider
+	embedder           provider.Provider
 	chunkSizeTokens    int
 	chunkOverlapTokens int
 	embeddingBatchSize int
+	indexConfigHash    string
+	cleaner            CleaningStrategy
+	chunker            ChunkingStrategy
 }
 
 // NewKnowledgeUsecase creates a new KnowledgeUsecase
-func NewKnowledgeUsecase(repo KnowledgeRepo, queue IngestionQueue, logger log.Logger) *KnowledgeUsecase {
-	opts := loadIngestionOptions()
+func NewKnowledgeUsecase(repo KnowledgeRepo, queue IngestionQueue, cfg *conf.Data, logger log.Logger) *KnowledgeUsecase {
+	opts := loadIngestionOptions(cfg)
 	embedder := newEmbeddingProvider(opts)
 	uc := &KnowledgeUsecase{
 		repo:               repo,
@@ -187,8 +195,11 @@ func NewKnowledgeUsecase(repo KnowledgeRepo, queue IngestionQueue, logger log.Lo
 		chunkSizeTokens:    opts.chunkSizeTokens,
 		chunkOverlapTokens: opts.chunkOverlapTokens,
 		embeddingBatchSize: opts.embeddingBatchSize,
+		indexConfigHash:    opts.indexConfigHash,
+		cleaner:            DefaultCleaningStrategy{},
+		chunker:            TokenChunker{MaxTokens: opts.chunkSizeTokens, OverlapTokens: opts.chunkOverlapTokens},
 	}
-	uc.asyncEnabled = asyncEnabled(queue)
+	uc.asyncEnabled = opts.asyncEnabled && queue != nil
 	return uc
 }
 
@@ -339,10 +350,11 @@ func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sou
 		return Document{}, DocumentVersion{}, err
 	}
 	ver, err := uc.repo.CreateDocumentVersion(ctx, DocumentVersion{
-		DocumentID: doc.ID,
-		Version:    1,
-		RawURI:     rawURI,
-		Status:     DocumentVersionStatusProcessing,
+		DocumentID:      doc.ID,
+		Version:         1,
+		RawURI:          rawURI,
+		IndexConfigHash: uc.indexConfigHash,
+		Status:          DocumentVersionStatusProcessing,
 	})
 	if err != nil {
 		return Document{}, DocumentVersion{}, err
@@ -404,10 +416,11 @@ func (uc *KnowledgeUsecase) ReindexDocument(ctx context.Context, id string) (Doc
 	}
 	nextVersion := doc.CurrentVersion + 1
 	ver, err := uc.repo.CreateDocumentVersion(ctx, DocumentVersion{
-		DocumentID: id,
-		Version:    nextVersion,
-		RawURI:     current.RawURI,
-		Status:     DocumentVersionStatusProcessing,
+		DocumentID:      id,
+		Version:         nextVersion,
+		RawURI:          current.RawURI,
+		IndexConfigHash: uc.indexConfigHash,
+		Status:          DocumentVersionStatusProcessing,
 	})
 	if err != nil {
 		return DocumentVersion{}, err
@@ -469,13 +482,48 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 		return errors.Forbidden("TENANT_MISSING", "tenant missing")
 	}
 	ctx = withTenantID(ctx, job.TenantID)
+	startTotal := time.Now()
+	stepStart := time.Now()
+	version, doc, sourceType, rawInput, meta, err := uc.loadIngestionInput(ctx, job)
+	uc.logIngestionStep(job, "load", stepStart, err)
+	if err != nil {
+		uc.markIngestionFailed(ctx, job, version.ID, err)
+		return err
+	}
+	stepStart = time.Now()
+	chunks, err := uc.parseAndChunk(ctx, sourceType, rawInput, meta, version.ID)
+	uc.logIngestionStep(job, "chunk", stepStart, err)
+	if err != nil {
+		uc.markIngestionFailed(ctx, job, version.ID, err)
+		return err
+	}
+	stepStart = time.Now()
+	embedded, err := uc.embedChunks(ctx, chunks)
+	uc.logIngestionStep(job, "embed", stepStart, err)
+	if err != nil {
+		uc.markIngestionFailed(ctx, job, version.ID, err)
+		return err
+	}
+	stepStart = time.Now()
+	if err := uc.indexEmbeddedChunks(ctx, job, doc, sourceType, version, embedded); err != nil {
+		uc.logIngestionStep(job, "index", stepStart, err)
+		uc.markIngestionFailed(ctx, job, version.ID, err)
+		return err
+	}
+	uc.logIngestionStep(job, "index", stepStart, nil)
+	uc.markIngestionReady(ctx, job, version)
+	uc.logIngestionStep(job, "complete", startTotal, nil)
+	return nil
+}
+
+func (uc *KnowledgeUsecase) loadIngestionInput(ctx context.Context, job IngestionJob) (DocumentVersion, Document, string, []byte, DocumentMeta, error) {
 	version, err := uc.repo.GetDocumentVersion(ctx, job.DocumentVersionID)
 	if err != nil {
-		return err
+		return DocumentVersion{}, Document{}, "", nil, DocumentMeta{}, err
 	}
 	doc, err := uc.repo.GetDocument(ctx, job.DocumentID)
 	if err != nil {
-		return err
+		return version, Document{}, "", nil, DocumentMeta{}, err
 	}
 	sourceType := normalizeSourceType(doc.SourceType)
 	var rawInput []byte
@@ -484,37 +532,45 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 	} else {
 		rawInput, err = uc.repo.LoadDocumentContent(ctx, version)
 		if err != nil {
-			_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusFailed, err.Error())
-			_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)
-			return err
+			return version, doc, sourceType, nil, DocumentMeta{}, err
 		}
 	}
 	if len(rawInput) == 0 {
-		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
+		return version, doc, sourceType, nil, DocumentMeta{}, errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}
 	meta := DocumentMeta{
 		Title:      doc.Title,
 		SourceURI:  strings.TrimSpace(version.RawURI),
 		SourceType: sourceType,
 	}
+	return version, doc, sourceType, rawInput, meta, nil
+}
+
+func (uc *KnowledgeUsecase) parseAndChunk(ctx context.Context, sourceType string, rawInput []byte, meta DocumentMeta, versionID string) ([]DocChunk, error) {
 	parsed, err := parseDocument(ctx, sourceType, rawInput, meta)
 	if err != nil {
-		_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusFailed, err.Error())
-		_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)
-		return err
+		return nil, err
 	}
-	parsed = normalizeParsedDocument(sourceType, parsed)
+	cleaner := uc.cleaner
+	if cleaner == nil {
+		cleaner = DefaultCleaningStrategy{}
+	}
+	parsed = cleaner.Normalize(sourceType, parsed)
 	if len(parsed.Blocks) == 0 {
-		return errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
+		return nil, errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
 	}
-	chunks := buildChunksFromBlocks(parsed.Blocks, parsed.Meta, version.ID, uc.chunkSizeTokens, uc.chunkOverlapTokens)
+	chunker := uc.chunker
+	if chunker == nil {
+		chunker = TokenChunker{MaxTokens: uc.chunkSizeTokens, OverlapTokens: uc.chunkOverlapTokens}
+	}
+	chunks := chunker.BuildChunks(parsed.Blocks, parsed.Meta, versionID)
 	if len(chunks) == 0 {
-		return errors.BadRequest("DOC_CHUNKS_EMPTY", "document chunks empty")
+		return nil, errors.BadRequest("DOC_CHUNKS_EMPTY", "document chunks empty")
 	}
-	embedded, err := uc.embedChunks(ctx, chunks)
-	if err != nil {
-		return err
-	}
+	return chunks, nil
+}
+
+func (uc *KnowledgeUsecase) indexEmbeddedChunks(ctx context.Context, job IngestionJob, doc Document, sourceType string, version DocumentVersion, embedded []EmbeddedChunk) error {
 	indexReq := IndexDocumentVersionRequest{
 		KBID:              job.KBID,
 		DocumentID:        job.DocumentID,
@@ -526,13 +582,48 @@ func (uc *KnowledgeUsecase) processIngestion(ctx context.Context, job IngestionJ
 		Chunks:            embedded,
 	}
 	if err := uc.repo.IndexDocumentVersion(ctx, indexReq); err != nil {
-		_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusFailed, err.Error())
-		_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)
 		return err
 	}
+	return nil
+}
+
+func (uc *KnowledgeUsecase) markIngestionFailed(ctx context.Context, job IngestionJob, versionID string, err error) {
+	if versionID != "" {
+		_ = uc.repo.UpdateDocumentVersionStatus(ctx, versionID, DocumentVersionStatusFailed, err.Error())
+	}
+	if job.DocumentID != "" {
+		_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusFailed, job.FallbackVersion)
+	}
+}
+
+func (uc *KnowledgeUsecase) markIngestionReady(ctx context.Context, job IngestionJob, version DocumentVersion) {
 	_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusReady, "")
 	_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusReady, version.Version)
-	return nil
+}
+
+func (uc *KnowledgeUsecase) logIngestionStep(job IngestionJob, step string, start time.Time, err error) {
+	if uc == nil || uc.log == nil {
+		return
+	}
+	duration := time.Since(start).Milliseconds()
+	if err != nil {
+		uc.log.Warnf("ingestion step=%s tenant=%s document=%s version=%s dur_ms=%d err=%v",
+			step,
+			job.TenantID,
+			job.DocumentID,
+			job.DocumentVersionID,
+			duration,
+			err,
+		)
+		return
+	}
+	uc.log.Infof("ingestion step=%s tenant=%s document=%s version=%s dur_ms=%d",
+		step,
+		job.TenantID,
+		job.DocumentID,
+		job.DocumentVersionID,
+		duration,
+	)
 }
 
 // ProviderSet is knowledge biz providers.

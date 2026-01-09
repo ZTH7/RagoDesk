@@ -1,9 +1,14 @@
 package biz
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 )
 
 const (
@@ -24,28 +29,87 @@ type ingestionOptions struct {
 	embeddingAPIKey    string
 	embeddingTimeoutMs int
 	embeddingBatchSize int
+	asyncEnabled       bool
+	indexConfigHash    string
 }
 
-func loadIngestionOptions() ingestionOptions {
-	provider := envString("RAGDESK_EMBEDDING_PROVIDER", defaultEmbeddingProvider)
-	embeddingDim := defaultEmbeddingDim
+func loadIngestionOptions(cfg *conf.Data) ingestionOptions {
+	opts := ingestionOptions{
+		chunkSizeTokens:    defaultChunkSizeTokens,
+		chunkOverlapTokens: defaultChunkOverlapTokens,
+		embeddingModel:     defaultEmbeddingModel,
+		embeddingDim:       defaultEmbeddingDim,
+		embeddingProvider:  defaultEmbeddingProvider,
+		embeddingEndpoint:  "",
+		embeddingAPIKey:    "",
+		embeddingTimeoutMs: 15000,
+		embeddingBatchSize: 64,
+		asyncEnabled:       false,
+	}
+	dimSet := false
+	if cfg != nil && cfg.Knowledge != nil {
+		if chunking := cfg.Knowledge.Chunking; chunking != nil {
+			if chunking.MaxTokens > 0 {
+				opts.chunkSizeTokens = int(chunking.MaxTokens)
+			}
+			if chunking.OverlapTokens >= 0 {
+				opts.chunkOverlapTokens = int(chunking.OverlapTokens)
+			}
+		}
+		if embedding := cfg.Knowledge.Embedding; embedding != nil {
+			if strings.TrimSpace(embedding.Provider) != "" {
+				opts.embeddingProvider = embedding.Provider
+			}
+			if strings.TrimSpace(embedding.Endpoint) != "" {
+				opts.embeddingEndpoint = embedding.Endpoint
+			}
+			if strings.TrimSpace(embedding.ApiKey) != "" {
+				opts.embeddingAPIKey = embedding.ApiKey
+			}
+			if strings.TrimSpace(embedding.Model) != "" {
+				opts.embeddingModel = embedding.Model
+			}
+			if embedding.Dim > 0 {
+				opts.embeddingDim = int(embedding.Dim)
+				dimSet = true
+			}
+			if embedding.TimeoutMs > 0 {
+				opts.embeddingTimeoutMs = int(embedding.TimeoutMs)
+			}
+			if embedding.BatchSize > 0 {
+				opts.embeddingBatchSize = int(embedding.BatchSize)
+			}
+		}
+		if ingestion := cfg.Knowledge.Ingestion; ingestion != nil {
+			opts.asyncEnabled = ingestion.AsyncEnabled
+		}
+	}
+
+	opts.chunkSizeTokens = envInt("RAGDESK_CHUNK_SIZE_TOKENS", opts.chunkSizeTokens)
+	opts.chunkOverlapTokens = envInt("RAGDESK_CHUNK_OVERLAP_TOKENS", opts.chunkOverlapTokens)
+	opts.embeddingModel = envString("RAGDESK_EMBEDDING_MODEL", opts.embeddingModel)
+	opts.embeddingProvider = envString("RAGDESK_EMBEDDING_PROVIDER", opts.embeddingProvider)
+	opts.embeddingEndpoint = envString("RAGDESK_EMBEDDING_ENDPOINT", opts.embeddingEndpoint)
+	opts.embeddingAPIKey = envString("RAGDESK_EMBEDDING_API_KEY", opts.embeddingAPIKey)
+	opts.embeddingTimeoutMs = envInt("RAGDESK_EMBEDDING_TIMEOUT_MS", opts.embeddingTimeoutMs)
+	opts.embeddingBatchSize = envInt("RAGDESK_EMBEDDING_BATCH_SIZE", opts.embeddingBatchSize)
+
 	if raw := strings.TrimSpace(os.Getenv("RAGDESK_EMBEDDING_DIM")); raw != "" {
 		if parsed, err := strconv.Atoi(raw); err == nil {
-			embeddingDim = parsed
+			opts.embeddingDim = parsed
+			dimSet = true
 		}
-	} else if strings.EqualFold(provider, "openai") || strings.EqualFold(provider, "http") {
-		embeddingDim = 0
 	}
-	opts := ingestionOptions{
-		chunkSizeTokens:    envInt("RAGDESK_CHUNK_SIZE_TOKENS", defaultChunkSizeTokens),
-		chunkOverlapTokens: envInt("RAGDESK_CHUNK_OVERLAP_TOKENS", defaultChunkOverlapTokens),
-		embeddingModel:     envString("RAGDESK_EMBEDDING_MODEL", defaultEmbeddingModel),
-		embeddingDim:       embeddingDim,
-		embeddingProvider:  provider,
-		embeddingEndpoint:  envString("RAGDESK_EMBEDDING_ENDPOINT", ""),
-		embeddingAPIKey:    envString("RAGDESK_EMBEDDING_API_KEY", ""),
-		embeddingTimeoutMs: envInt("RAGDESK_EMBEDDING_TIMEOUT_MS", 15000),
-		embeddingBatchSize: envInt("RAGDESK_EMBEDDING_BATCH_SIZE", 64),
+	if !dimSet && (strings.EqualFold(opts.embeddingProvider, "openai") || strings.EqualFold(opts.embeddingProvider, "http")) {
+		opts.embeddingDim = 0
+	}
+	if raw := strings.TrimSpace(os.Getenv("RAGDESK_INGESTION_ASYNC")); raw != "" {
+		switch strings.ToLower(raw) {
+		case "1", "true", "yes", "y":
+			opts.asyncEnabled = true
+		default:
+			opts.asyncEnabled = false
+		}
 	}
 	if opts.chunkSizeTokens <= 0 {
 		opts.chunkSizeTokens = defaultChunkSizeTokens
@@ -59,20 +123,22 @@ func loadIngestionOptions() ingestionOptions {
 	if opts.embeddingBatchSize <= 0 {
 		opts.embeddingBatchSize = 64
 	}
+	opts.indexConfigHash = buildIndexConfigHash(opts)
 	return opts
 }
 
-func asyncEnabled(queue IngestionQueue) bool {
-	if queue == nil {
-		return false
-	}
-	value := strings.TrimSpace(os.Getenv("RAGDESK_INGESTION_ASYNC"))
-	switch strings.ToLower(value) {
-	case "1", "true", "yes", "y":
-		return true
-	default:
-		return false
-	}
+func buildIndexConfigHash(opts ingestionOptions) string {
+	payload := fmt.Sprintf(
+		"chunk=%d|overlap=%d|provider=%s|model=%s|dim=%d|endpoint=%s",
+		opts.chunkSizeTokens,
+		opts.chunkOverlapTokens,
+		strings.ToLower(strings.TrimSpace(opts.embeddingProvider)),
+		strings.TrimSpace(opts.embeddingModel),
+		opts.embeddingDim,
+		strings.TrimSpace(opts.embeddingEndpoint),
+	)
+	sum := sha256.Sum256([]byte(payload))
+	return hex.EncodeToString(sum[:])
 }
 
 func envString(key string, fallback string) string {

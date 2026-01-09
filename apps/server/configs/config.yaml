@@ -34,3 +34,20 @@ data:
     bucket: ragdesk
     region: ""
     use_ssl: false
+  knowledge:
+    chunking:
+      max_tokens: 800
+      overlap_tokens: 100
+    embedding:
+      provider: fake
+      endpoint: ""
+      api_key: ""
+      model: fake-embedding-v1
+      dim: 384
+      timeout_ms: 15000
+      batch_size: 64
+    ingestion:
+      max_retries: 3
+      backoff_base_ms: 500
+      async_enabled: false
+      worker_concurrency: 1

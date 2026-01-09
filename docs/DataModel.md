@@ -196,6 +196,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `document_id`
 - `version` (int)
 - `raw_uri` (必填：object storage path / 预签 URL)
+- `index_config_hash`（chunking + embedding 配置快照，用于变更检测）
 - `status` (processing/ready/failed)
 - `error_message`
 - `created_at`

@@ -79,16 +79,14 @@ func main() {
 		helper.Warn("ingestion queue disabled or not configured")
 		return
 	}
-	if closer, ok := queue.(interface{ Close() error }); ok {
-		defer func() {
-			if err := closer.Close(); err != nil {
-				helper.Warnf("ingestion queue close failed: %v", err)
-			}
-		}()
-	}
+	defer func() {
+		if err := queue.Close(); err != nil {
+			helper.Warnf("ingestion queue close failed: %v", err)
+		}
+	}()
 
 	repo := knowledgedata.NewKnowledgeRepo(dataData, bc.Data, logger)
-	uc := knowledgebiz.NewKnowledgeUsecase(repo, queue, logger)
+	uc := knowledgebiz.NewKnowledgeUsecase(repo, queue, bc.Data, logger)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

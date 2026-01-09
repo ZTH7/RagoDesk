@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
@@ -26,23 +27,30 @@ const (
 	ingestionRetryHeader = "x-retry"
 	defaultMaxRetries    = 3
 	defaultBackoffBaseMs = 500
+	defaultWorkerCount   = 1
 	envMaxRetries        = "RAGDESK_INGESTION_MAX_RETRIES"
 	envBackoffBaseMs     = "RAGDESK_INGESTION_BACKOFF_MS"
+	envWorkerCount       = "RAGDESK_INGESTION_WORKERS"
 )
 
 type rabbitQueue struct {
-	conn  *amqp.Connection
-	ch    *amqp.Channel
-	queue string
-	retry string
-	dlq   string
-	log   *log.Helper
+	conn        *amqp.Connection
+	ch          *amqp.Channel
+	queue       string
+	retry       string
+	dlq         string
+	log         *log.Helper
+	maxRetries  int
+	backoffBase time.Duration
+	workerCount int
+	pubMu       sync.Mutex
 }
 
 func NewIngestionQueue(cfg *conf.Data, logger log.Logger) biz.IngestionQueue {
 	if cfg == nil {
 		return nil
 	}
+	maxRetries, backoffBase, workerCount := resolveIngestionRuntimeConfig(cfg)
 	if cfg.Rabbitmq != nil && cfg.Rabbitmq.Addr != "" {
 		helper := log.NewHelper(logger)
 		conn, err := amqp.Dial(cfg.Rabbitmq.Addr)
@@ -92,18 +100,21 @@ func NewIngestionQueue(cfg *conf.Data, logger log.Logger) biz.IngestionQueue {
 					_ = conn.Close()
 				} else {
 					return &rabbitQueue{
-						conn:  conn,
-						ch:    ch,
-						queue: ingestionQueueName,
-						retry: ingestionRetryQueueName,
-						dlq:   ingestionDLQName,
-						log:   helper,
+						conn:        conn,
+						ch:          ch,
+						queue:       ingestionQueueName,
+						retry:       ingestionRetryQueueName,
+						dlq:         ingestionDLQName,
+						log:         helper,
+						maxRetries:  maxRetries,
+						backoffBase: backoffBase,
+						workerCount: workerCount,
 					}
 				}
 			}
 		}
 	}
-	return newRedisQueue(cfg, logger)
+	return newRedisQueue(cfg, logger, maxRetries, backoffBase, workerCount)
 }
 
 func (q *rabbitQueue) Enqueue(ctx context.Context, job biz.IngestionJob) error {
@@ -115,10 +126,31 @@ func (q *rabbitQueue) Enqueue(ctx context.Context, job biz.IngestionJob) error {
 }
 
 func (q *rabbitQueue) Start(ctx context.Context, handler func(context.Context, biz.IngestionJob) error) error {
-	if err := q.ch.Qos(1, 0, false); err != nil {
-		return err
+	if q.conn == nil {
+		return errors.New("rabbitmq connection missing")
 	}
-	msgs, err := q.ch.Consume(
+	workers := q.workerCount
+	if workers <= 0 {
+		workers = defaultWorkerCount
+	}
+	for i := 0; i < workers; i++ {
+		go q.consume(ctx, handler)
+	}
+	return nil
+}
+
+func (q *rabbitQueue) consume(ctx context.Context, handler func(context.Context, biz.IngestionJob) error) {
+	ch, err := q.conn.Channel()
+	if err != nil {
+		q.log.Warnf("rabbitmq worker channel failed: %v", err)
+		return
+	}
+	defer func() { _ = ch.Close() }()
+	if err := ch.Qos(1, 0, false); err != nil {
+		q.log.Warnf("rabbitmq worker qos failed: %v", err)
+		return
+	}
+	msgs, err := ch.Consume(
 		q.queue,
 		"",
 		false,
@@ -128,57 +160,56 @@ func (q *rabbitQueue) Start(ctx context.Context, handler func(context.Context, b
 		nil,
 	)
 	if err != nil {
-		return err
+		q.log.Warnf("rabbitmq consume failed: %v", err)
+		return
 	}
-	go func() {
-		maxRetries := ingestionMaxRetries()
-		backoffBase := ingestionBackoff()
-		for {
-			select {
-			case <-ctx.Done():
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-msgs:
+			if !ok {
 				return
-			case msg, ok := <-msgs:
-				if !ok {
-					return
-				}
-				var job biz.IngestionJob
-				if err := json.Unmarshal(msg.Body, &job); err != nil {
-					_ = msg.Nack(false, false)
-					continue
-				}
-				if err := handler(context.Background(), job); err != nil {
-					retry := getRetryCount(msg.Headers)
-					if retry < maxRetries {
-						delay := backoffBase
-						if retry > 0 {
-							delay = backoffBase * time.Duration(1<<retry)
-						}
-						headers := cloneHeaders(msg.Headers)
-						headers[ingestionRetryHeader] = retry + 1
-						if err := q.publish(context.Background(), q.retry, msg.Body, headers, delay); err != nil {
-							_ = msg.Nack(false, true)
-							continue
-						}
-						_ = msg.Ack(false)
-						continue
+			}
+			var job biz.IngestionJob
+			if err := json.Unmarshal(msg.Body, &job); err != nil {
+				_ = msg.Nack(false, false)
+				continue
+			}
+			if err := handler(ctx, job); err != nil {
+				retry := getRetryCount(msg.Headers)
+				if retry < q.maxRetries {
+					delay := q.backoffBase
+					if retry > 0 {
+						delay = q.backoffBase * time.Duration(1<<retry)
 					}
 					headers := cloneHeaders(msg.Headers)
-					headers[ingestionRetryHeader] = retry
-					if err := q.publish(context.Background(), q.dlq, msg.Body, headers, 0); err != nil {
+					headers[ingestionRetryHeader] = retry + 1
+					if err := q.publish(context.Background(), q.retry, msg.Body, headers, delay); err != nil {
 						_ = msg.Nack(false, true)
 						continue
 					}
 					_ = msg.Ack(false)
 					continue
 				}
+				headers := cloneHeaders(msg.Headers)
+				headers[ingestionRetryHeader] = retry
+				if err := q.publish(context.Background(), q.dlq, msg.Body, headers, 0); err != nil {
+					_ = msg.Nack(false, true)
+					continue
+				}
 				_ = msg.Ack(false)
+				continue
 			}
+			_ = msg.Ack(false)
 		}
-	}()
-	return nil
+	}
 }
 
 func (q *rabbitQueue) publish(ctx context.Context, queue string, payload []byte, headers amqp.Table, delay time.Duration) error {
+	if q.ch == nil {
+		return errors.New("rabbitmq channel missing")
+	}
 	if headers == nil {
 		headers = amqp.Table{}
 	}
@@ -192,6 +223,8 @@ func (q *rabbitQueue) publish(ctx context.Context, queue string, payload []byte,
 	if delay > 0 {
 		pub.Expiration = fmt.Sprintf("%d", delay.Milliseconds())
 	}
+	q.pubMu.Lock()
+	defer q.pubMu.Unlock()
 	return q.ch.PublishWithContext(
 		ctx,
 		"",
@@ -200,33 +233,6 @@ func (q *rabbitQueue) publish(ctx context.Context, queue string, payload []byte,
 		false,
 		pub,
 	)
-}
-
-func ingestionMaxRetries() int {
-	value := strings.TrimSpace(os.Getenv(envMaxRetries))
-	if value == "" {
-		return defaultMaxRetries
-	}
-	n, err := strconv.Atoi(value)
-	if err != nil || n < 0 {
-		return defaultMaxRetries
-	}
-	if n > 10 {
-		return 10
-	}
-	return n
-}
-
-func ingestionBackoff() time.Duration {
-	value := strings.TrimSpace(os.Getenv(envBackoffBaseMs))
-	if value == "" {
-		return time.Duration(defaultBackoffBaseMs) * time.Millisecond
-	}
-	n, err := strconv.Atoi(value)
-	if err != nil || n < 0 {
-		return time.Duration(defaultBackoffBaseMs) * time.Millisecond
-	}
-	return time.Duration(n) * time.Millisecond
 }
 
 func getRetryCount(headers amqp.Table) int {
@@ -268,11 +274,21 @@ func (q *rabbitQueue) Close() error {
 	return nil
 }
 
+func (q *rabbitQueue) Health(ctx context.Context) error {
+	if q.conn == nil || q.conn.IsClosed() {
+		return errors.New("rabbitmq connection closed")
+	}
+	return nil
+}
+
 type redisQueue struct {
-	client *redis.Client
-	queue  string
-	dlq    string
-	log    *log.Helper
+	client      *redis.Client
+	queue       string
+	dlq         string
+	log         *log.Helper
+	maxRetries  int
+	backoffBase time.Duration
+	workerCount int
 }
 
 type redisIngestionPayload struct {
@@ -280,7 +296,7 @@ type redisIngestionPayload struct {
 	Retry int              `json:"retry,omitempty"`
 }
 
-func newRedisQueue(cfg *conf.Data, logger log.Logger) biz.IngestionQueue {
+func newRedisQueue(cfg *conf.Data, logger log.Logger, maxRetries int, backoffBase time.Duration, workerCount int) biz.IngestionQueue {
 	if cfg == nil || cfg.Redis == nil || cfg.Redis.Addr == "" {
 		return nil
 	}
@@ -306,10 +322,13 @@ func newRedisQueue(cfg *conf.Data, logger log.Logger) biz.IngestionQueue {
 		return nil
 	}
 	return &redisQueue{
-		client: client,
-		queue:  ingestionQueueName,
-		dlq:    ingestionDLQName,
-		log:    helper,
+		client:      client,
+		queue:       ingestionQueueName,
+		dlq:         ingestionDLQName,
+		log:         helper,
+		maxRetries:  maxRetries,
+		backoffBase: backoffBase,
+		workerCount: workerCount,
 	}
 }
 
@@ -322,45 +341,51 @@ func (q *redisQueue) Enqueue(ctx context.Context, job biz.IngestionJob) error {
 }
 
 func (q *redisQueue) Start(ctx context.Context, handler func(context.Context, biz.IngestionJob) error) error {
-	go func() {
-		maxRetries := ingestionMaxRetries()
-		backoffBase := ingestionBackoff()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
+	workers := q.workerCount
+	if workers <= 0 {
+		workers = defaultWorkerCount
+	}
+	for i := 0; i < workers; i++ {
+		go q.consume(ctx, handler)
+	}
+	return nil
+}
+
+func (q *redisQueue) consume(ctx context.Context, handler func(context.Context, biz.IngestionJob) error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+		result, err := q.client.BRPop(ctx, time.Second, q.queue).Result()
+		if err != nil {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, redis.Nil) {
+				continue
 			}
-			result, err := q.client.BRPop(ctx, time.Second, q.queue).Result()
-			if err != nil {
-				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, redis.Nil) {
-					continue
+			q.log.Warnf("redis brpop failed: %v", err)
+			continue
+		}
+		if len(result) < 2 {
+			continue
+		}
+		job, retry, err := decodeRedisPayload(result[1])
+		if err != nil {
+			q.log.Warnf("redis payload decode failed: %v", err)
+			continue
+		}
+		if err := handler(ctx, job); err != nil {
+			if retry < q.maxRetries {
+				delay := q.backoffBase
+				if retry > 0 {
+					delay = q.backoffBase * time.Duration(1<<retry)
 				}
-				q.log.Warnf("redis brpop failed: %v", err)
-				continue
-			}
-			if len(result) < 2 {
-				continue
-			}
-			job, retry, err := decodeRedisPayload(result[1])
-			if err != nil {
-				q.log.Warnf("redis payload decode failed: %v", err)
-				continue
-			}
-			if err := handler(context.Background(), job); err != nil {
-				if retry < maxRetries {
-					delay := backoffBase
-					if retry > 0 {
-						delay = backoffBase * time.Duration(1<<retry)
-					}
-					q.requeueWithDelay(job, retry+1, delay)
-				} else {
-					q.pushDLQ(job, retry)
-				}
+				q.requeueWithDelay(job, retry+1, delay)
+			} else {
+				q.pushDLQ(job, retry)
 			}
 		}
-	}()
-	return nil
+	}
 }
 
 func (q *redisQueue) requeueWithDelay(job biz.IngestionJob, retry int, delay time.Duration) {
@@ -412,4 +437,60 @@ func (q *redisQueue) Close() error {
 		return nil
 	}
 	return q.client.Close()
+}
+
+func (q *redisQueue) Health(ctx context.Context) error {
+	if q.client == nil {
+		return errors.New("redis client missing")
+	}
+	return q.client.Ping(ctx).Err()
+}
+
+func resolveIngestionRuntimeConfig(cfg *conf.Data) (int, time.Duration, int) {
+	maxRetries := defaultMaxRetries
+	backoff := time.Duration(defaultBackoffBaseMs) * time.Millisecond
+	workerCount := defaultWorkerCount
+	if cfg != nil && cfg.Knowledge != nil && cfg.Knowledge.Ingestion != nil {
+		ingestion := cfg.Knowledge.Ingestion
+		if ingestion.MaxRetries > 0 {
+			maxRetries = int(ingestion.MaxRetries)
+		}
+		if ingestion.BackoffBaseMs > 0 {
+			backoff = time.Duration(ingestion.BackoffBaseMs) * time.Millisecond
+		}
+		if ingestion.WorkerConcurrency > 0 {
+			workerCount = int(ingestion.WorkerConcurrency)
+		}
+	}
+	if value := strings.TrimSpace(os.Getenv(envMaxRetries)); value != "" {
+		if n, err := strconv.Atoi(value); err == nil {
+			maxRetries = n
+		}
+	}
+	if value := strings.TrimSpace(os.Getenv(envBackoffBaseMs)); value != "" {
+		if n, err := strconv.Atoi(value); err == nil {
+			backoff = time.Duration(n) * time.Millisecond
+		}
+	}
+	if value := strings.TrimSpace(os.Getenv(envWorkerCount)); value != "" {
+		if n, err := strconv.Atoi(value); err == nil {
+			workerCount = n
+		}
+	}
+	if maxRetries < 0 {
+		maxRetries = defaultMaxRetries
+	}
+	if maxRetries > 10 {
+		maxRetries = 10
+	}
+	if backoff < 0 {
+		backoff = time.Duration(defaultBackoffBaseMs) * time.Millisecond
+	}
+	if workerCount <= 0 {
+		workerCount = defaultWorkerCount
+	}
+	if workerCount > 32 {
+		workerCount = 32
+	}
+	return maxRetries, backoff, workerCount
 }

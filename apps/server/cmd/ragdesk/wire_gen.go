@@ -9,12 +9,12 @@ package main
 import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/data"
-	iambiz "github.com/ZTH7/RAGDesk/apps/server/internal/iam/biz"
-	iamdata "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
-	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
-	knowledgebiz "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
-	knowledgedata "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
-	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/iam/biz"
+	data2 "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
+	biz2 "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
+	data3 "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
+	service2 "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/server"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
@@ -32,13 +32,13 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	iamRepo := iamdata.NewIAMRepo(dataData, logger)
-	iamUsecase := iambiz.NewIAMUsecase(iamRepo, logger)
-	iamService := iamservice.NewIAMService(iamUsecase, logger)
-	knowledgeRepo := knowledgedata.NewKnowledgeRepo(dataData, confData, logger)
-	knowledgeQueue := knowledgedata.NewIngestionQueue(confData, logger)
-	knowledgeUsecase := knowledgebiz.NewKnowledgeUsecase(knowledgeRepo, knowledgeQueue, logger)
-	knowledgeService := knowledgeservice.NewKnowledgeService(knowledgeUsecase, iamUsecase, logger)
+	iamRepo := data2.NewIAMRepo(dataData, logger)
+	iamUsecase := biz.NewIAMUsecase(iamRepo, logger)
+	iamService := service.NewIAMService(iamUsecase, logger)
+	knowledgeRepo := data3.NewKnowledgeRepo(dataData, confData, logger)
+	ingestionQueue := data3.NewIngestionQueue(confData, logger)
+	knowledgeUsecase := biz2.NewKnowledgeUsecase(knowledgeRepo, ingestionQueue, confData, logger)
+	knowledgeService := service2.NewKnowledgeService(knowledgeUsecase, iamUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService)
 	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService)
 	app := newApp(logger, grpcServer, httpServer)

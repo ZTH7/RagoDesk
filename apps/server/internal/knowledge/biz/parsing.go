@@ -22,6 +22,18 @@ import (
 
 const maxDocumentBytes = 5 << 20
 
+// CleaningStrategy normalizes parsed content.
+type CleaningStrategy interface {
+	Normalize(sourceType string, doc ParsedDocument) ParsedDocument
+}
+
+// DefaultCleaningStrategy applies built-in normalization rules.
+type DefaultCleaningStrategy struct{}
+
+func (DefaultCleaningStrategy) Normalize(sourceType string, doc ParsedDocument) ParsedDocument {
+	return normalizeParsedDocument(sourceType, doc)
+}
+
 func normalizeSourceType(sourceType string) string {
 	value := strings.ToLower(strings.TrimSpace(sourceType))
 	switch value {

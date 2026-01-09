@@ -11,6 +11,21 @@ import (
 	"github.com/google/uuid"
 )
 
+// ChunkingStrategy defines how to split parsed blocks into chunks.
+type ChunkingStrategy interface {
+	BuildChunks(blocks []DocumentBlock, meta DocumentMeta, docVersionID string) []DocChunk
+}
+
+// TokenChunker is the default chunking strategy (structure-first + token window).
+type TokenChunker struct {
+	MaxTokens     int
+	OverlapTokens int
+}
+
+func (c TokenChunker) BuildChunks(blocks []DocumentBlock, meta DocumentMeta, docVersionID string) []DocChunk {
+	return buildChunksFromBlocks(blocks, meta, docVersionID, c.MaxTokens, c.OverlapTokens)
+}
+
 func buildChunksFromBlocks(blocks []DocumentBlock, meta DocumentMeta, docVersionID string, chunkSize, overlap int) []DocChunk {
 	chunkSize = clampInt(chunkSize, 64, 8192)
 	overlap = clampInt(overlap, 0, chunkSize-1)

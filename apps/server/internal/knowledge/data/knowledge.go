@@ -22,18 +22,18 @@ type knowledgeRepo struct {
 	log *log.Helper
 	db  *sql.DB
 
-	qdrant     *qdrantClient
+	vector     VectorStore
 	collection string
 	storage    objectStorage
 }
 
 // NewKnowledgeRepo creates a new knowledge repo.
 func NewKnowledgeRepo(data *internaldata.Data, cfg *conf.Data, logger log.Logger) biz.KnowledgeRepo {
-	var qc *qdrantClient
+	var vector VectorStore
 	collection := ""
 	helper := log.NewHelper(logger)
 	if cfg != nil && cfg.Vectordb != nil && cfg.Vectordb.Driver == "qdrant" && cfg.Vectordb.Endpoint != "" {
-		qc = newQdrantClient(cfg.Vectordb.Endpoint, cfg.Vectordb.ApiKey)
+		vector = newQdrantClient(cfg.Vectordb.Endpoint, cfg.Vectordb.ApiKey)
 		collection = cfg.Vectordb.Collection
 	}
 	if collection == "" {
@@ -42,7 +42,7 @@ func NewKnowledgeRepo(data *internaldata.Data, cfg *conf.Data, logger log.Logger
 	return &knowledgeRepo{
 		log:        helper,
 		db:         data.DB,
-		qdrant:     qc,
+		vector:     vector,
 		collection: collection,
 		storage:    newObjectStorage(cfg, helper),
 	}
@@ -359,6 +359,7 @@ func (r *knowledgeRepo) CreateDocumentVersion(ctx context.Context, v biz.Documen
 	if rawURI == "" {
 		return biz.DocumentVersion{}, kerrors.BadRequest("DOC_RAW_URI_MISSING", "document raw_uri missing")
 	}
+	v.IndexConfigHash = strings.TrimSpace(v.IndexConfigHash)
 	if v.Status == "" {
 		v.Status = biz.DocumentVersionStatusProcessing
 	}
@@ -367,13 +368,14 @@ func (r *knowledgeRepo) CreateDocumentVersion(ctx context.Context, v biz.Documen
 	}
 	_, err = r.db.ExecContext(
 		ctx,
-		`INSERT INTO document_version (id, tenant_id, document_id, version, raw_uri, status, error_message, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO document_version (id, tenant_id, document_id, version, raw_uri, index_config_hash, status, error_message, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		v.ID,
 		v.TenantID,
 		v.DocumentID,
 		v.Version,
 		rawURI,
+		v.IndexConfigHash,
 		v.Status,
 		v.ErrorReason,
 		v.CreatedAt,
@@ -397,11 +399,11 @@ func (r *knowledgeRepo) GetDocumentVersion(ctx context.Context, id string) (biz.
 	var v biz.DocumentVersion
 	err = r.db.QueryRowContext(
 		ctx,
-		`SELECT id, tenant_id, document_id, version, raw_uri, status, error_message, created_at
+		`SELECT id, tenant_id, document_id, version, raw_uri, index_config_hash, status, error_message, created_at
 		FROM document_version WHERE tenant_id = ? AND id = ?`,
 		tenantID,
 		id,
-	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawURI, &v.Status, &v.ErrorReason, &v.CreatedAt)
+	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawURI, &v.IndexConfigHash, &v.Status, &v.ErrorReason, &v.CreatedAt)
 	if err != nil {
 		if stderrors.Is(err, sql.ErrNoRows) {
 			return biz.DocumentVersion{}, kerrors.NotFound("DOC_VERSION_NOT_FOUND", "document version not found")
@@ -419,12 +421,12 @@ func (r *knowledgeRepo) GetDocumentVersionByNumber(ctx context.Context, document
 	var v biz.DocumentVersion
 	err = r.db.QueryRowContext(
 		ctx,
-		`SELECT id, tenant_id, document_id, version, raw_uri, status, error_message, created_at
+		`SELECT id, tenant_id, document_id, version, raw_uri, index_config_hash, status, error_message, created_at
 		FROM document_version WHERE tenant_id = ? AND document_id = ? AND version = ?`,
 		tenantID,
 		documentID,
 		version,
-	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawURI, &v.Status, &v.ErrorReason, &v.CreatedAt)
+	).Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.RawURI, &v.IndexConfigHash, &v.Status, &v.ErrorReason, &v.CreatedAt)
 	if err != nil {
 		if stderrors.Is(err, sql.ErrNoRows) {
 			return biz.DocumentVersion{}, kerrors.NotFound("DOC_VERSION_NOT_FOUND", "document version not found")
@@ -459,7 +461,7 @@ func (r *knowledgeRepo) ListDocumentVersions(ctx context.Context, documentID str
 	}
 	rows, err := r.db.QueryContext(
 		ctx,
-		`SELECT id, tenant_id, document_id, version, status, created_at
+		`SELECT id, tenant_id, document_id, version, index_config_hash, status, created_at
 		FROM document_version WHERE tenant_id = ? AND document_id = ? ORDER BY version DESC`,
 		tenantID,
 		documentID,
@@ -472,7 +474,7 @@ func (r *knowledgeRepo) ListDocumentVersions(ctx context.Context, documentID str
 	items := make([]biz.DocumentVersion, 0)
 	for rows.Next() {
 		var v biz.DocumentVersion
-		if err := rows.Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.Status, &v.CreatedAt); err != nil {
+		if err := rows.Scan(&v.ID, &v.TenantID, &v.DocumentID, &v.Version, &v.IndexConfigHash, &v.Status, &v.CreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, v)
@@ -501,7 +503,7 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 	if err != nil {
 		return err
 	}
-	if r.qdrant == nil {
+	if r.vector == nil {
 		return kerrors.InternalServer("VECTORDB_MISSING", "vectordb not configured")
 	}
 	if r.collection == "" {
@@ -510,11 +512,11 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 	if req.EmbeddingDim <= 0 {
 		return kerrors.InternalServer("EMBEDDING_DIM_INVALID", "embedding dim invalid")
 	}
-	if err := r.qdrant.EnsureCollection(ctx, r.collection, req.EmbeddingDim); err != nil {
+	if err := r.vector.EnsureCollection(ctx, r.collection, req.EmbeddingDim); err != nil {
 		return err
 	}
 
-	points := make([]qdrantPoint, 0, len(req.Chunks))
+	points := make([]VectorPoint, 0, len(req.Chunks))
 	now := time.Now()
 	for _, item := range req.Chunks {
 		ch := item.Chunk
@@ -535,13 +537,13 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 			"source_uri":          ch.SourceURI,
 			"created_at":          ch.CreatedAt.UnixMilli(),
 		}
-		points = append(points, qdrantPoint{
+		points = append(points, VectorPoint{
 			ID:      ch.ID,
 			Vector:  item.Vector,
 			Payload: payload,
 		})
 	}
-	if err := r.qdrant.UpsertPoints(ctx, r.collection, points); err != nil {
+	if err := r.vector.UpsertPoints(ctx, r.collection, points); err != nil {
 		return err
 	}
 
@@ -722,14 +724,14 @@ func (r *knowledgeRepo) DeleteDocument(ctx context.Context, documentID string) e
 		}
 	}
 
-	if r.qdrant != nil && r.collection != "" {
-		filter := qdrantFilter{
-			Must: []qdrantCondition{
-				qdrantMatchCondition("tenant_id", tenantID),
-				qdrantMatchCondition("document_id", doc.ID),
+	if r.vector != nil && r.collection != "" {
+		filter := VectorFilter{
+			Must: []VectorCondition{
+				VectorMatchCondition("tenant_id", tenantID),
+				VectorMatchCondition("document_id", doc.ID),
 			},
 		}
-		if err := r.qdrant.DeletePoints(ctx, r.collection, filter); err != nil {
+		if err := r.vector.DeletePoints(ctx, r.collection, filter); err != nil {
 			return err
 		}
 	}

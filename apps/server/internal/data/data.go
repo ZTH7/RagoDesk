@@ -209,6 +209,7 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 			document_id VARCHAR(36) NOT NULL,
 			version INT NOT NULL,
 			raw_uri VARCHAR(1024) NULL,
+			index_config_hash VARCHAR(64) NOT NULL DEFAULT '',
 			status VARCHAR(32) NOT NULL,
 			error_message TEXT NULL,
 			created_at DATETIME NOT NULL,
@@ -271,6 +272,9 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "document_version", "raw_uri", "VARCHAR(1024) NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "document_version", "index_config_hash", "VARCHAR(64) NOT NULL DEFAULT ''"); err != nil {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "doc_chunk", "section", "VARCHAR(255) NULL"); err != nil {
