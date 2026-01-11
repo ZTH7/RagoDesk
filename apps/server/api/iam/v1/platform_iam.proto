@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package api.iam.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "api/iam/v1/iam.proto";
+
+service PlatformIAM {
+  rpc CreateTenant(CreateTenantRequest) returns (TenantResponse) {
+    option (google.api.http) = {
+      post: "/platform/v1/tenants"
+      body: "*"
+    };
+  }
+  rpc GetTenant(GetTenantRequest) returns (TenantResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/tenants/{id}"
+    };
+  }
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/tenants"
+    };
+  }
+
+  rpc CreatePermission(CreatePermissionRequest) returns (PermissionResponse) {
+    option (google.api.http) = {
+      post: "/platform/v1/permissions"
+      body: "*"
+    };
+  }
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/permissions"
+    };
+  }
+
+  rpc CreatePlatformAdmin(CreatePlatformAdminRequest) returns (PlatformAdminResponse) {
+    option (google.api.http) = {
+      post: "/platform/v1/admins"
+      body: "*"
+    };
+  }
+  rpc ListPlatformAdmins(ListPlatformAdminsRequest) returns (ListPlatformAdminsResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/admins"
+    };
+  }
+
+  rpc CreatePlatformRole(CreatePlatformRoleRequest) returns (PlatformRoleResponse) {
+    option (google.api.http) = {
+      post: "/platform/v1/roles"
+      body: "*"
+    };
+  }
+  rpc ListPlatformRoles(ListPlatformRolesRequest) returns (ListPlatformRolesResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/roles"
+    };
+  }
+
+  rpc AssignPlatformAdminRole(AssignPlatformAdminRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/platform/v1/admins/{admin_id}/roles"
+      body: "*"
+    };
+  }
+  rpc AssignPlatformRolePermissions(AssignPlatformRolePermissionsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/platform/v1/roles/{role_id}/permissions"
+      body: "*"
+    };
+  }
+  rpc ListPlatformRolePermissions(ListPlatformRolePermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/roles/{role_id}/permissions"
+    };
+  }
+}

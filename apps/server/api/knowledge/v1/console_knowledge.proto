@@ -8,83 +8,83 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-service KnowledgeAdmin {
+service ConsoleKnowledge {
   rpc CreateKnowledgeBase(CreateKnowledgeBaseRequest) returns (KnowledgeBaseResponse) {
     option (google.api.http) = {
-      post: "/admin/v1/knowledge_bases"
+      post: "/console/v1/knowledge_bases"
       body: "*"
     };
   }
   rpc GetKnowledgeBase(GetKnowledgeBaseRequest) returns (KnowledgeBaseResponse) {
     option (google.api.http) = {
-      get: "/admin/v1/knowledge_bases/{id}"
+      get: "/console/v1/knowledge_bases/{id}"
     };
   }
   rpc UpdateKnowledgeBase(UpdateKnowledgeBaseRequest) returns (KnowledgeBaseResponse) {
     option (google.api.http) = {
-      patch: "/admin/v1/knowledge_bases/{id}"
+      patch: "/console/v1/knowledge_bases/{id}"
       body: "*"
     };
   }
   rpc DeleteKnowledgeBase(DeleteKnowledgeBaseRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/admin/v1/knowledge_bases/{id}"
+      delete: "/console/v1/knowledge_bases/{id}"
     };
   }
   rpc ListKnowledgeBases(ListKnowledgeBasesRequest) returns (ListKnowledgeBasesResponse) {
     option (google.api.http) = {
-      get: "/admin/v1/knowledge_bases"
+      get: "/console/v1/knowledge_bases"
     };
   }
 
   rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse) {
     option (google.api.http) = {
-      get: "/admin/v1/documents"
+      get: "/console/v1/documents"
     };
   }
 
   rpc ListBotKnowledgeBases(ListBotKnowledgeBasesRequest) returns (ListBotKnowledgeBasesResponse) {
     option (google.api.http) = {
-      get: "/admin/v1/bots/{bot_id}/knowledge_bases"
+      get: "/console/v1/bots/{bot_id}/knowledge_bases"
     };
   }
   rpc BindBotKnowledgeBase(BindBotKnowledgeBaseRequest) returns (BotKnowledgeBaseResponse) {
     option (google.api.http) = {
-      post: "/admin/v1/bots/{bot_id}/knowledge_bases"
+      post: "/console/v1/bots/{bot_id}/knowledge_bases"
       body: "*"
     };
   }
   rpc UnbindBotKnowledgeBase(UnbindBotKnowledgeBaseRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/admin/v1/bots/{bot_id}/knowledge_bases/{kb_id}"
+      delete: "/console/v1/bots/{bot_id}/knowledge_bases/{kb_id}"
     };
   }
 
   rpc UploadDocument(UploadDocumentRequest) returns (UploadDocumentResponse) {
     option (google.api.http) = {
-      post: "/admin/v1/documents/upload"
+      post: "/console/v1/documents/upload"
       body: "*"
     };
   }
   rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse) {
     option (google.api.http) = {
-      get: "/admin/v1/documents/{id}"
+      get: "/console/v1/documents/{id}"
     };
   }
   rpc DeleteDocument(DeleteDocumentRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/admin/v1/documents/{id}"
+      delete: "/console/v1/documents/{id}"
     };
   }
   rpc ReindexDocument(ReindexDocumentRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/admin/v1/documents/{id}/reindex"
+      post: "/console/v1/documents/{id}/reindex"
       body: "*"
     };
   }
   rpc RollbackDocument(RollbackDocumentRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/admin/v1/documents/{id}/rollback"
+      post: "/console/v1/documents/{id}/rollback"
       body: "*"
     };
   }

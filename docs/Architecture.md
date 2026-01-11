@@ -8,7 +8,7 @@
 
 ### 1.1 系统组件（逻辑视图）
 - **API / HTTP Layer（Kratos HTTP）**
-  - 外部 API + 管理后台入口
+  - 外部 API + 管理后台入口（/console/v1）
   - Auth、限流、审计、统一错误码
 - **IAM / Tenant**
   - 多租户、用户、角色、权限
@@ -51,7 +51,7 @@
 ### 2.1 模块职责与交互
 - **API Layer**
   - 对外：`/api/v1/*`
-  - 管理后台：`/admin/v1/*`
+  - 管理后台：`/console/v1/*`
   - 统一鉴权（API Key/JWT）、限流、审计日志
 - **IAM / Tenant**
   - 生产/消费 `tenant_id` 上下文

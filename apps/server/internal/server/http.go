@@ -35,7 +35,7 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 	}
 	srv := http.NewServer(opts...)
 	iamv1.RegisterPlatformIAMHTTPServer(srv, iamSvc)
-	iamv1.RegisterTenantIAMHTTPServer(srv, iamSvc)
-	knowledgev1.RegisterKnowledgeAdminHTTPServer(srv, knowledgeSvc)
+	iamv1.RegisterConsoleIAMHTTPServer(srv, iamSvc)
+	knowledgev1.RegisterConsoleKnowledgeHTTPServer(srv, knowledgeSvc)
 	return srv
 }

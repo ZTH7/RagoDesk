@@ -35,7 +35,7 @@ func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 	}
 	srv := grpc.NewServer(opts...)
 	iamv1.RegisterPlatformIAMServer(srv, iamSvc)
-	iamv1.RegisterTenantIAMServer(srv, iamSvc)
-	knowledgev1.RegisterKnowledgeAdminServer(srv, knowledgeSvc)
+	iamv1.RegisterConsoleIAMServer(srv, iamSvc)
+	knowledgev1.RegisterConsoleKnowledgeServer(srv, knowledgeSvc)
 	return srv
 }

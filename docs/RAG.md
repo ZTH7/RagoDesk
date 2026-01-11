@@ -46,7 +46,7 @@
 
 ## 3.1 当前实现（Phase 2 已落地）
 
-- 入口：`/admin/v1/documents/upload`（写 `document` + `document_version`，触发 ingestion；必填 `raw_uri`）
+- 入口：`/console/v1/documents/upload`（写 `document` + `document_version`，触发 ingestion；必填 `raw_uri`）
 - 执行方式：RabbitMQ（优先）或 Redis 入队 + `apps/server/cmd/ingester` 消费（API 进程只负责入队）
 - 解析/清洗：
 - `text/markdown/html` 走清洗（HTML strip + 规范化空白）
@@ -58,7 +58,7 @@
 - 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
 - 重试：RabbitMQ retry queue（TTL + DLX）+ DLQ，指数退避
 - 原文存储：上传直达 OSS，仅保存 `raw_uri`（读取时按需回源）
-- 删除：`DELETE /admin/v1/documents/{id}` 会清理 MySQL 元数据 + Qdrant points（按 `tenant_id` + `document_id` filter）+ 原始文档存储（`raw_uri`）
+- 删除：`DELETE /console/v1/documents/{id}` 会清理 MySQL 元数据 + Qdrant points（按 `tenant_id` + `document_id` filter）+ 原始文档存储（`raw_uri`）
 
 **当前可配置（config + env override）**
 - 配置文件路径：`data.knowledge.chunking` / `data.knowledge.embedding` / `data.knowledge.ingestion`

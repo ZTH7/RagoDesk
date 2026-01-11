@@ -17,7 +17,7 @@ import (
 
 // KnowledgeService handles knowledge service layer.
 type KnowledgeService struct {
-	v1.UnimplementedKnowledgeAdminServer
+	v1.UnimplementedConsoleKnowledgeServer
 
 	uc    *biz.KnowledgeUsecase
 	iamUC *iambiz.IAMUsecase

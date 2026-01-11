@@ -152,54 +152,55 @@
 ## 4. 管理后台 API（Tenant Admin）
 
 ### 4.1 成员与角色
-- `POST /admin/v1/tenants/{id}/users`（邀请成员）
-- `GET /admin/v1/tenants/{id}/users`
-- `POST /admin/v1/roles`
-- `GET /admin/v1/roles`
-- `POST /admin/v1/users/{id}/roles`（分配角色）
+- `POST /console/v1/tenants/{id}/users`（邀请成员）
+- `GET /console/v1/tenants/{id}/users`
+- `POST /console/v1/roles`
+- `GET /console/v1/roles`
+- `POST /console/v1/users/{id}/roles`（分配角色）
 
 ### 4.2 权限分配
-- `GET /admin/v1/permissions`（仅租户可见权限）
-- `POST /admin/v1/roles/{id}/permissions`（分配权限）
-- `GET /admin/v1/roles/{id}/permissions`
+- `GET /console/v1/permissions`（仅租户可见权限）
+- `POST /console/v1/roles/{id}/permissions`（分配权限）
+- `GET /console/v1/roles/{id}/permissions`
 
 ### 4.3 机器人管理
-- `POST /admin/v1/bots`
-- `GET /admin/v1/bots`
-- `PATCH /admin/v1/bots/{id}`
-- `DELETE /admin/v1/bots/{id}`
-- `GET /admin/v1/bots/{id}/knowledge_bases`
-- `POST /admin/v1/bots/{id}/knowledge_bases`（绑定）
-- `DELETE /admin/v1/bots/{id}/knowledge_bases/{kb_id}`（解绑）
+- `POST /console/v1/bots`
+- `GET /console/v1/bots`
+- `PATCH /console/v1/bots/{id}`
+- `DELETE /console/v1/bots/{id}`
+- `GET /console/v1/bots/{id}/knowledge_bases`
+- `POST /console/v1/bots/{id}/knowledge_bases`（绑定）
+- `DELETE /console/v1/bots/{id}/knowledge_bases/{kb_id}`（解绑）
 绑定请求字段：`kb_id`, `priority`（可选）, `weight`（可选）
 
 ### 4.4 知识库管理
-- `POST /admin/v1/knowledge_bases`
-- `GET /admin/v1/knowledge_bases`
-- `GET /admin/v1/knowledge_bases/{id}`
-- `PATCH /admin/v1/knowledge_bases/{id}`
-- `DELETE /admin/v1/knowledge_bases/{id}`
-- `POST /admin/v1/documents/upload`
-- `GET /admin/v1/documents`（可选 `kb_id` 过滤）
-- `GET /admin/v1/documents/{id}`
-- `DELETE /admin/v1/documents/{id}`
-- `POST /admin/v1/documents/{id}/reindex`
-- `POST /admin/v1/documents/{id}/rollback`
+- `POST /console/v1/knowledge_bases`
+- `GET /console/v1/knowledge_bases`
+- `GET /console/v1/knowledge_bases/{id}`
+- `PATCH /console/v1/knowledge_bases/{id}`
+- `DELETE /console/v1/knowledge_bases/{id}`
+- `POST /console/v1/documents/upload`
+- `GET /console/v1/documents`（可选 `kb_id` 过滤）
+- `GET /console/v1/documents/{id}`
+- `DELETE /console/v1/documents/{id}`
+- `POST /console/v1/documents/{id}/reindex`
+- `POST /console/v1/documents/{id}/rollback`
 上传请求字段：`kb_id`, `title`, `source_type`, `raw_uri`（OSS URI 或预签 URL）
 
 ### 4.5 API Key 管理
-- `POST /admin/v1/api_keys`
-- `GET /admin/v1/api_keys`
-- `PATCH /admin/v1/api_keys/{id}`
-- `DELETE /admin/v1/api_keys/{id}`
+- `POST /console/v1/api_keys`
+- `GET /console/v1/api_keys`
+- `PATCH /console/v1/api_keys/{id}`
+- `DELETE /console/v1/api_keys/{id}`
 > 支持 scope 配置与 Key 轮换（可保留历史 Key 过渡期）
 
 ### 4.6 统计看板
-- `GET /admin/v1/analytics/overview`
-- `GET /admin/v1/analytics/latency`
+- `GET /console/v1/analytics/overview`
+- `GET /console/v1/analytics/latency`
 
 ---
 
 ## 4. 安全与审计
 - 请求必须记录：租户 ID、API Key、调用 IP、耗时
 - 重要操作需审计日志（创建/删除 API Key）
+

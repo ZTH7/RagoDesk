@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package api.iam.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "api/iam/v1/iam.proto";
+
+service ConsoleIAM {
+  rpc CreateUser(CreateUserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      post: "/console/v1/tenants/{tenant_id}/users"
+      body: "*"
+    };
+  }
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/tenants/{tenant_id}/users"
+    };
+  }
+
+  rpc CreateRole(CreateRoleRequest) returns (RoleResponse) {
+    option (google.api.http) = {
+      post: "/console/v1/roles"
+      body: "*"
+    };
+  }
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/roles"
+    };
+  }
+
+  rpc AssignRole(AssignRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/console/v1/users/{user_id}/roles"
+      body: "*"
+    };
+  }
+
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/permissions"
+    };
+  }
+  rpc AssignRolePermissions(AssignRolePermissionsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/console/v1/roles/{role_id}/permissions"
+      body: "*"
+    };
+  }
+  rpc ListRolePermissions(ListRolePermissionsRequest) returns (ListPermissionsResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/roles/{role_id}/permissions"
+    };
+  }
+}

@@ -20,7 +20,7 @@ import (
 // IAMService handles iam service layer (placeholder)
 type IAMService struct {
 	v1.UnimplementedPlatformIAMServer
-	v1.UnimplementedTenantIAMServer
+	v1.UnimplementedConsoleIAMServer
 	uc  *biz.IAMUsecase
 	log *log.Helper
 }
