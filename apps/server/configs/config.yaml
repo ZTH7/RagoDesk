@@ -57,7 +57,6 @@ data:
       top_k: 5
       threshold: 0.2
       timeout_ms: 8000
-      rerank_enabled: true
       rerank_weight: 0.3
     llm:
       provider: fake

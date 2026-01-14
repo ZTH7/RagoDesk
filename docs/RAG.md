@@ -14,6 +14,8 @@
 - Ingestion：上传 → 解析/清洗 → 切分 → 文档 embedding → upsert 向量库（按 `document_version_id` 幂等）
 - RAG：query embedding → 向量检索 → Prompt → LLM → 返回 `answer + refs + confidence`（置信度低拒答/保守答复）
 - 必要的超时与取消：embedding / 向量检索 / LLM 调用必须有 timeout（避免请求堆积）
+- Query 归一化：轻量清洗（大小写/标点/空白）保证检索稳定性
+- Prompt 去重与压缩：内容去重、每文档上限、空白压缩（降低 token）
 
 **优化能力（单独优化 Phase）**
 - 上线后的 CE（Continuous Evaluation）：在线采样、漂移检测、自动/半自动标注与回归
@@ -21,6 +23,8 @@
 - 缓存策略：embedding cache / retrieval cache / response cache + 版本化失效
 - 吞吐与延迟预算：分段 budget、并发上限、排队策略与降级开关
 - 队列/重试/幂等的工程化：dead-letter、退避、去重键、任务可观测与人工重放
+- 【高优先级】Query 扩展（multi-query）：生成 2–3 个改写 query 并合并检索
+- 【高优先级】Cross-Encoder Rerank：对 TopN 做 rerank 提升相关性
 - hybrid + rerank：融合策略、alpha 权重、默认重排模型与可配置化
 - Prompt registry 与 A/B：版本化、灰度、回滚、效果对比
 - 清洗规则与原文存储策略：支持 tenant/KB 级清洗 profile（页眉页脚、噪音模式、结构化提取）；
@@ -56,6 +60,9 @@
 - Chunking：结构优先（block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%，可通过环境变量配置）
 - Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`；离线文档 embedding 支持批量处理
 - 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
+- Query 归一化：大小写/标点/空白清洗，提升召回稳定性
+- Rerank：轻量 overlap rerank，并对 `section` 命中提供结构权重加成
+- Prompt：chunk 去重、按 doc 限制数量、空白压缩以降低 token
 - 重试：RabbitMQ retry queue（TTL + DLX）+ DLQ，指数退避
 - 原文存储：上传直达 OSS，仅保存 `raw_uri`（读取时按需回源）
 - 删除：`DELETE /console/v1/documents/{id}` 会清理 MySQL 元数据 + Qdrant points（按 `tenant_id` + `document_id` filter）+ 原始文档存储（`raw_uri`）
@@ -107,7 +114,7 @@
 ## 6. 检索策略：vector / hybrid / rerank（以及默认取舍）
 
 - 基础（Phase 3）：先做“向量检索 + TopK”，保证引用与拒答策略可落地。
-- 当前实现：启用轻量 rerank（词面 overlap），可通过 `data.rag.retrieval.rerank_enabled` 与 `rerank_weight` 调整。
+- 当前实现：启用轻量 rerank（词面 overlap），可通过 `data.rag.retrieval.rerank_weight` 调整权重。
 - 优化：hybrid 检索（dense + sparse/BM25）提升覆盖；在融合后对候选做 rerank 提升相关性。
 - hybrid 的实现路径（优化）：
 - 方案 A：向量库/检索引擎自带 hybrid 能力（实现成本低、但绑定能力边界）

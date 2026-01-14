@@ -19,7 +19,6 @@ const (
 	defaultLLMModel          = "fake-llm-v1"
 	defaultLLMTemperature    = 0.2
 	defaultLLMMaxTokens      = 512
-	defaultRerankEnabled     = true
 	defaultRerankWeight      = 0.3
 	defaultAPIKeyHeader      = "X-API-Key"
 	defaultEmbeddingModel    = "fake-embedding-v1"
@@ -35,7 +34,6 @@ type ragOptions struct {
 	ragTimeoutMs      int
 	retrieveTimeoutMs int
 	llmTimeoutMs      int
-	rerankEnabled     bool
 	rerankWeight      float32
 	llmProvider       string
 	llmEndpoint       string
@@ -57,7 +55,6 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 		ragTimeoutMs:      defaultRagTimeoutMs,
 		retrieveTimeoutMs: defaultRetrieveTimeoutMs,
 		llmTimeoutMs:      defaultLLMTimeoutMs,
-		rerankEnabled:     defaultRerankEnabled,
 		rerankWeight:      float32(defaultRerankWeight),
 		llmProvider:       defaultLLMProvider,
 		llmEndpoint:       "",
@@ -98,7 +95,6 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 				if retrieval.RerankWeight > 0 {
 					opts.rerankWeight = retrieval.RerankWeight
 				}
-				opts.rerankEnabled = retrieval.RerankEnabled
 			}
 			if llm := rag.Llm; llm != nil {
 				if strings.TrimSpace(llm.Provider) != "" {
@@ -173,7 +169,6 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 	opts.systemPrompt = envString("RAGDESK_RAG_SYSTEM_PROMPT", opts.systemPrompt)
 	opts.refusalMessage = envString("RAGDESK_RAG_REFUSAL_MESSAGE", opts.refusalMessage)
 	opts.rerankWeight = envFloat32("RAGDESK_RAG_RERANK_WEIGHT", opts.rerankWeight)
-	opts.rerankEnabled = envBool("RAGDESK_RAG_RERANK_ENABLED", opts.rerankEnabled)
 	opts.apiKeyRequired = envBool("RAGDESK_API_KEY_REQUIRED", opts.apiKeyRequired)
 	opts.apiKeyHeader = envString("RAGDESK_API_KEY_HEADER", opts.apiKeyHeader)
 

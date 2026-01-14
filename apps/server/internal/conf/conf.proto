@@ -91,7 +91,7 @@ message Data {
       int32 top_k = 1;
       float threshold = 2;
       int32 timeout_ms = 3;
-      bool rerank_enabled = 4;
+      reserved 4;
       float rerank_weight = 5;
     }
     message LLM {

@@ -259,6 +259,7 @@ type ragContext struct {
 	threshold    float32
 	kbs          []BotKnowledgeBase
 	queryVector  []float32
+	normalized   string
 	ranked       []scoredChunk
 	chunks       map[string]ChunkMeta
 	prompt       string
@@ -267,7 +268,7 @@ type ragContext struct {
 	shouldRefuse bool
 }
 
-func (uc *RAGUsecase) initContext(ctx context.Context, req MessageRequest) (*ragContext, error) {
+func (uc *RAGUsecase) initContext(_ context.Context, req MessageRequest) (*ragContext, error) {
 	req.BotID = strings.TrimSpace(req.BotID)
 	req.Message = strings.TrimSpace(req.Message)
 	if req.BotID == "" {
@@ -284,7 +285,11 @@ func (uc *RAGUsecase) initContext(ctx context.Context, req MessageRequest) (*rag
 	if threshold <= 0 {
 		threshold = uc.opts.scoreThreshold
 	}
-	return &ragContext{req: req, topK: topK, threshold: threshold}, nil
+	normalized := normalizeQuery(req.Message)
+	if normalized == "" {
+		normalized = strings.TrimSpace(req.Message)
+	}
+	return &ragContext{req: req, topK: topK, threshold: threshold, normalized: normalized}, nil
 }
 
 func (uc *RAGUsecase) resolveContext(ctx context.Context, rc *ragContext) (*ragContext, error) {
@@ -317,7 +322,7 @@ func (uc *RAGUsecase) embedContext(ctx context.Context, rc *ragContext) (*ragCon
 	embedCtx, cancel := withTimeout(ctx, uc.opts.embeddingConfig.TimeoutMs)
 	defer cancel()
 	start := time.Now()
-	vecs, err := uc.embedder.Embed(embedCtx, []string{rc.req.Message})
+	vecs, err := uc.embedder.Embed(embedCtx, []string{rc.normalized})
 	uc.logStep("embed", start, err)
 	if err != nil {
 		uc.recordSpanError(span, err)
@@ -403,7 +408,7 @@ func (uc *RAGUsecase) loadChunksContext(ctx context.Context, rc *ragContext) (*r
 }
 
 func (uc *RAGUsecase) rerankContext(ctx context.Context, rc *ragContext) (*ragContext, error) {
-	if rc == nil || rc.shouldRefuse || !uc.opts.rerankEnabled || len(rc.ranked) == 0 {
+	if rc == nil || rc.shouldRefuse || len(rc.ranked) == 0 {
 		return rc, nil
 	}
 	ctx, span := uc.startSpan(ctx, "rag.rerank", attribute.Float64("rag.rerank_weight", float64(uc.opts.rerankWeight)))
@@ -412,7 +417,11 @@ func (uc *RAGUsecase) rerankContext(ctx context.Context, rc *ragContext) (*ragCo
 	for i := range rc.ranked {
 		chunk := rc.ranked[i]
 		meta := rc.chunks[chunk.result.ChunkID]
-		textScore := overlapScore(rc.req.Message, meta.Content)
+		textScore := overlapScore(rc.normalized, meta.Content)
+		sectionScore := overlapScore(rc.normalized, meta.Section)
+		if sectionScore > 0 {
+			textScore = maxFloat32(textScore, sectionScore*1.2)
+		}
 		chunk.textScore = textScore
 		chunk.score = combineScores(chunk.vectorScore, textScore, uc.opts.rerankWeight)
 		rc.ranked[i] = chunk
@@ -473,7 +482,7 @@ func (uc *RAGUsecase) llmContext(ctx context.Context, rc *ragContext) (*ragConte
 	return rc, nil
 }
 
-func (uc *RAGUsecase) buildResponse(ctx context.Context, rc *ragContext) (MessageResponse, error) {
+func (uc *RAGUsecase) buildResponse(_ context.Context, rc *ragContext) (MessageResponse, error) {
 	if rc == nil {
 		return MessageResponse{}, errors.InternalServer("RAG_CONTEXT_MISSING", "rag context missing")
 	}
@@ -629,6 +638,37 @@ func tokenSet(text string, limit int) map[string]struct{} {
 		}
 	}
 	return out
+}
+
+func normalizeQuery(text string) string {
+	if strings.TrimSpace(text) == "" {
+		return ""
+	}
+	var b strings.Builder
+	b.Grow(len(text))
+	space := false
+	for _, r := range strings.ToLower(text) {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) {
+			b.WriteRune(r)
+			space = false
+			continue
+		}
+		if unicode.IsSpace(r) || unicode.IsPunct(r) || unicode.IsSymbol(r) {
+			if !space {
+				b.WriteRune(' ')
+				space = true
+			}
+			continue
+		}
+	}
+	return strings.TrimSpace(b.String())
+}
+
+func maxFloat32(a float32, b float32) float32 {
+	if a >= b {
+		return a
+	}
+	return b
 }
 
 func withTimeout(ctx context.Context, timeoutMs int) (context.Context, context.CancelFunc) {

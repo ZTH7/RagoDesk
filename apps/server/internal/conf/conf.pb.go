@@ -1099,7 +1099,6 @@ type Data_Rag_Retrieval struct {
 	TopK          int32                  `protobuf:"varint,1,opt,name=top_k,json=topK,proto3" json:"top_k,omitempty"`
 	Threshold     float32                `protobuf:"fixed32,2,opt,name=threshold,proto3" json:"threshold,omitempty"`
 	TimeoutMs     int32                  `protobuf:"varint,3,opt,name=timeout_ms,json=timeoutMs,proto3" json:"timeout_ms,omitempty"`
-	RerankEnabled bool                   `protobuf:"varint,4,opt,name=rerank_enabled,json=rerankEnabled,proto3" json:"rerank_enabled,omitempty"`
 	RerankWeight  float32                `protobuf:"fixed32,5,opt,name=rerank_weight,json=rerankWeight,proto3" json:"rerank_weight,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1154,13 +1153,6 @@ func (x *Data_Rag_Retrieval) GetTimeoutMs() int32 {
 		return x.TimeoutMs
 	}
 	return 0
-}
-
-func (x *Data_Rag_Retrieval) GetRerankEnabled() bool {
-	if x != nil {
-		return x.RerankEnabled
-	}
-	return false
 }
 
 func (x *Data_Rag_Retrieval) GetRerankWeight() float32 {
@@ -1303,7 +1295,7 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"\n" +
 	"jwt_secret\x18\x01 \x01(\tR\tjwtSecret\x12\x16\n" +
 	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12\x1a\n" +
-	"\baudience\x18\x03 \x01(\tR\baudience\"\xd3\x12\n" +
+	"\baudience\x18\x03 \x01(\tR\baudience\"\xb2\x12\n" +
 	"\x04Data\x125\n" +
 	"\bdatabase\x18\x01 \x01(\v2\x19.kratos.api.Data.DatabaseR\bdatabase\x12,\n" +
 	"\x05redis\x18\x02 \x01(\v2\x16.kratos.api.Data.RedisR\x05redis\x125\n" +
@@ -1364,21 +1356,20 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"maxRetries\x12&\n" +
 	"\x0fbackoff_base_ms\x18\x02 \x01(\x05R\rbackoffBaseMs\x12#\n" +
 	"\rasync_enabled\x18\x03 \x01(\bR\fasyncEnabled\x12-\n" +
-	"\x12worker_concurrency\x18\x04 \x01(\x05R\x11workerConcurrency\x1a\xa7\x05\n" +
+	"\x12worker_concurrency\x18\x04 \x01(\x05R\x11workerConcurrency\x1a\x86\x05\n" +
 	"\x03Rag\x12\x1d\n" +
 	"\n" +
 	"timeout_ms\x18\x01 \x01(\x05R\ttimeoutMs\x12<\n" +
 	"\tretrieval\x18\x02 \x01(\v2\x1e.kratos.api.Data.Rag.RetrievalR\tretrieval\x12*\n" +
 	"\x03llm\x18\x03 \x01(\v2\x18.kratos.api.Data.Rag.LLMR\x03llm\x12(\n" +
 	"\x10api_key_required\x18\x04 \x01(\bR\x0eapiKeyRequired\x12$\n" +
-	"\x0eapi_key_header\x18\x05 \x01(\tR\fapiKeyHeader\x1a\xa9\x01\n" +
+	"\x0eapi_key_header\x18\x05 \x01(\tR\fapiKeyHeader\x1a\x88\x01\n" +
 	"\tRetrieval\x12\x13\n" +
 	"\x05top_k\x18\x01 \x01(\x05R\x04topK\x12\x1c\n" +
 	"\tthreshold\x18\x02 \x01(\x02R\tthreshold\x12\x1d\n" +
 	"\n" +
-	"timeout_ms\x18\x03 \x01(\x05R\ttimeoutMs\x12%\n" +
-	"\x0ererank_enabled\x18\x04 \x01(\bR\rrerankEnabled\x12#\n" +
-	"\rrerank_weight\x18\x05 \x01(\x02R\frerankWeight\x1a\x9a\x02\n" +
+	"timeout_ms\x18\x03 \x01(\x05R\ttimeoutMs\x12#\n" +
+	"\rrerank_weight\x18\x05 \x01(\x02R\frerankWeightJ\x04\b\x04\x10\x05\x1a\x9a\x02\n" +
 	"\x03LLM\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1a\n" +
 	"\bendpoint\x18\x02 \x01(\tR\bendpoint\x12\x17\n" +
