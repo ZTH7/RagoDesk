@@ -14,6 +14,7 @@ const (
 	defaultRagScoreThreshold = 0.2
 	defaultRagTimeoutMs      = 20000
 	defaultRetrieveTimeoutMs = 8000
+	defaultRetrieveConcurrency = 8
 	defaultLLMTimeoutMs      = 15000
 	defaultLLMProvider       = "fake"
 	defaultLLMModel          = "fake-llm-v1"
@@ -33,6 +34,7 @@ type ragOptions struct {
 	scoreThreshold    float32
 	ragTimeoutMs      int
 	retrieveTimeoutMs int
+	retrieveConcurrency int
 	llmTimeoutMs      int
 	rerankWeight      float32
 	llmProvider       string
@@ -54,6 +56,7 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 		scoreThreshold:    float32(defaultRagScoreThreshold),
 		ragTimeoutMs:      defaultRagTimeoutMs,
 		retrieveTimeoutMs: defaultRetrieveTimeoutMs,
+		retrieveConcurrency: defaultRetrieveConcurrency,
 		llmTimeoutMs:      defaultLLMTimeoutMs,
 		rerankWeight:      float32(defaultRerankWeight),
 		llmProvider:       defaultLLMProvider,
@@ -91,6 +94,9 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 				}
 				if retrieval.TimeoutMs > 0 {
 					opts.retrieveTimeoutMs = int(retrieval.TimeoutMs)
+				}
+				if retrieval.MaxConcurrency > 0 {
+					opts.retrieveConcurrency = int(retrieval.MaxConcurrency)
 				}
 				if retrieval.RerankWeight > 0 {
 					opts.rerankWeight = retrieval.RerankWeight
@@ -159,6 +165,7 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 	opts.scoreThreshold = envFloat32("RAGDESK_RAG_SCORE_THRESHOLD", opts.scoreThreshold)
 	opts.ragTimeoutMs = envInt("RAGDESK_RAG_TIMEOUT_MS", opts.ragTimeoutMs)
 	opts.retrieveTimeoutMs = envInt("RAGDESK_RETRIEVE_TIMEOUT_MS", opts.retrieveTimeoutMs)
+	opts.retrieveConcurrency = envInt("RAGDESK_RETRIEVE_MAX_CONCURRENCY", opts.retrieveConcurrency)
 	opts.llmProvider = envString("RAGDESK_LLM_PROVIDER", opts.llmProvider)
 	opts.llmEndpoint = envString("RAGDESK_LLM_ENDPOINT", opts.llmEndpoint)
 	opts.llmAPIKey = envString("RAGDESK_LLM_API_KEY", opts.llmAPIKey)
@@ -194,6 +201,12 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 	}
 	if opts.retrieveTimeoutMs <= 0 {
 		opts.retrieveTimeoutMs = defaultRetrieveTimeoutMs
+	}
+	if opts.retrieveConcurrency <= 0 {
+		opts.retrieveConcurrency = defaultRetrieveConcurrency
+	}
+	if opts.retrieveConcurrency > 64 {
+		opts.retrieveConcurrency = 64
 	}
 	if opts.llmMaxTokens <= 0 {
 		opts.llmMaxTokens = defaultLLMMaxTokens

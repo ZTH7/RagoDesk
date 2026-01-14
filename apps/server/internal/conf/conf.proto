@@ -93,6 +93,7 @@ message Data {
       int32 timeout_ms = 3;
       reserved 4;
       float rerank_weight = 5;
+      int32 max_concurrency = 6;
     }
     message LLM {
       string provider = 1;

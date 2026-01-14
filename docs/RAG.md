@@ -24,7 +24,6 @@
 - 吞吐与延迟预算：分段 budget、并发上限、排队策略与降级开关
 - 队列/重试/幂等的工程化：dead-letter、退避、去重键、任务可观测与人工重放
 - 【高优先级】Query 扩展（multi-query）：生成 2–3 个改写 query 并合并检索
-- 【高优先级】Cross-Encoder Rerank：对 TopN 做 rerank 提升相关性
 - hybrid + rerank：融合策略、alpha 权重、默认重排模型与可配置化
 - Prompt registry 与 A/B：版本化、灰度、回滚、效果对比
 - 清洗规则与原文存储策略：支持 tenant/KB 级清洗 profile（页眉页脚、噪音模式、结构化提取）；
@@ -61,7 +60,7 @@
 - Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`；离线文档 embedding 支持批量处理
 - 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
 - Query 归一化：大小写/标点/空白清洗，提升召回稳定性
-- Rerank：轻量 overlap rerank，并对 `section` 命中提供结构权重加成
+- Rerank：轻量 overlap rerank + `section` 结构权重；低置信度时触发 LLM Cross‑Encoder TopN 复排
 - Prompt：chunk 去重、按 doc 限制数量、空白压缩以降低 token
 - 重试：RabbitMQ retry queue（TTL + DLX）+ DLQ，指数退避
 - 原文存储：上传直达 OSS，仅保存 `raw_uri`（读取时按需回源）
@@ -120,8 +119,8 @@
 - 方案 A：向量库/检索引擎自带 hybrid 能力（实现成本低、但绑定能力边界）
 - 方案 B：自建 sparse 检索（例如 BM25）+ dense 检索两路召回，自行做融合（RRF/加权融合）
 - alpha 权重（优化）：作为可配置项（按 bot/kb），默认从 `0.5` 起步并用离线评测调参。
-- rerank 默认（优化）：先用轻量交叉编码器 rerank（更稳定的延迟）；LLM rerank 作为可选高成本策略。
-- 多 KB 并发（优化）：对多个 KB 并发 retrieve，之后做 merge/dedup，再进入 rerank/LLM。
+- rerank 默认：轻量 overlap + LLM Cross‑Encoder TopN（用于稳定相关性排序）。
+- 多 KB 并发：对多个 KB 并发 retrieve，之后做 merge/dedup，再进入 rerank/LLM。
 
 ---
 

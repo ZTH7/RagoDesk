@@ -58,6 +58,7 @@ data:
       threshold: 0.2
       timeout_ms: 8000
       rerank_weight: 0.3
+      max_concurrency: 8
     llm:
       provider: fake
       endpoint: ""

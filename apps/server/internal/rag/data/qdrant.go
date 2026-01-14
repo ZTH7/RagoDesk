@@ -59,14 +59,17 @@ type qdrantSearchResult struct {
 	Score             float32
 }
 
-func newQdrantSearchClient(endpoint string, apiKey string) *qdrantSearchClient {
+func newQdrantSearchClient(endpoint string, apiKey string, timeoutMs int) *qdrantSearchClient {
 	endpoint = strings.TrimSpace(endpoint)
 	endpoint = strings.TrimRight(endpoint, "/")
+	if timeoutMs <= 0 {
+		timeoutMs = 10000
+	}
 	return &qdrantSearchClient{
 		endpoint: endpoint,
 		apiKey:   strings.TrimSpace(apiKey),
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: time.Duration(timeoutMs) * time.Millisecond,
 		},
 	}
 }

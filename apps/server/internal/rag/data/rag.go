@@ -10,37 +10,60 @@ import (
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	kerrors "github.com/go-kratos/kratos/v2/errors"
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )
 
-type ragRepo struct {
-	log        *log.Helper
-	db         *sql.DB
+const maxChunkLoadBatch = 200
+
+type kbRepo struct {
+	db *sql.DB
+}
+
+type vectorRepo struct {
 	vector     *qdrantSearchClient
 	collection string
 }
 
-// NewRAGRepo creates a new rag repo.
-func NewRAGRepo(data *internaldata.Data, cfg *conf.Data, logger log.Logger) biz.RAGRepo {
+type chunkRepo struct {
+	db *sql.DB
+}
+
+// NewKBRepo creates a new bot knowledge base resolver.
+func NewKBRepo(data *internaldata.Data) biz.BotKBResolver {
+	return &kbRepo{db: data.DB}
+}
+
+// NewVectorRepo creates a new vector search repo.
+func NewVectorRepo(cfg *conf.Data) biz.VectorSearcher {
 	collection := ""
 	var vector *qdrantSearchClient
-	if cfg != nil && cfg.Vectordb != nil && cfg.Vectordb.Driver == "qdrant" && cfg.Vectordb.Endpoint != "" {
-		vector = newQdrantSearchClient(cfg.Vectordb.Endpoint, cfg.Vectordb.ApiKey)
-		collection = cfg.Vectordb.Collection
+	timeoutMs := 0
+	if cfg != nil {
+		if rag := cfg.Rag; rag != nil && rag.Retrieval != nil {
+			if rag.Retrieval.TimeoutMs > 0 {
+				timeoutMs = int(rag.Retrieval.TimeoutMs)
+			}
+		}
+		if cfg.Vectordb != nil && cfg.Vectordb.Driver == "qdrant" && cfg.Vectordb.Endpoint != "" {
+			vector = newQdrantSearchClient(cfg.Vectordb.Endpoint, cfg.Vectordb.ApiKey, timeoutMs)
+			collection = cfg.Vectordb.Collection
+		}
 	}
 	if strings.TrimSpace(collection) == "" {
 		collection = "ragdesk_chunks"
 	}
-	return &ragRepo{
-		log:        log.NewHelper(logger),
-		db:         data.DB,
+	return &vectorRepo{
 		vector:     vector,
 		collection: collection,
 	}
 }
 
-func (r *ragRepo) ResolveBotKnowledgeBases(ctx context.Context, botID string) ([]biz.BotKnowledgeBase, error) {
+// NewChunkRepo creates a new chunk loader.
+func NewChunkRepo(data *internaldata.Data) biz.ChunkLoader {
+	return &chunkRepo{db: data.DB}
+}
+
+func (r *kbRepo) ResolveBotKnowledgeBases(ctx context.Context, botID string) ([]biz.BotKnowledgeBase, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
 		return nil, err
@@ -75,7 +98,7 @@ func (r *ragRepo) ResolveBotKnowledgeBases(ctx context.Context, botID string) ([
 	return items, nil
 }
 
-func (r *ragRepo) Search(ctx context.Context, req biz.VectorSearchRequest) ([]biz.VectorSearchResult, error) {
+func (r *vectorRepo) Search(ctx context.Context, req biz.VectorSearchRequest) ([]biz.VectorSearchResult, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
 		return nil, err
@@ -104,46 +127,54 @@ func (r *ragRepo) Search(ctx context.Context, req biz.VectorSearchRequest) ([]bi
 	return out, nil
 }
 
-func (r *ragRepo) LoadChunks(ctx context.Context, chunkIDs []string) (map[string]biz.ChunkMeta, error) {
+func (r *chunkRepo) LoadChunks(ctx context.Context, chunkIDs []string) (map[string]biz.ChunkMeta, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if len(chunkIDs) == 0 {
+	unique := dedupeStrings(chunkIDs)
+	if len(unique) == 0 {
 		return map[string]biz.ChunkMeta{}, nil
 	}
-	query, args := buildChunkQuery(tenantID, chunkIDs)
-	rows, err := r.db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	out := make(map[string]biz.ChunkMeta, len(chunkIDs))
-	for rows.Next() {
-		var meta biz.ChunkMeta
-		if err := rows.Scan(
-			&meta.ChunkID,
-			&meta.KBID,
-			&meta.DocumentID,
-			&meta.DocumentVersionID,
-			&meta.Content,
-			&meta.Section,
-			&meta.PageNo,
-			&meta.SourceURI,
-		); err != nil {
+	out := make(map[string]biz.ChunkMeta, len(unique))
+	for start := 0; start < len(unique); start += maxChunkLoadBatch {
+		end := start + maxChunkLoadBatch
+		if end > len(unique) {
+			end = len(unique)
+		}
+		query, args := buildChunkQuery(tenantID, unique[start:end])
+		rows, err := r.db.QueryContext(ctx, query, args...)
+		if err != nil {
 			return nil, err
 		}
-		out[meta.ChunkID] = meta
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+		for rows.Next() {
+			var meta biz.ChunkMeta
+			if err := rows.Scan(
+				&meta.ChunkID,
+				&meta.KBID,
+				&meta.DocumentID,
+				&meta.DocumentVersionID,
+				&meta.Content,
+				&meta.Section,
+				&meta.PageNo,
+				&meta.SourceURI,
+			); err != nil {
+				rows.Close()
+				return nil, err
+			}
+			out[meta.ChunkID] = meta
+		}
+		if err := rows.Err(); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		rows.Close()
 	}
 	return out, nil
 }
 
 // ProviderSet is rag data providers.
-var ProviderSet = wire.NewSet(NewRAGRepo)
+var ProviderSet = wire.NewSet(NewKBRepo, NewVectorRepo, NewChunkRepo)
 
 func buildChunkQuery(tenantID string, chunkIDs []string) (string, []any) {
 	placeholders := make([]string, 0, len(chunkIDs))
@@ -156,4 +187,24 @@ func buildChunkQuery(tenantID string, chunkIDs []string) (string, []any) {
 	query := `SELECT id, kb_id, document_id, document_version_id, content, section, page_no, source_uri
 		FROM doc_chunk WHERE tenant_id = ? AND id IN (` + strings.Join(placeholders, ",") + `)`
 	return query, args
+}
+
+func dedupeStrings(values []string) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(values))
+	out := make([]string, 0, len(values))
+	for _, item := range values {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		if _, ok := seen[item]; ok {
+			continue
+		}
+		seen[item] = struct{}{}
+		out = append(out, item)
+	}
+	return out
 }
