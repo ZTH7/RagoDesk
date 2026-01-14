@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package api.rag.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1;v1";
+
+import "google/api/annotations.proto";
+
+service RAG {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/message"
+      body: "*"
+    };
+  }
+}
+
+message Reference {
+  string document_id = 1;
+  string document_version_id = 2;
+  string chunk_id = 3;
+  float score = 4;
+  int32 rank = 5;
+  string snippet = 6;
+}
+
+message SendMessageRequest {
+  string session_id = 1;
+  string bot_id = 2;
+  string message = 3;
+  int32 top_k = 4;
+  float threshold = 5;
+}
+
+message SendMessageResponse {
+  string reply = 1;
+  float confidence = 2;
+  repeated Reference references = 3;
+}

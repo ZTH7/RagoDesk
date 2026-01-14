@@ -142,6 +142,7 @@ type Data struct {
 	Rabbitmq      *Data_RabbitMQ         `protobuf:"bytes,4,opt,name=rabbitmq,proto3" json:"rabbitmq,omitempty"`
 	ObjectStorage *Data_ObjectStorage    `protobuf:"bytes,5,opt,name=object_storage,json=objectStorage,proto3" json:"object_storage,omitempty"`
 	Knowledge     *Data_Knowledge        `protobuf:"bytes,6,opt,name=knowledge,proto3" json:"knowledge,omitempty"`
+	Rag           *Data_Rag              `protobuf:"bytes,7,opt,name=rag,proto3" json:"rag,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -214,6 +215,13 @@ func (x *Data) GetObjectStorage() *Data_ObjectStorage {
 func (x *Data) GetKnowledge() *Data_Knowledge {
 	if x != nil {
 		return x.Knowledge
+	}
+	return nil
+}
+
+func (x *Data) GetRag() *Data_Rag {
+	if x != nil {
+		return x.Rag
 	}
 	return nil
 }
@@ -798,6 +806,82 @@ func (x *Data_Knowledge) GetIngestion() *Data_Knowledge_Ingestion {
 	return nil
 }
 
+type Data_Rag struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TimeoutMs      int32                  `protobuf:"varint,1,opt,name=timeout_ms,json=timeoutMs,proto3" json:"timeout_ms,omitempty"`
+	Retrieval      *Data_Rag_Retrieval    `protobuf:"bytes,2,opt,name=retrieval,proto3" json:"retrieval,omitempty"`
+	Llm            *Data_Rag_LLM          `protobuf:"bytes,3,opt,name=llm,proto3" json:"llm,omitempty"`
+	ApiKeyRequired bool                   `protobuf:"varint,4,opt,name=api_key_required,json=apiKeyRequired,proto3" json:"api_key_required,omitempty"`
+	ApiKeyHeader   string                 `protobuf:"bytes,5,opt,name=api_key_header,json=apiKeyHeader,proto3" json:"api_key_header,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Data_Rag) Reset() {
+	*x = Data_Rag{}
+	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Data_Rag) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Data_Rag) ProtoMessage() {}
+
+func (x *Data_Rag) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Data_Rag.ProtoReflect.Descriptor instead.
+func (*Data_Rag) Descriptor() ([]byte, []int) {
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{2, 6}
+}
+
+func (x *Data_Rag) GetTimeoutMs() int32 {
+	if x != nil {
+		return x.TimeoutMs
+	}
+	return 0
+}
+
+func (x *Data_Rag) GetRetrieval() *Data_Rag_Retrieval {
+	if x != nil {
+		return x.Retrieval
+	}
+	return nil
+}
+
+func (x *Data_Rag) GetLlm() *Data_Rag_LLM {
+	if x != nil {
+		return x.Llm
+	}
+	return nil
+}
+
+func (x *Data_Rag) GetApiKeyRequired() bool {
+	if x != nil {
+		return x.ApiKeyRequired
+	}
+	return false
+}
+
+func (x *Data_Rag) GetApiKeyHeader() string {
+	if x != nil {
+		return x.ApiKeyHeader
+	}
+	return ""
+}
+
 type Data_Knowledge_Chunking struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MaxTokens     int32                  `protobuf:"varint,1,opt,name=max_tokens,json=maxTokens,proto3" json:"max_tokens,omitempty"`
@@ -808,7 +892,7 @@ type Data_Knowledge_Chunking struct {
 
 func (x *Data_Knowledge_Chunking) Reset() {
 	*x = Data_Knowledge_Chunking{}
-	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	mi := &file_internal_conf_conf_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -820,7 +904,7 @@ func (x *Data_Knowledge_Chunking) String() string {
 func (*Data_Knowledge_Chunking) ProtoMessage() {}
 
 func (x *Data_Knowledge_Chunking) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[12]
+	mi := &file_internal_conf_conf_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -865,7 +949,7 @@ type Data_Knowledge_Embedding struct {
 
 func (x *Data_Knowledge_Embedding) Reset() {
 	*x = Data_Knowledge_Embedding{}
-	mi := &file_internal_conf_conf_proto_msgTypes[13]
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -877,7 +961,7 @@ func (x *Data_Knowledge_Embedding) String() string {
 func (*Data_Knowledge_Embedding) ProtoMessage() {}
 
 func (x *Data_Knowledge_Embedding) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[13]
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -954,7 +1038,7 @@ type Data_Knowledge_Ingestion struct {
 
 func (x *Data_Knowledge_Ingestion) Reset() {
 	*x = Data_Knowledge_Ingestion{}
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -966,7 +1050,7 @@ func (x *Data_Knowledge_Ingestion) String() string {
 func (*Data_Knowledge_Ingestion) ProtoMessage() {}
 
 func (x *Data_Knowledge_Ingestion) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1010,6 +1094,190 @@ func (x *Data_Knowledge_Ingestion) GetWorkerConcurrency() int32 {
 	return 0
 }
 
+type Data_Rag_Retrieval struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TopK          int32                  `protobuf:"varint,1,opt,name=top_k,json=topK,proto3" json:"top_k,omitempty"`
+	Threshold     float32                `protobuf:"fixed32,2,opt,name=threshold,proto3" json:"threshold,omitempty"`
+	TimeoutMs     int32                  `protobuf:"varint,3,opt,name=timeout_ms,json=timeoutMs,proto3" json:"timeout_ms,omitempty"`
+	RerankEnabled bool                   `protobuf:"varint,4,opt,name=rerank_enabled,json=rerankEnabled,proto3" json:"rerank_enabled,omitempty"`
+	RerankWeight  float32                `protobuf:"fixed32,5,opt,name=rerank_weight,json=rerankWeight,proto3" json:"rerank_weight,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Data_Rag_Retrieval) Reset() {
+	*x = Data_Rag_Retrieval{}
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Data_Rag_Retrieval) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Data_Rag_Retrieval) ProtoMessage() {}
+
+func (x *Data_Rag_Retrieval) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Data_Rag_Retrieval.ProtoReflect.Descriptor instead.
+func (*Data_Rag_Retrieval) Descriptor() ([]byte, []int) {
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{2, 6, 0}
+}
+
+func (x *Data_Rag_Retrieval) GetTopK() int32 {
+	if x != nil {
+		return x.TopK
+	}
+	return 0
+}
+
+func (x *Data_Rag_Retrieval) GetThreshold() float32 {
+	if x != nil {
+		return x.Threshold
+	}
+	return 0
+}
+
+func (x *Data_Rag_Retrieval) GetTimeoutMs() int32 {
+	if x != nil {
+		return x.TimeoutMs
+	}
+	return 0
+}
+
+func (x *Data_Rag_Retrieval) GetRerankEnabled() bool {
+	if x != nil {
+		return x.RerankEnabled
+	}
+	return false
+}
+
+func (x *Data_Rag_Retrieval) GetRerankWeight() float32 {
+	if x != nil {
+		return x.RerankWeight
+	}
+	return 0
+}
+
+type Data_Rag_LLM struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Provider       string                 `protobuf:"bytes,1,opt,name=provider,proto3" json:"provider,omitempty"`
+	Endpoint       string                 `protobuf:"bytes,2,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	ApiKey         string                 `protobuf:"bytes,3,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	Model          string                 `protobuf:"bytes,4,opt,name=model,proto3" json:"model,omitempty"`
+	TimeoutMs      int32                  `protobuf:"varint,5,opt,name=timeout_ms,json=timeoutMs,proto3" json:"timeout_ms,omitempty"`
+	Temperature    float32                `protobuf:"fixed32,6,opt,name=temperature,proto3" json:"temperature,omitempty"`
+	MaxTokens      int32                  `protobuf:"varint,7,opt,name=max_tokens,json=maxTokens,proto3" json:"max_tokens,omitempty"`
+	SystemPrompt   string                 `protobuf:"bytes,8,opt,name=system_prompt,json=systemPrompt,proto3" json:"system_prompt,omitempty"`
+	RefusalMessage string                 `protobuf:"bytes,9,opt,name=refusal_message,json=refusalMessage,proto3" json:"refusal_message,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Data_Rag_LLM) Reset() {
+	*x = Data_Rag_LLM{}
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Data_Rag_LLM) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Data_Rag_LLM) ProtoMessage() {}
+
+func (x *Data_Rag_LLM) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Data_Rag_LLM.ProtoReflect.Descriptor instead.
+func (*Data_Rag_LLM) Descriptor() ([]byte, []int) {
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{2, 6, 1}
+}
+
+func (x *Data_Rag_LLM) GetProvider() string {
+	if x != nil {
+		return x.Provider
+	}
+	return ""
+}
+
+func (x *Data_Rag_LLM) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
+	}
+	return ""
+}
+
+func (x *Data_Rag_LLM) GetApiKey() string {
+	if x != nil {
+		return x.ApiKey
+	}
+	return ""
+}
+
+func (x *Data_Rag_LLM) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *Data_Rag_LLM) GetTimeoutMs() int32 {
+	if x != nil {
+		return x.TimeoutMs
+	}
+	return 0
+}
+
+func (x *Data_Rag_LLM) GetTemperature() float32 {
+	if x != nil {
+		return x.Temperature
+	}
+	return 0
+}
+
+func (x *Data_Rag_LLM) GetMaxTokens() int32 {
+	if x != nil {
+		return x.MaxTokens
+	}
+	return 0
+}
+
+func (x *Data_Rag_LLM) GetSystemPrompt() string {
+	if x != nil {
+		return x.SystemPrompt
+	}
+	return ""
+}
+
+func (x *Data_Rag_LLM) GetRefusalMessage() string {
+	if x != nil {
+		return x.RefusalMessage
+	}
+	return ""
+}
+
 var File_internal_conf_conf_proto protoreflect.FileDescriptor
 
 const file_internal_conf_conf_proto_rawDesc = "" +
@@ -1035,14 +1303,15 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"\n" +
 	"jwt_secret\x18\x01 \x01(\tR\tjwtSecret\x12\x16\n" +
 	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12\x1a\n" +
-	"\baudience\x18\x03 \x01(\tR\baudience\"\x81\r\n" +
+	"\baudience\x18\x03 \x01(\tR\baudience\"\xd3\x12\n" +
 	"\x04Data\x125\n" +
 	"\bdatabase\x18\x01 \x01(\v2\x19.kratos.api.Data.DatabaseR\bdatabase\x12,\n" +
 	"\x05redis\x18\x02 \x01(\v2\x16.kratos.api.Data.RedisR\x05redis\x125\n" +
 	"\bvectordb\x18\x03 \x01(\v2\x19.kratos.api.Data.VectorDBR\bvectordb\x125\n" +
 	"\brabbitmq\x18\x04 \x01(\v2\x19.kratos.api.Data.RabbitMQR\brabbitmq\x12E\n" +
 	"\x0eobject_storage\x18\x05 \x01(\v2\x1e.kratos.api.Data.ObjectStorageR\robjectStorage\x128\n" +
-	"\tknowledge\x18\x06 \x01(\v2\x1a.kratos.api.Data.KnowledgeR\tknowledge\x1a:\n" +
+	"\tknowledge\x18\x06 \x01(\v2\x1a.kratos.api.Data.KnowledgeR\tknowledge\x12&\n" +
+	"\x03rag\x18\a \x01(\v2\x14.kratos.api.Data.RagR\x03rag\x1a:\n" +
 	"\bDatabase\x12\x16\n" +
 	"\x06driver\x18\x01 \x01(\tR\x06driver\x12\x16\n" +
 	"\x06source\x18\x02 \x01(\tR\x06source\x1a\xb3\x01\n" +
@@ -1095,7 +1364,33 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"maxRetries\x12&\n" +
 	"\x0fbackoff_base_ms\x18\x02 \x01(\x05R\rbackoffBaseMs\x12#\n" +
 	"\rasync_enabled\x18\x03 \x01(\bR\fasyncEnabled\x12-\n" +
-	"\x12worker_concurrency\x18\x04 \x01(\x05R\x11workerConcurrencyB8Z6github.com/ZTH7/RAGDesk/apps/server/internal/conf;confb\x06proto3"
+	"\x12worker_concurrency\x18\x04 \x01(\x05R\x11workerConcurrency\x1a\xa7\x05\n" +
+	"\x03Rag\x12\x1d\n" +
+	"\n" +
+	"timeout_ms\x18\x01 \x01(\x05R\ttimeoutMs\x12<\n" +
+	"\tretrieval\x18\x02 \x01(\v2\x1e.kratos.api.Data.Rag.RetrievalR\tretrieval\x12*\n" +
+	"\x03llm\x18\x03 \x01(\v2\x18.kratos.api.Data.Rag.LLMR\x03llm\x12(\n" +
+	"\x10api_key_required\x18\x04 \x01(\bR\x0eapiKeyRequired\x12$\n" +
+	"\x0eapi_key_header\x18\x05 \x01(\tR\fapiKeyHeader\x1a\xa9\x01\n" +
+	"\tRetrieval\x12\x13\n" +
+	"\x05top_k\x18\x01 \x01(\x05R\x04topK\x12\x1c\n" +
+	"\tthreshold\x18\x02 \x01(\x02R\tthreshold\x12\x1d\n" +
+	"\n" +
+	"timeout_ms\x18\x03 \x01(\x05R\ttimeoutMs\x12%\n" +
+	"\x0ererank_enabled\x18\x04 \x01(\bR\rrerankEnabled\x12#\n" +
+	"\rrerank_weight\x18\x05 \x01(\x02R\frerankWeight\x1a\x9a\x02\n" +
+	"\x03LLM\x12\x1a\n" +
+	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x1a\n" +
+	"\bendpoint\x18\x02 \x01(\tR\bendpoint\x12\x17\n" +
+	"\aapi_key\x18\x03 \x01(\tR\x06apiKey\x12\x14\n" +
+	"\x05model\x18\x04 \x01(\tR\x05model\x12\x1d\n" +
+	"\n" +
+	"timeout_ms\x18\x05 \x01(\x05R\ttimeoutMs\x12 \n" +
+	"\vtemperature\x18\x06 \x01(\x02R\vtemperature\x12\x1d\n" +
+	"\n" +
+	"max_tokens\x18\a \x01(\x05R\tmaxTokens\x12#\n" +
+	"\rsystem_prompt\x18\b \x01(\tR\fsystemPrompt\x12'\n" +
+	"\x0frefusal_message\x18\t \x01(\tR\x0erefusalMessageB8Z6github.com/ZTH7/RAGDesk/apps/server/internal/conf;confb\x06proto3"
 
 var (
 	file_internal_conf_conf_proto_rawDescOnce sync.Once
@@ -1109,7 +1404,7 @@ func file_internal_conf_conf_proto_rawDescGZIP() []byte {
 	return file_internal_conf_conf_proto_rawDescData
 }
 
-var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_internal_conf_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),                // 0: kratos.api.Bootstrap
 	(*Server)(nil),                   // 1: kratos.api.Server
@@ -1123,10 +1418,13 @@ var file_internal_conf_conf_proto_goTypes = []any{
 	(*Data_RabbitMQ)(nil),            // 9: kratos.api.Data.RabbitMQ
 	(*Data_ObjectStorage)(nil),       // 10: kratos.api.Data.ObjectStorage
 	(*Data_Knowledge)(nil),           // 11: kratos.api.Data.Knowledge
-	(*Data_Knowledge_Chunking)(nil),  // 12: kratos.api.Data.Knowledge.Chunking
-	(*Data_Knowledge_Embedding)(nil), // 13: kratos.api.Data.Knowledge.Embedding
-	(*Data_Knowledge_Ingestion)(nil), // 14: kratos.api.Data.Knowledge.Ingestion
-	(*durationpb.Duration)(nil),      // 15: google.protobuf.Duration
+	(*Data_Rag)(nil),                 // 12: kratos.api.Data.Rag
+	(*Data_Knowledge_Chunking)(nil),  // 13: kratos.api.Data.Knowledge.Chunking
+	(*Data_Knowledge_Embedding)(nil), // 14: kratos.api.Data.Knowledge.Embedding
+	(*Data_Knowledge_Ingestion)(nil), // 15: kratos.api.Data.Knowledge.Ingestion
+	(*Data_Rag_Retrieval)(nil),       // 16: kratos.api.Data.Rag.Retrieval
+	(*Data_Rag_LLM)(nil),             // 17: kratos.api.Data.Rag.LLM
+	(*durationpb.Duration)(nil),      // 18: google.protobuf.Duration
 }
 var file_internal_conf_conf_proto_depIdxs = []int32{
 	1,  // 0: kratos.api.Bootstrap.server:type_name -> kratos.api.Server
@@ -1140,18 +1438,21 @@ var file_internal_conf_conf_proto_depIdxs = []int32{
 	9,  // 8: kratos.api.Data.rabbitmq:type_name -> kratos.api.Data.RabbitMQ
 	10, // 9: kratos.api.Data.object_storage:type_name -> kratos.api.Data.ObjectStorage
 	11, // 10: kratos.api.Data.knowledge:type_name -> kratos.api.Data.Knowledge
-	15, // 11: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
-	15, // 12: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	15, // 13: kratos.api.Data.Redis.read_timeout:type_name -> google.protobuf.Duration
-	15, // 14: kratos.api.Data.Redis.write_timeout:type_name -> google.protobuf.Duration
-	12, // 15: kratos.api.Data.Knowledge.chunking:type_name -> kratos.api.Data.Knowledge.Chunking
-	13, // 16: kratos.api.Data.Knowledge.embedding:type_name -> kratos.api.Data.Knowledge.Embedding
-	14, // 17: kratos.api.Data.Knowledge.ingestion:type_name -> kratos.api.Data.Knowledge.Ingestion
-	18, // [18:18] is the sub-list for method output_type
-	18, // [18:18] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	12, // 11: kratos.api.Data.rag:type_name -> kratos.api.Data.Rag
+	18, // 12: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
+	18, // 13: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	18, // 14: kratos.api.Data.Redis.read_timeout:type_name -> google.protobuf.Duration
+	18, // 15: kratos.api.Data.Redis.write_timeout:type_name -> google.protobuf.Duration
+	13, // 16: kratos.api.Data.Knowledge.chunking:type_name -> kratos.api.Data.Knowledge.Chunking
+	14, // 17: kratos.api.Data.Knowledge.embedding:type_name -> kratos.api.Data.Knowledge.Embedding
+	15, // 18: kratos.api.Data.Knowledge.ingestion:type_name -> kratos.api.Data.Knowledge.Ingestion
+	16, // 19: kratos.api.Data.Rag.retrieval:type_name -> kratos.api.Data.Rag.Retrieval
+	17, // 20: kratos.api.Data.Rag.llm:type_name -> kratos.api.Data.Rag.LLM
+	21, // [21:21] is the sub-list for method output_type
+	21, // [21:21] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_internal_conf_conf_proto_init() }
@@ -1165,7 +1466,7 @@ func file_internal_conf_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_conf_conf_proto_rawDesc), len(file_internal_conf_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

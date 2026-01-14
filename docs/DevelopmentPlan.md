@@ -10,7 +10,7 @@
 - Knowledge ingestion pipeline
 - RAG chat with citations + confidence
 - Basic analytics
-- External API + Admin API
+- External API + Console API
 
 ---
 
@@ -30,8 +30,9 @@
 **Purpose**: all other modules depend on tenant context.
 - Tables: `tenant`, `user`, `role`, `permission`, `user_role`, `role_permission`, `platform_admin`, `platform_role`, `platform_admin_role`, `platform_role_permission`
 - Enforce `tenant_id` filter in data access
-- Admin API: create tenant, invite users, assign roles
-- Auth: JWT for admin, context injection of `tenant_id`
+- Platform API: create tenant, manage platform roles/admins
+- Console API: invite users, assign roles
+- Auth: JWT for platform/console, context injection of `tenant_id`
 
 **Deliverable**: tenant creation and member management flow.
 
@@ -49,7 +50,7 @@
 - Chunking策略：结构优先（按 block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%）
 - Metadata extraction (basic: title/section/page/source) + index build (vector + metadata)
 - Status tracking + idempotency (by `document_version`)
-- Admin API: KB CRUD / document upload / reindex / rollback
+- Console API: KB CRUD / document upload / reindex / rollback
 
 **Deliverable**: documents upload and index successfully.
 
@@ -75,7 +76,7 @@
 - Message persistence + refs + confidence
 - Feedback capture: `message_feedback`
 - Low‑confidence strategy: conservative answer or refusal
-- Admin API: session/message listing (tenant scope)
+- Console API: session/message listing (tenant scope)
 
 **Deliverable**: chat sessions with message history and audit trail.
 
@@ -106,14 +107,14 @@
 
 ---
 
-## Phase 7: Admin Web
+## Phase 7: Console Web
 **Purpose**: operational UI.
 - Pages: tenants, bots, KB/documents, API keys, analytics
 - Role‑aware navigation (platform vs tenant)
 - Form + list + charts
 - Basic audit views
 
-**Deliverable**: Admin UI working end‑to‑end.
+**Deliverable**: Console UI working end‑to‑end.
 
 ---
 

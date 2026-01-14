@@ -195,7 +195,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `tenant_id`
 - `document_id`
 - `version` (int)
-- `raw_uri` (必填：object storage path / 预签 URL)
+- `raw_uri` (必填：`s3://bucket/path`，对象存储 URI)
 - `index_config_hash`（chunking + embedding 配置快照，用于变更检测）
 - `status` (processing/ready/failed)
 - `error_message`

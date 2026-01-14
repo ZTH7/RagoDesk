@@ -6,7 +6,7 @@
 
 ## 1. 前端技术栈
 
-### 1.1 管理后台（Admin Web）
+### 1.1 管理后台（Console Web）
 - **框架**：React 18
 - **构建工具**：Vite
 - **UI 组件库**：Ant Design

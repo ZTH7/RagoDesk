@@ -3,6 +3,7 @@ package biz
 import (
 	iambiz "github.com/ZTH7/RAGDesk/apps/server/internal/iam/biz"
 	knowledgebiz "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
+	ragbiz "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
 
 	"github.com/google/wire"
 )
@@ -11,4 +12,5 @@ import (
 var ProviderSet = wire.NewSet(
 	iambiz.ProviderSet,
 	knowledgebiz.ProviderSet,
+	ragbiz.ProviderSet,
 )

@@ -68,10 +68,15 @@
 ### 2.2 发送消息（机器人回复）
 `POST /api/v1/message`
 
+**Headers**
+- `X-Tenant-ID`: tenant scope (required in Phase 3 unless API key already maps to tenant)
+- `X-API-Key`: required when `data.rag.api_key_required=true`
+
 **Request**
 ```json
 {
   "session_id": "sess_abc",
+  "bot_id": "bot_123",
   "message": "如何申请退款？"
 }
 ```
@@ -149,7 +154,7 @@
 
 ---
 
-## 4. 管理后台 API（Tenant Admin）
+## 4. 管理后台 API（Console）
 
 ### 4.1 成员与角色
 - `POST /console/v1/tenants/{id}/users`（邀请成员）

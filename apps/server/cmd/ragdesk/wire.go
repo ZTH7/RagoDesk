@@ -11,6 +11,7 @@ import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/data"
 	iamdata "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
 	knowledgedata "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
+	ragdata "github.com/ZTH7/RAGDesk/apps/server/internal/rag/data"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/server"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/service"
 
@@ -26,6 +27,7 @@ func wireApp(*conf.Server, *conf.Data, log.Logger) (*kratos.App, func(), error) 
 		data.NewData,
 		iamdata.ProviderSet,
 		knowledgedata.ProviderSet,
+		ragdata.ProviderSet,
 		biz.ProviderSet,
 		service.ProviderSet,
 		newApp,

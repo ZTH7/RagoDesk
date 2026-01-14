@@ -86,10 +86,36 @@ message Data {
     Embedding embedding = 2;
     Ingestion ingestion = 3;
   }
+  message Rag {
+    message Retrieval {
+      int32 top_k = 1;
+      float threshold = 2;
+      int32 timeout_ms = 3;
+      bool rerank_enabled = 4;
+      float rerank_weight = 5;
+    }
+    message LLM {
+      string provider = 1;
+      string endpoint = 2;
+      string api_key = 3;
+      string model = 4;
+      int32 timeout_ms = 5;
+      float temperature = 6;
+      int32 max_tokens = 7;
+      string system_prompt = 8;
+      string refusal_message = 9;
+    }
+    int32 timeout_ms = 1;
+    Retrieval retrieval = 2;
+    LLM llm = 3;
+    bool api_key_required = 4;
+    string api_key_header = 5;
+  }
   Database database = 1;
   Redis redis = 2;
   VectorDB vectordb = 3;
   RabbitMQ rabbitmq = 4;
   ObjectStorage object_storage = 5;
   Knowledge knowledge = 6;
+  Rag rag = 7;
 }

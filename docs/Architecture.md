@@ -58,7 +58,7 @@
   - 为所有模块提供租户与权限校验能力
   - DAO 层强制 tenant 过滤（防止越权访问）
 - **Knowledge & Ingestion**
-  - Admin API 触发上传
+  - Console API 触发上传
   - 写 `document` / `document_version`
   - 异步任务：清洗、切分、向量化、入向量库
   - 索引数据契约：chunk 元信息 + 向量库 payload（按 `document_version` 幂等可重建，详见 `docs/RAG.md`）
@@ -140,7 +140,7 @@ API-->>Client: reply
 #### 3.3.1 Ingestion 处理链路
 ```mermaid
 flowchart LR
-  Client[Admin API] -->|Upload / Reindex| KSvc[Knowledge Service]
+  Client[Console API] -->|Upload / Reindex| KSvc[Knowledge Service]
   KSvc -->|write metadata| MySQL[(MySQL)]
   KSvc -->|enqueue job| MQ[(RabbitMQ)]
   MQ --> Worker[Ingestion Worker]

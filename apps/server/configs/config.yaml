@@ -51,3 +51,23 @@ data:
       backoff_base_ms: 500
       async_enabled: false
       worker_concurrency: 1
+  rag:
+    timeout_ms: 20000
+    retrieval:
+      top_k: 5
+      threshold: 0.2
+      timeout_ms: 8000
+      rerank_enabled: true
+      rerank_weight: 0.3
+    llm:
+      provider: fake
+      endpoint: ""
+      api_key: ""
+      model: fake-llm-v1
+      timeout_ms: 15000
+      temperature: 0.2
+      max_tokens: 512
+      system_prompt: ""
+      refusal_message: ""
+    api_key_required: false
+    api_key_header: X-API-Key

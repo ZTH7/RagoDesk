@@ -3,9 +3,11 @@ package server
 import (
 	iamv1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
 	knowledgev1 "github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1"
+	ragv1 "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
 	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
+	ragservice "github.com/ZTH7/RAGDesk/apps/server/internal/rag/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -13,7 +15,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService) *http.Server {
+func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -37,5 +39,6 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 	iamv1.RegisterPlatformIAMHTTPServer(srv, iamSvc)
 	iamv1.RegisterConsoleIAMHTTPServer(srv, iamSvc)
 	knowledgev1.RegisterConsoleKnowledgeHTTPServer(srv, knowledgeSvc)
+	ragv1.RegisterRAGHTTPServer(srv, ragSvc)
 	return srv
 }

@@ -51,7 +51,7 @@
 - 解析/清洗：
 - `text/markdown/html` 走清洗（HTML strip + 规范化空白）
 - `url` 走 HTTP GET 拉取（HTML 自动 strip）
-- `docx`/`pdf`/`doc`：从 `raw_uri` 读取原文件（OSS 或预签 URL），按格式 best-effort 提取文本
+- `docx`/`pdf`/`doc`：从 `raw_uri` 读取原文件（`s3://bucket/path`），按格式 best-effort 提取文本
 - 基础元数据抽取：`title/section/page/source`（`title` 优先用文档标题，缺省取首个 heading/段落；`section` 来自 heading 或页码；`page_no` 来自 PDF；`source_uri` 来自 `raw_uri`）
 - Chunking：结构优先（block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%，可通过环境变量配置）
 - Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`；离线文档 embedding 支持批量处理
@@ -107,6 +107,7 @@
 ## 6. 检索策略：vector / hybrid / rerank（以及默认取舍）
 
 - 基础（Phase 3）：先做“向量检索 + TopK”，保证引用与拒答策略可落地。
+- 当前实现：启用轻量 rerank（词面 overlap），可通过 `data.rag.retrieval.rerank_enabled` 与 `rerank_weight` 调整。
 - 优化：hybrid 检索（dense + sparse/BM25）提升覆盖；在融合后对候选做 rerank 提升相关性。
 - hybrid 的实现路径（优化）：
 - 方案 A：向量库/检索引擎自带 hybrid 能力（实现成本低、但绑定能力边界）
@@ -159,6 +160,8 @@
 ## 11. Eino 在哪里用？怎么用？
 
 - Eino 的价值：把 RAG 链路拆成可观测的节点（embedding/retrieve/rerank/prompt/llm），并在链路里统一做 tracing、耗时与成本统计。
+- 当前实现：RAG 使用 Eino compose graph 节点化编排（resolve → embed → retrieve → rerank → prompt → llm）。
+- Tracing：每个节点都会创建一个 span，记录耗时与错误（OpenTelemetry）。
 - RAG Engine pipeline（建议节点）：`DetectLanguage` → `EmbedQuery` → `Retrieve(topK, per kb)` → `Merge & Dedup` → `Rerank(optional)` → `BuildPrompt` → `CallLLM` → `PostProcess` → `PersistMessage`。
 - 并发点：多 KB 检索可并发；merge 后进入 rerank/LLM 串行。
 - 观测点：每个节点记录 `latency_ms`、命中数量、TopK 分布、以及 LLM token usage（如果可获取）。

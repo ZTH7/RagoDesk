@@ -4,16 +4,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
+	"fmt"
 	"math/rand/v2"
+	"strings"
 )
 
 type fakeProvider struct {
 	model string
 	dim   int
-}
-
-func init() {
-	RegisterProvider("fake", newFakeProvider)
 }
 
 func newFakeProvider(cfg Config) Provider {
@@ -52,4 +50,44 @@ func deterministicEmbedding(s string, dim int) []float32 {
 		out[i] = float32(rng.Float64()*2.0 - 1.0)
 	}
 	return out
+}
+
+type fakeLLMProvider struct {
+	model string
+}
+
+func init() {
+	RegisterProvider("fake", newFakeProvider)
+	RegisterLLMProvider("fake", newFakeLLMProvider)
+}
+
+func newFakeLLMProvider(cfg LLMConfig) LLMProvider {
+	return fakeLLMProvider{
+		model: strings.TrimSpace(cfg.Model),
+	}
+}
+
+func (p fakeLLMProvider) Generate(ctx context.Context, req LLMRequest) (LLMResponse, error) {
+	text := strings.TrimSpace(req.Prompt)
+	if text == "" {
+		text = "No input provided."
+	}
+	return LLMResponse{
+		Text:  fmt.Sprintf("RAG response (fake): %s", truncateText(text, 180)),
+		Usage: LLMUsage{},
+	}, nil
+}
+
+func (p fakeLLMProvider) Model() string {
+	if p.model == "" {
+		return "fake-llm-v1"
+	}
+	return p.model
+}
+
+func truncateText(text string, limit int) string {
+	if limit <= 0 || len(text) <= limit {
+		return text
+	}
+	return text[:limit] + "..."
 }
