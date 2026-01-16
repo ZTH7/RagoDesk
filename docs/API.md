@@ -113,7 +113,20 @@
 
 ---
 
-### 2.4 用户反馈（用于优化）
+### 2.4 结束会话
+`POST /api/v1/session/{id}/close`
+
+**Request**
+```json
+{
+  "session_id": "sess_abc",
+  "close_reason": "user_end"
+}
+```
+
+---
+
+### 2.5 用户反馈（用于优化）
 `POST /api/v1/feedback`
 
 **Request**
@@ -202,6 +215,10 @@
 ### 4.6 统计看板
 - `GET /console/v1/analytics/overview`
 - `GET /console/v1/analytics/latency`
+
+### 4.7 会话管理
+- `GET /console/v1/sessions`（可选 `bot_id` 过滤）
+- `GET /console/v1/sessions/{id}/messages`
 
 ---
 

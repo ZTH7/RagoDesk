@@ -8,15 +8,18 @@ package main
 
 import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	biz4 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
+	data2 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/data"
+	service4 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/service"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/data"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/iam/biz"
-	data2 "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
+	data3 "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
 	biz2 "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
-	data3 "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
+	data4 "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
 	service2 "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
 	biz3 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
-	data4 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/data"
+	data5 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/data"
 	service3 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/service"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/server"
 	"github.com/go-kratos/kratos/v2"
@@ -35,23 +38,26 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	iamRepo := data2.NewIAMRepo(dataData, logger)
+	conversationRepo := data2.NewConversationRepo(dataData)
+	conversationUsecase := biz4.NewConversationUsecase(conversationRepo)
+	conversationService := service4.NewConversationService(conversationUsecase)
+	iamRepo := data3.NewIAMRepo(dataData, logger)
 	iamUsecase := biz.NewIAMUsecase(iamRepo, logger)
 	iamService := service.NewIAMService(iamUsecase, logger)
-	knowledgeRepo := data3.NewKnowledgeRepo(dataData, confData, logger)
-	ingestionQueue := data3.NewIngestionQueue(confData, logger)
+	knowledgeRepo := data4.NewKnowledgeRepo(dataData, confData, logger)
+	ingestionQueue := data4.NewIngestionQueue(confData, logger)
 	knowledgeUsecase := biz2.NewKnowledgeUsecase(knowledgeRepo, ingestionQueue, confData, logger)
 	knowledgeService := service2.NewKnowledgeService(knowledgeUsecase, iamUsecase, logger)
-	ragKBRepo := data4.NewKBRepo(dataData)
-	ragVectorRepo := data4.NewVectorRepo(confData)
-	ragChunkRepo := data4.NewChunkRepo(dataData)
+	ragKBRepo := data5.NewKBRepo(dataData)
+	ragVectorRepo := data5.NewVectorRepo(confData)
+	ragChunkRepo := data5.NewChunkRepo(dataData)
 	ragUsecase, err := biz3.NewRAGUsecase(ragKBRepo, ragVectorRepo, ragChunkRepo, confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	ragService := service3.NewRAGService(ragUsecase, logger)
-	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService)
-	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService)
+	ragService := service3.NewRAGService(ragUsecase, conversationUsecase, logger)
+	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService)
+	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

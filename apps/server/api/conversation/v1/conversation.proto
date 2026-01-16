@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package api.conversation.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/conversation/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+service Conversation {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/session"
+      body: "*"
+    };
+  }
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/session/{session_id}"
+    };
+  }
+  rpc CloseSession(CloseSessionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/api/v1/session/{session_id}/close"
+      body: "*"
+    };
+  }
+  rpc CreateFeedback(CreateFeedbackRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/api/v1/feedback"
+      body: "*"
+    };
+  }
+}
+
+service ConsoleConversation {
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/sessions"
+    };
+  }
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/sessions/{session_id}/messages"
+    };
+  }
+}
+
+message Reference {
+  string document_id = 1;
+  string document_version_id = 2;
+  string chunk_id = 3;
+  float score = 4;
+  int32 rank = 5;
+  string snippet = 6;
+}
+
+message Message {
+  string id = 1;
+  string session_id = 2;
+  string role = 3;
+  string content = 4;
+  float confidence = 5;
+  repeated Reference references = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message Session {
+  string id = 1;
+  string tenant_id = 2;
+  string bot_id = 3;
+  string status = 4;
+  string close_reason = 5;
+  string user_external_id = 6;
+  string metadata = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  google.protobuf.Timestamp closed_at = 10;
+}
+
+message CreateSessionRequest {
+  string bot_id = 1;
+  string user_external_id = 2;
+  google.protobuf.Struct metadata = 3;
+}
+
+message CreateSessionResponse {
+  Session session = 1;
+}
+
+message GetSessionRequest {
+  string session_id = 1;
+  bool include_messages = 2;
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message GetSessionResponse {
+  Session session = 1;
+  repeated Message messages = 2;
+}
+
+message CloseSessionRequest {
+  string session_id = 1;
+  string close_reason = 2;
+}
+
+message CreateFeedbackRequest {
+  string session_id = 1;
+  string message_id = 2;
+  int32 rating = 3;
+  string comment = 4;
+  string correction = 5;
+}
+
+message ListSessionsRequest {
+  string bot_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message ListSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+message ListMessagesRequest {
+  string session_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message ListMessagesResponse {
+  repeated Message messages = 1;
+}

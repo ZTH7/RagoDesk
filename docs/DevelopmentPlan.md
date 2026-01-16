@@ -76,7 +76,14 @@
 - Message persistence + refs + confidence
 - Feedback capture: `message_feedback`
 - Low‑confidence strategy: conservative answer or refusal
+- External API: `POST /api/v1/session`, `GET /api/v1/session/{id}` (tenant scope)
 - Console API: session/message listing (tenant scope)
+- Session events: open/close/refusal/escalation tags (audit)
+- Retention policy: configurable TTL for session/message storage (default keep)
+- Persist request/response payloads: user query, final answer, confidence, refs
+- Indexes: `tenant_id`, `bot_id`, `session_id`, `created_at`
+- DAO: tenant‑scoped queries only (no cross‑tenant access)
+- Hook RAG output into conversation storage (save refs + confidence)
 
 **Deliverable**: chat sessions with message history and audit trail.
 

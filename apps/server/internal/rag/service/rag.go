@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	ragv1 "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1"
+	convbiz "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -16,13 +17,14 @@ import (
 type RAGService struct {
 	ragv1.UnimplementedRAGServer
 
-	uc  *biz.RAGUsecase
-	log *log.Helper
+	uc   *biz.RAGUsecase
+	conv *convbiz.ConversationUsecase
+	log  *log.Helper
 }
 
 // NewRAGService creates a new RAGService.
-func NewRAGService(uc *biz.RAGUsecase, logger log.Logger) *RAGService {
-	return &RAGService{uc: uc, log: log.NewHelper(logger)}
+func NewRAGService(uc *biz.RAGUsecase, conv *convbiz.ConversationUsecase, logger log.Logger) *RAGService {
+	return &RAGService{uc: uc, conv: conv, log: log.NewHelper(logger)}
 }
 
 // SendMessage handles RAG message requests.
@@ -51,6 +53,19 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 	if err != nil {
 		return nil, err
 	}
+	if s.conv != nil && strings.TrimSpace(req.SessionId) != "" {
+		if err := s.conv.RecordRAGExchange(
+			ctx,
+			req.SessionId,
+			req.BotId,
+			req.Message,
+			resp.Reply,
+			resp.Confidence,
+			convbiz.EncodeReferences(toConversationReferences(resp.References)),
+		); err != nil {
+			return nil, err
+		}
+	}
 	return &ragv1.SendMessageResponse{
 		Reply:      resp.Reply,
 		Confidence: resp.Confidence,
@@ -78,3 +93,21 @@ func toAPIReferences(refs biz.References) []*ragv1.Reference {
 
 // ProviderSet is rag service providers.
 var ProviderSet = wire.NewSet(NewRAGService)
+
+func toConversationReferences(refs biz.References) []convbiz.Reference {
+	if len(refs) == 0 {
+		return nil
+	}
+	out := make([]convbiz.Reference, 0, len(refs))
+	for _, item := range refs {
+		out = append(out, convbiz.Reference{
+			DocumentID:        item.DocumentID,
+			DocumentVersionID: item.DocumentVersionID,
+			ChunkID:           item.ChunkID,
+			Score:             item.Score,
+			Rank:              item.Rank,
+			Snippet:           item.Snippet,
+		})
+	}
+	return out
+}

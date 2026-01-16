@@ -235,16 +235,20 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `bot_id`
 - `user_external_id` (对外系统用户 id)
 - `status` (bot/closed)
+- `close_reason` (optional)
+- `metadata` (json/text)
 - `created_at`
+- `updated_at`
 - `closed_at`
 
 **chat_message**
 - `id` (PK)
+- `tenant_id`
 - `session_id`
-- `sender` (user/bot)
+- `role` (user/assistant)
 - `content`
-- `refs_json` (引用来源)
 - `confidence`
+- `references_json` (引用来源)
 - `created_at`
 
 **message_feedback**
@@ -253,14 +257,16 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `session_id`
 - `message_id`
 - `rating` (1/-1)
+- `comment` (text, optional)
 - `correction` (text, optional)
 - `created_at`
 
 **session_event**
 - `id` (PK)
+- `tenant_id`
 - `session_id`
-- `event_type` (start/close)
-- `payload_json`
+- `event_type` (open/close/refusal)
+- `event_detail`
 - `created_at`
 
 ---

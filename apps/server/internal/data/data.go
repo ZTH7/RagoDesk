@@ -59,6 +59,9 @@ func ensureSchemaAndSeed(ctx context.Context, db *sql.DB) error {
 	if err := ensureKnowledgeSchema(ctx, db); err != nil {
 		return err
 	}
+	if err := ensureConversationSchema(ctx, db); err != nil {
+		return err
+	}
 	if err := seedIAMPermissions(ctx, db); err != nil {
 		return err
 	}
@@ -285,6 +288,69 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 	}
 	if err := ensureColumn(ctx, db, "doc_chunk", "source_uri", "VARCHAR(1024) NULL"); err != nil {
 		return err
+	}
+	return nil
+}
+
+func ensureConversationSchema(ctx context.Context, db *sql.DB) error {
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS chat_session (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			bot_id VARCHAR(36) NOT NULL,
+			status VARCHAR(32) NOT NULL,
+			close_reason VARCHAR(64) NULL,
+			user_external_id VARCHAR(128) NULL,
+			metadata TEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			closed_at DATETIME NULL,
+			PRIMARY KEY (id),
+			KEY idx_chat_session_tenant (tenant_id),
+			KEY idx_chat_session_tenant_bot (tenant_id, bot_id),
+			KEY idx_chat_session_created_at (tenant_id, created_at),
+			KEY idx_chat_session_status (tenant_id, status)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS chat_message (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			session_id VARCHAR(36) NOT NULL,
+			role VARCHAR(16) NOT NULL,
+			content LONGTEXT NOT NULL,
+			confidence DOUBLE NOT NULL DEFAULT 0,
+			references_json TEXT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			KEY idx_chat_message_session (tenant_id, session_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS session_event (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			session_id VARCHAR(36) NOT NULL,
+			event_type VARCHAR(32) NOT NULL,
+			event_detail TEXT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			KEY idx_session_event_session (tenant_id, session_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS message_feedback (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			session_id VARCHAR(36) NOT NULL,
+			message_id VARCHAR(36) NOT NULL,
+			rating INT NOT NULL,
+			comment TEXT NULL,
+			correction TEXT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			KEY idx_message_feedback_message (tenant_id, message_id),
+			KEY idx_message_feedback_session (tenant_id, session_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	}
+	for _, stmt := range statements {
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			return err
+		}
 	}
 	return nil
 }
