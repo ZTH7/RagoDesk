@@ -8,6 +8,8 @@ package main
 
 import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	biz5 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
+	data6 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/data"
 	biz4 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
 	data2 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/data"
 	service4 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/service"
@@ -38,9 +40,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
+	apimgmtRepo := data6.NewAPIMgmtRepo(dataData, logger)
+	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, logger)
 	conversationRepo := data2.NewConversationRepo(dataData)
 	conversationUsecase := biz4.NewConversationUsecase(conversationRepo)
-	conversationService := service4.NewConversationService(conversationUsecase)
+	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase)
 	iamRepo := data3.NewIAMRepo(dataData, logger)
 	iamUsecase := biz.NewIAMUsecase(iamRepo, logger)
 	iamService := service.NewIAMService(iamUsecase, logger)
@@ -55,7 +59,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	ragService := service3.NewRAGService(ragUsecase, conversationUsecase, logger)
+	ragService := service3.NewRAGService(ragUsecase, conversationUsecase, apimgmtUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService)
 	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService)
 	app := newApp(logger, grpcServer, httpServer)

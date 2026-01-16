@@ -56,6 +56,9 @@ func ensureSchemaAndSeed(ctx context.Context, db *sql.DB) error {
 	if err := ensureIAMSchema(ctx, db); err != nil {
 		return err
 	}
+	if err := ensureAPIMgmtSchema(ctx, db); err != nil {
+		return err
+	}
 	if err := ensureKnowledgeSchema(ctx, db); err != nil {
 		return err
 	}
@@ -63,6 +66,63 @@ func ensureSchemaAndSeed(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if err := seedIAMPermissions(ctx, db); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS api_key (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			bot_id VARCHAR(36) NOT NULL,
+			name VARCHAR(128) NOT NULL,
+			key_hash VARCHAR(64) NOT NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'active',
+			quota_daily INT NOT NULL DEFAULT 0,
+			qps_limit INT NOT NULL DEFAULT 0,
+			created_at DATETIME NOT NULL,
+			last_used_at DATETIME NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_api_key_hash (key_hash),
+			KEY idx_api_key_tenant (tenant_id),
+			KEY idx_api_key_bot (tenant_id, bot_id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS api_usage_log (
+			id VARCHAR(36) NOT NULL,
+			api_key_id VARCHAR(36) NOT NULL,
+			path VARCHAR(255) NOT NULL,
+			status_code INT NOT NULL,
+			latency_ms INT NOT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			KEY idx_api_usage_key (api_key_id),
+			KEY idx_api_usage_created_at (created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	}
+
+	for _, stmt := range statements {
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			return err
+		}
+	}
+	if err := ensureColumn(ctx, db, "api_key", "bot_id", "VARCHAR(36) NOT NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "key_hash", "VARCHAR(64) NOT NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "status", "VARCHAR(32) NOT NULL DEFAULT 'active'"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "quota_daily", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "qps_limit", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "last_used_at", "DATETIME NULL"); err != nil {
 		return err
 	}
 	return nil

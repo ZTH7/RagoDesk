@@ -74,16 +74,17 @@ message Session {
   string status = 4;
   string close_reason = 5;
   string user_external_id = 6;
-  string metadata = 7;
+  google.protobuf.Struct metadata = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
   google.protobuf.Timestamp closed_at = 10;
 }
 
 message CreateSessionRequest {
-  string bot_id = 1;
   string user_external_id = 2;
   google.protobuf.Struct metadata = 3;
+
+  reserved 1;
 }
 
 message CreateSessionResponse {

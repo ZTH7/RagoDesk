@@ -2,11 +2,16 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"time"
 
 	v1 "github.com/ZTH7/RAGDesk/apps/server/api/conversation/v1"
+	apimgmtbiz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/transport"
 	"github.com/google/wire"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -18,20 +23,25 @@ type ConversationService struct {
 	v1.UnimplementedConversationServer
 	v1.UnimplementedConsoleConversationServer
 
-	uc *biz.ConversationUsecase
+	uc  *biz.ConversationUsecase
+	api *apimgmtbiz.APIMgmtUsecase
 }
 
 // NewConversationService creates a new ConversationService
-func NewConversationService(uc *biz.ConversationUsecase) *ConversationService {
-	return &ConversationService{uc: uc}
+func NewConversationService(uc *biz.ConversationUsecase, api *apimgmtbiz.APIMgmtUsecase) *ConversationService {
+	return &ConversationService{uc: uc, api: api}
 }
 
 func (s *ConversationService) CreateSession(ctx context.Context, req *v1.CreateSessionRequest) (*v1.CreateSessionResponse, error) {
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
+	ctx, key, err := s.requireAPIKey(ctx)
+	if err != nil {
+		return nil, err
+	}
 	meta := structToMap(req.Metadata)
-	session, err := s.uc.CreateSession(ctx, req.BotId, req.UserExternalId, meta)
+	session, err := s.uc.CreateSession(ctx, key.BotID, req.UserExternalId, meta)
 	if err != nil {
 		return nil, err
 	}
@@ -42,9 +52,16 @@ func (s *ConversationService) GetSession(ctx context.Context, req *v1.GetSession
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
+	ctx, key, err := s.requireAPIKey(ctx)
+	if err != nil {
+		return nil, err
+	}
 	session, messages, err := s.uc.GetSession(ctx, req.SessionId, req.IncludeMessages, int(req.Limit), int(req.Offset))
 	if err != nil {
 		return nil, err
+	}
+	if key.BotID != "" && session.BotID != "" && key.BotID != session.BotID {
+		return nil, errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
 	}
 	resp := &v1.GetSessionResponse{
 		Session:  toAPISession(session),
@@ -57,6 +74,17 @@ func (s *ConversationService) CloseSession(ctx context.Context, req *v1.CloseSes
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
+	ctx, key, err := s.requireAPIKey(ctx)
+	if err != nil {
+		return nil, err
+	}
+	session, _, err := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	if key.BotID != "" && session.BotID != "" && key.BotID != session.BotID {
+		return nil, errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
+	}
 	if err := s.uc.CloseSession(ctx, req.SessionId, req.CloseReason); err != nil {
 		return nil, err
 	}
@@ -66,6 +94,17 @@ func (s *ConversationService) CloseSession(ctx context.Context, req *v1.CloseSes
 func (s *ConversationService) CreateFeedback(ctx context.Context, req *v1.CreateFeedbackRequest) (*emptypb.Empty, error) {
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
+	}
+	ctx, key, err := s.requireAPIKey(ctx)
+	if err != nil {
+		return nil, err
+	}
+	session, _, err := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
+	if err != nil {
+		return nil, err
+	}
+	if key.BotID != "" && session.BotID != "" && key.BotID != session.BotID {
+		return nil, errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
 	}
 	if err := s.uc.CreateFeedback(ctx, req.SessionId, req.MessageId, req.Rating, req.Comment, req.Correction); err != nil {
 		return nil, err
@@ -113,7 +152,7 @@ func toAPISession(session biz.Session) *v1.Session {
 		Status:        session.Status,
 		CloseReason:   session.CloseReason,
 		UserExternalId: session.UserExternal,
-		Metadata:      session.Metadata,
+		Metadata:      parseMetadata(session.Metadata),
 		CreatedAt:     timestamppb.New(session.CreatedAt),
 		UpdatedAt:     timestamppb.New(session.UpdatedAt),
 		ClosedAt:      timeOrNil(session.ClosedAt),
@@ -156,6 +195,39 @@ func toAPIReferences(raw string) []*v1.Reference {
 		})
 	}
 	return out
+}
+
+func parseMetadata(raw string) *structpb.Struct {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return nil
+	}
+	var data map[string]any
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
+		return nil
+	}
+	metadata, err := structpb.NewStruct(data)
+	if err != nil {
+		return nil
+	}
+	return metadata
+}
+
+func (s *ConversationService) requireAPIKey(ctx context.Context) (context.Context, apimgmtbiz.APIKey, error) {
+	if s.api == nil {
+		return ctx, apimgmtbiz.APIKey{}, errors.InternalServer("API_KEY_RESOLVER_MISSING", "api key resolver missing")
+	}
+	tr, ok := transport.FromServerContext(ctx)
+	if !ok {
+		return ctx, apimgmtbiz.APIKey{}, errors.Unauthorized("API_KEY_MISSING", "api key missing")
+	}
+	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
+	key, err := s.api.ResolveAPIKey(ctx, rawKey)
+	if err != nil {
+		return ctx, apimgmtbiz.APIKey{}, err
+	}
+	ctx = tenant.WithTenantID(ctx, key.TenantID)
+	return ctx, key, nil
 }
 
 func structToMap(value *structpb.Struct) map[string]any {

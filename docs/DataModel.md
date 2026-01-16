@@ -274,6 +274,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 **api_key**
 - `id` (PK)
 - `tenant_id`
+- `bot_id` (绑定 bot)
 - `name`
 - `key_hash`
 - `status` (active/disabled)

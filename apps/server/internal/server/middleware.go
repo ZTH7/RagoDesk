@@ -78,26 +78,6 @@ func ErrorMiddleware() middleware.Middleware {
 	}
 }
 
-// TenantContextMiddleware extracts tenant_id from transport metadata.
-func TenantContextMiddleware() middleware.Middleware {
-	return func(next middleware.Handler) middleware.Handler {
-		return func(ctx context.Context, req interface{}) (interface{}, error) {
-			if _, ok := tenant.TenantID(ctx); ok {
-				return next(ctx, req)
-			}
-			tr, ok := transport.FromServerContext(ctx)
-			if !ok {
-				return next(ctx, req)
-			}
-			tenantID := tr.RequestHeader().Get("X-Tenant-ID")
-			if tenantID == "" {
-				return next(ctx, req)
-			}
-			return next(tenant.WithTenantID(ctx, tenantID), req)
-		}
-	}
-}
-
 func isAdminOperation(operation string) bool {
 	return strings.Contains(operation, "PlatformIAM") ||
 		strings.Contains(operation, "ConsoleIAM") ||

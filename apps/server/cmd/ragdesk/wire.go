@@ -8,6 +8,7 @@ package main
 import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/biz"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	apimgmtdata "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/data"
 	conversationdata "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/data"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/data"
 	iamdata "github.com/ZTH7/RAGDesk/apps/server/internal/iam/data"
@@ -26,6 +27,7 @@ func wireApp(*conf.Server, *conf.Data, log.Logger) (*kratos.App, func(), error) 
 	panic(wire.Build(
 		server.ProviderSet,
 		data.NewData,
+		apimgmtdata.ProviderSet,
 		conversationdata.ProviderSet,
 		iamdata.ProviderSet,
 		knowledgedata.ProviderSet,

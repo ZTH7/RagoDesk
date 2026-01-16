@@ -209,7 +209,7 @@ type Session struct {
 	Status         string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
 	CloseReason    string                 `protobuf:"bytes,5,opt,name=close_reason,json=closeReason,proto3" json:"close_reason,omitempty"`
 	UserExternalId string                 `protobuf:"bytes,6,opt,name=user_external_id,json=userExternalId,proto3" json:"user_external_id,omitempty"`
-	Metadata       string                 `protobuf:"bytes,7,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata       *structpb.Struct       `protobuf:"bytes,7,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	ClosedAt       *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=closed_at,json=closedAt,proto3" json:"closed_at,omitempty"`
@@ -289,11 +289,11 @@ func (x *Session) GetUserExternalId() string {
 	return ""
 }
 
-func (x *Session) GetMetadata() string {
+func (x *Session) GetMetadata() *structpb.Struct {
 	if x != nil {
 		return x.Metadata
 	}
-	return ""
+	return nil
 }
 
 func (x *Session) GetCreatedAt() *timestamppb.Timestamp {
@@ -319,7 +319,6 @@ func (x *Session) GetClosedAt() *timestamppb.Timestamp {
 
 type CreateSessionRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	BotId          string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
 	UserExternalId string                 `protobuf:"bytes,2,opt,name=user_external_id,json=userExternalId,proto3" json:"user_external_id,omitempty"`
 	Metadata       *structpb.Struct       `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	unknownFields  protoimpl.UnknownFields
@@ -354,13 +353,6 @@ func (x *CreateSessionRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateSessionRequest.ProtoReflect.Descriptor instead.
 func (*CreateSessionRequest) Descriptor() ([]byte, []int) {
 	return file_api_conversation_v1_conversation_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *CreateSessionRequest) GetBotId() string {
-	if x != nil {
-		return x.BotId
-	}
-	return ""
 }
 
 func (x *CreateSessionRequest) GetUserExternalId() string {
@@ -903,25 +895,24 @@ const file_api_conversation_v1_conversation_proto_rawDesc = "" +
 	"references\x18\x06 \x03(\v2\x1e.api.conversation.v1.ReferenceR\n" +
 	"references\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xfd\x02\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x96\x03\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x15\n" +
 	"\x06bot_id\x18\x03 \x01(\tR\x05botId\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12!\n" +
 	"\fclose_reason\x18\x05 \x01(\tR\vcloseReason\x12(\n" +
-	"\x10user_external_id\x18\x06 \x01(\tR\x0euserExternalId\x12\x1a\n" +
-	"\bmetadata\x18\a \x01(\tR\bmetadata\x129\n" +
+	"\x10user_external_id\x18\x06 \x01(\tR\x0euserExternalId\x123\n" +
+	"\bmetadata\x18\a \x01(\v2\x17.google.protobuf.StructR\bmetadata\x129\n" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x127\n" +
 	"\tclosed_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\bclosedAt\"\x8c\x01\n" +
-	"\x14CreateSessionRequest\x12\x15\n" +
-	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12(\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\bclosedAt\"{\n" +
+	"\x14CreateSessionRequest\x12(\n" +
 	"\x10user_external_id\x18\x02 \x01(\tR\x0euserExternalId\x123\n" +
-	"\bmetadata\x18\x03 \x01(\v2\x17.google.protobuf.StructR\bmetadata\"O\n" +
+	"\bmetadata\x18\x03 \x01(\v2\x17.google.protobuf.StructR\bmetadataJ\x04\b\x01\x10\x02\"O\n" +
 	"\x15CreateSessionResponse\x126\n" +
 	"\asession\x18\x01 \x01(\v2\x1c.api.conversation.v1.SessionR\asession\"\x8b\x01\n" +
 	"\x11GetSessionRequest\x12\x1d\n" +
@@ -1004,32 +995,33 @@ var file_api_conversation_v1_conversation_proto_goTypes = []any{
 var file_api_conversation_v1_conversation_proto_depIdxs = []int32{
 	0,  // 0: api.conversation.v1.Message.references:type_name -> api.conversation.v1.Reference
 	13, // 1: api.conversation.v1.Message.created_at:type_name -> google.protobuf.Timestamp
-	13, // 2: api.conversation.v1.Session.created_at:type_name -> google.protobuf.Timestamp
-	13, // 3: api.conversation.v1.Session.updated_at:type_name -> google.protobuf.Timestamp
-	13, // 4: api.conversation.v1.Session.closed_at:type_name -> google.protobuf.Timestamp
-	14, // 5: api.conversation.v1.CreateSessionRequest.metadata:type_name -> google.protobuf.Struct
-	2,  // 6: api.conversation.v1.CreateSessionResponse.session:type_name -> api.conversation.v1.Session
-	2,  // 7: api.conversation.v1.GetSessionResponse.session:type_name -> api.conversation.v1.Session
-	1,  // 8: api.conversation.v1.GetSessionResponse.messages:type_name -> api.conversation.v1.Message
-	2,  // 9: api.conversation.v1.ListSessionsResponse.sessions:type_name -> api.conversation.v1.Session
-	1,  // 10: api.conversation.v1.ListMessagesResponse.messages:type_name -> api.conversation.v1.Message
-	3,  // 11: api.conversation.v1.Conversation.CreateSession:input_type -> api.conversation.v1.CreateSessionRequest
-	5,  // 12: api.conversation.v1.Conversation.GetSession:input_type -> api.conversation.v1.GetSessionRequest
-	7,  // 13: api.conversation.v1.Conversation.CloseSession:input_type -> api.conversation.v1.CloseSessionRequest
-	8,  // 14: api.conversation.v1.Conversation.CreateFeedback:input_type -> api.conversation.v1.CreateFeedbackRequest
-	9,  // 15: api.conversation.v1.ConsoleConversation.ListSessions:input_type -> api.conversation.v1.ListSessionsRequest
-	11, // 16: api.conversation.v1.ConsoleConversation.ListMessages:input_type -> api.conversation.v1.ListMessagesRequest
-	4,  // 17: api.conversation.v1.Conversation.CreateSession:output_type -> api.conversation.v1.CreateSessionResponse
-	6,  // 18: api.conversation.v1.Conversation.GetSession:output_type -> api.conversation.v1.GetSessionResponse
-	15, // 19: api.conversation.v1.Conversation.CloseSession:output_type -> google.protobuf.Empty
-	15, // 20: api.conversation.v1.Conversation.CreateFeedback:output_type -> google.protobuf.Empty
-	10, // 21: api.conversation.v1.ConsoleConversation.ListSessions:output_type -> api.conversation.v1.ListSessionsResponse
-	12, // 22: api.conversation.v1.ConsoleConversation.ListMessages:output_type -> api.conversation.v1.ListMessagesResponse
-	17, // [17:23] is the sub-list for method output_type
-	11, // [11:17] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	14, // 2: api.conversation.v1.Session.metadata:type_name -> google.protobuf.Struct
+	13, // 3: api.conversation.v1.Session.created_at:type_name -> google.protobuf.Timestamp
+	13, // 4: api.conversation.v1.Session.updated_at:type_name -> google.protobuf.Timestamp
+	13, // 5: api.conversation.v1.Session.closed_at:type_name -> google.protobuf.Timestamp
+	14, // 6: api.conversation.v1.CreateSessionRequest.metadata:type_name -> google.protobuf.Struct
+	2,  // 7: api.conversation.v1.CreateSessionResponse.session:type_name -> api.conversation.v1.Session
+	2,  // 8: api.conversation.v1.GetSessionResponse.session:type_name -> api.conversation.v1.Session
+	1,  // 9: api.conversation.v1.GetSessionResponse.messages:type_name -> api.conversation.v1.Message
+	2,  // 10: api.conversation.v1.ListSessionsResponse.sessions:type_name -> api.conversation.v1.Session
+	1,  // 11: api.conversation.v1.ListMessagesResponse.messages:type_name -> api.conversation.v1.Message
+	3,  // 12: api.conversation.v1.Conversation.CreateSession:input_type -> api.conversation.v1.CreateSessionRequest
+	5,  // 13: api.conversation.v1.Conversation.GetSession:input_type -> api.conversation.v1.GetSessionRequest
+	7,  // 14: api.conversation.v1.Conversation.CloseSession:input_type -> api.conversation.v1.CloseSessionRequest
+	8,  // 15: api.conversation.v1.Conversation.CreateFeedback:input_type -> api.conversation.v1.CreateFeedbackRequest
+	9,  // 16: api.conversation.v1.ConsoleConversation.ListSessions:input_type -> api.conversation.v1.ListSessionsRequest
+	11, // 17: api.conversation.v1.ConsoleConversation.ListMessages:input_type -> api.conversation.v1.ListMessagesRequest
+	4,  // 18: api.conversation.v1.Conversation.CreateSession:output_type -> api.conversation.v1.CreateSessionResponse
+	6,  // 19: api.conversation.v1.Conversation.GetSession:output_type -> api.conversation.v1.GetSessionResponse
+	15, // 20: api.conversation.v1.Conversation.CloseSession:output_type -> google.protobuf.Empty
+	15, // 21: api.conversation.v1.Conversation.CreateFeedback:output_type -> google.protobuf.Empty
+	10, // 22: api.conversation.v1.ConsoleConversation.ListSessions:output_type -> api.conversation.v1.ListSessionsResponse
+	12, // 23: api.conversation.v1.ConsoleConversation.ListMessages:output_type -> api.conversation.v1.ListMessagesResponse
+	18, // [18:24] is the sub-list for method output_type
+	12, // [12:18] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_api_conversation_v1_conversation_proto_init() }

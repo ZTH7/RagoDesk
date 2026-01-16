@@ -25,7 +25,6 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 			TracingMiddleware(),
 			LoggingMiddleware(),
 			AuthMiddleware(c.Auth),
-			TenantContextMiddleware(),
 		),
 	}
 	if c.Http.Network != "" {

@@ -9,7 +9,7 @@
 ## 1. 通用约定
 
 ### 1.1 认证
-- Header: `X-API-Key: <key>`
+- Header: `X-API-Key: <key>`（API Key 绑定 bot，用于定位租户与机器人配置）
 - 可选签名：`X-Timestamp`, `X-Nonce`, `X-Signature` (HMAC-SHA256)
 - 服务端校验时间窗口与 nonce 防重放
 - 管理后台使用 `Authorization: Bearer <JWT>`
@@ -46,7 +46,6 @@
 **Request**
 ```json
 {
-  "bot_id": "bot_123",
   "user_external_id": "u_998",
   "metadata": {"source": "web"}
 }
@@ -69,14 +68,12 @@
 `POST /api/v1/message`
 
 **Headers**
-- `X-Tenant-ID`: tenant scope (required in Phase 3 unless API key already maps to tenant)
-- `X-API-Key`: required when `data.rag.api_key_required=true`
+- `X-API-Key`: required (绑定 bot，用于定位租户与模型/知识库)
 
 **Request**
 ```json
 {
   "session_id": "sess_abc",
-  "bot_id": "bot_123",
   "message": "如何申请退款？"
 }
 ```
@@ -106,7 +103,8 @@
   "code": 0,
   "data": {
     "session_id": "sess_abc",
-    "status": "agent"
+    "status": "bot",
+    "metadata": {"source": "web"}
   }
 }
 ```

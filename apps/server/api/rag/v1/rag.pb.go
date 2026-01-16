@@ -109,7 +109,6 @@ func (x *Reference) GetSnippet() string {
 type SendMessageRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	BotId         string                 `protobuf:"bytes,2,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
 	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	TopK          int32                  `protobuf:"varint,4,opt,name=top_k,json=topK,proto3" json:"top_k,omitempty"`
 	Threshold     float32                `protobuf:"fixed32,5,opt,name=threshold,proto3" json:"threshold,omitempty"`
@@ -150,13 +149,6 @@ func (*SendMessageRequest) Descriptor() ([]byte, []int) {
 func (x *SendMessageRequest) GetSessionId() string {
 	if x != nil {
 		return x.SessionId
-	}
-	return ""
-}
-
-func (x *SendMessageRequest) GetBotId() string {
-	if x != nil {
-		return x.BotId
 	}
 	return ""
 }
@@ -255,14 +247,13 @@ const file_api_rag_v1_rag_proto_rawDesc = "" +
 	"\bchunk_id\x18\x03 \x01(\tR\achunkId\x12\x14\n" +
 	"\x05score\x18\x04 \x01(\x02R\x05score\x12\x12\n" +
 	"\x04rank\x18\x05 \x01(\x05R\x04rank\x12\x18\n" +
-	"\asnippet\x18\x06 \x01(\tR\asnippet\"\x97\x01\n" +
+	"\asnippet\x18\x06 \x01(\tR\asnippet\"\x86\x01\n" +
 	"\x12SendMessageRequest\x12\x1d\n" +
 	"\n" +
-	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x15\n" +
-	"\x06bot_id\x18\x02 \x01(\tR\x05botId\x12\x18\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x12\x13\n" +
 	"\x05top_k\x18\x04 \x01(\x05R\x04topK\x12\x1c\n" +
-	"\tthreshold\x18\x05 \x01(\x02R\tthreshold\"\x82\x01\n" +
+	"\tthreshold\x18\x05 \x01(\x02R\tthresholdJ\x04\b\x02\x10\x03\"\x82\x01\n" +
 	"\x13SendMessageResponse\x12\x14\n" +
 	"\x05reply\x18\x01 \x01(\tR\x05reply\x12\x1e\n" +
 	"\n" +

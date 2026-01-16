@@ -26,10 +26,11 @@ message Reference {
 
 message SendMessageRequest {
   string session_id = 1;
-  string bot_id = 2;
   string message = 3;
   int32 top_k = 4;
   float threshold = 5;
+
+  reserved 2;
 }
 
 message SendMessageResponse {

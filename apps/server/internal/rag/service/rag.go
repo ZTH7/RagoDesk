@@ -5,8 +5,10 @@ import (
 	"strings"
 
 	ragv1 "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1"
+	apimgmtbiz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
 	convbiz "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport"
@@ -19,12 +21,13 @@ type RAGService struct {
 
 	uc   *biz.RAGUsecase
 	conv *convbiz.ConversationUsecase
+	api  *apimgmtbiz.APIMgmtUsecase
 	log  *log.Helper
 }
 
 // NewRAGService creates a new RAGService.
-func NewRAGService(uc *biz.RAGUsecase, conv *convbiz.ConversationUsecase, logger log.Logger) *RAGService {
-	return &RAGService{uc: uc, conv: conv, log: log.NewHelper(logger)}
+func NewRAGService(uc *biz.RAGUsecase, conv *convbiz.ConversationUsecase, api *apimgmtbiz.APIMgmtUsecase, logger log.Logger) *RAGService {
+	return &RAGService{uc: uc, conv: conv, api: api, log: log.NewHelper(logger)}
 }
 
 // SendMessage handles RAG message requests.
@@ -32,20 +35,13 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	if s.uc != nil && s.uc.RequireAPIKey() {
-		tr, ok := transport.FromServerContext(ctx)
-		if !ok {
-			return nil, errors.Unauthorized("API_KEY_MISSING", "api key missing")
-		}
-		header := s.uc.APIKeyHeader()
-		apiKey := strings.TrimSpace(tr.RequestHeader().Get(header))
-		if apiKey == "" {
-			return nil, errors.Unauthorized("API_KEY_MISSING", "api key missing")
-		}
+	ctx, botID, err := s.requireAPIKey(ctx)
+	if err != nil {
+		return nil, err
 	}
 	resp, err := s.uc.SendMessage(ctx, biz.MessageRequest{
 		SessionID: req.SessionId,
-		BotID:     req.BotId,
+		BotID:     botID,
 		Message:   req.Message,
 		TopK:      req.TopK,
 		Threshold: req.Threshold,
@@ -57,7 +53,7 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 		if err := s.conv.RecordRAGExchange(
 			ctx,
 			req.SessionId,
-			req.BotId,
+			botID,
 			req.Message,
 			resp.Reply,
 			resp.Confidence,
@@ -110,4 +106,21 @@ func toConversationReferences(refs biz.References) []convbiz.Reference {
 		})
 	}
 	return out
+}
+
+func (s *RAGService) requireAPIKey(ctx context.Context) (context.Context, string, error) {
+	if s.api == nil {
+		return ctx, "", errors.InternalServer("API_KEY_RESOLVER_MISSING", "api key resolver missing")
+	}
+	tr, ok := transport.FromServerContext(ctx)
+	if !ok {
+		return ctx, "", errors.Unauthorized("API_KEY_MISSING", "api key missing")
+	}
+	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
+	key, err := s.api.ResolveAPIKey(ctx, rawKey)
+	if err != nil {
+		return ctx, "", err
+	}
+	ctx = tenant.WithTenantID(ctx, key.TenantID)
+	return ctx, key.BotID, nil
 }

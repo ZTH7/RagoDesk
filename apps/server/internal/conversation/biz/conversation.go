@@ -162,6 +162,9 @@ func (uc *ConversationUsecase) CloseSession(ctx context.Context, sessionID strin
 	if session.Status == SessionStatusClosed {
 		return nil
 	}
+	if !canCloseSession(session.Status) {
+		return errors.New(412, "SESSION_STATUS_INVALID", "session status cannot be closed")
+	}
 	now := time.Now()
 	if err := uc.repo.CloseSession(ctx, sessionID, strings.TrimSpace(closeReason), now); err != nil {
 		return err
@@ -222,6 +225,9 @@ func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID 
 	if botID != "" && session.BotID != "" && botID != session.BotID {
 		return errors.BadRequest("SESSION_BOT_MISMATCH", "session bot mismatch")
 	}
+	if session.Status == SessionStatusClosed {
+		return errors.New(412, "SESSION_CLOSED", "session already closed")
+	}
 	now := time.Now()
 	user := Message{
 		ID:        uuid.NewString(),
@@ -240,6 +246,17 @@ func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID 
 		CreatedAt:  now,
 	}
 	return uc.repo.CreateMessages(ctx, []Message{user, assistant})
+}
+
+func canCloseSession(status string) bool {
+	switch status {
+	case SessionStatusBot:
+		return true
+	case SessionStatusClosed:
+		return false
+	default:
+		return false
+	}
 }
 
 // ProviderSet is conversation biz providers.
