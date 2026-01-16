@@ -58,9 +58,9 @@
 
 ## Phase 3: RAG Engine
 **Purpose**: answer generation with references and confidence.
-- Vector store adapter (Qdrant/pgvector)
+- Vector store adapter (Qdrant only)
 - Retriever (vector search, TopK configurable)
-- Prompt templates + system instruction control + safety policy (basic)
+- Prompt templates + system instruction control + safety policy (basic, via system prompt)
 - Eino pipeline orchestration + tracing hooks（详见 `docs/RAG.md`）
 - Confidence scorer with configurable threshold + refusal strategy
 - RAG API: message → retrieve → prompt → LLM → refs

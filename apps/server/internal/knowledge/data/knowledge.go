@@ -603,6 +603,60 @@ func (r *knowledgeRepo) IndexDocumentVersion(ctx context.Context, req biz.IndexD
 	return nil
 }
 
+func (r *knowledgeRepo) DeleteDocumentVersionIndex(ctx context.Context, documentID string, versionID string) error {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(documentID) == "" {
+		return nil
+	}
+	if strings.TrimSpace(versionID) == "" {
+		return nil
+	}
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.ExecContext(
+		ctx,
+		`DELETE e FROM embedding e
+		 JOIN doc_chunk c ON e.chunk_id = c.id
+		 WHERE e.tenant_id = ? AND c.document_version_id = ?`,
+		tenantID,
+		versionID,
+	); err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(
+		ctx,
+		"DELETE FROM doc_chunk WHERE tenant_id = ? AND document_version_id = ?",
+		tenantID,
+		versionID,
+	); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	if r.vector != nil && r.collection != "" {
+		filter := VectorFilter{
+			Must: []VectorCondition{
+				VectorMatchCondition("tenant_id", tenantID),
+				VectorMatchCondition("document_version_id", versionID),
+			},
+		}
+		if err := r.vector.DeletePoints(ctx, r.collection, filter); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (r *knowledgeRepo) RollbackDocument(ctx context.Context, documentID string, version int32) error {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {

@@ -12,7 +12,7 @@
 - 清晰模块边界：Ingestion 负责建索引与更新；RAG 负责在线检索与生成
 - 最小可用的数据契约：chunk schema、向量库 payload schema、引用 refs schema
 - Ingestion：上传 → 解析/清洗 → 切分 → 文档 embedding → upsert 向量库（按 `document_version_id` 幂等）
-- RAG：query embedding → 向量检索 → Prompt → LLM → 返回 `answer + refs + confidence`（置信度低拒答/保守答复）
+- RAG：query embedding → 向量检索 → 轻量 rerank → Prompt → LLM → 返回 `answer + refs + confidence`（置信度低拒答/保守答复）
 - 必要的超时与取消：embedding / 向量检索 / LLM 调用必须有 timeout（避免请求堆积）
 - Query 归一化：轻量清洗（大小写/标点/空白）保证检索稳定性
 - Prompt 去重与压缩：内容去重、每文档上限、空白压缩（降低 token）
@@ -60,7 +60,7 @@
 - Embedding：默认 fake provider；支持 OpenAI 兼容 HTTP `/embeddings`；离线文档 embedding 支持批量处理
 - 向量写入：Qdrant `upsert`，payload 包含 `tenant_id/kb_id/document_id/document_version_id/document_title/source_type/chunk_id/...`
 - Query 归一化：大小写/标点/空白清洗，提升召回稳定性
-- Rerank：轻量 overlap rerank + `section` 结构权重；低置信度时触发 LLM Cross‑Encoder TopN 复排
+- Rerank：轻量 overlap rerank + `section` 结构权重；低置信度时触发 LLM Cross‑Encoder TopN 复排（默认常开，不提供关闭开关）
 - Prompt：chunk 去重、按 doc 限制数量、空白压缩以降低 token
 - 重试：RabbitMQ retry queue（TTL + DLX）+ DLQ，指数退避
 - 原文存储：上传直达 OSS，仅保存 `raw_uri`（读取时按需回源）
@@ -94,26 +94,26 @@
 - `reindex` 决策：当 `index_config_hash` 未变化时，跳过重建以避免重复版本。
 - Chunking 默认（基础）：结构优先（block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%）。
 - Chunking 可配置项（优化）：`chunk_size_tokens`, `chunk_overlap_tokens`, `split_strategy`（fixed/semantic）, `min_chunk_tokens`, `max_chunk_tokens`，并允许按 KB/文档覆盖。
-- 增量更新（优化）：document 更新生成新 `document_version_id`，索引采取 append-only；上线后再逐步完善“版本可见性”（例如只检索 latest version）。
+- 版本可见性（当前策略）：向量库仅保留最新版本；文档更新时清理旧版本向量与 chunk（保证检索只命中最新版本）。`document_version` 元数据仍保留用于审计或回滚时重建索引。
 - 重建索引（优化）：以下变化触发全量 rebuild 或新索引：embedding 模型/维度、chunking 策略、payload schema、hybrid/rerank 关键参数。
 
 ---
 
-## 5. 向量库数据模型（以 Qdrant 为例）
+## 5. 向量库数据模型（仅 Qdrant）
 
 - MVP 推荐：单 collection（例如 `ragdesk_chunks`）+ payload 强制过滤 `tenant_id` + `kb_id IN (...)`。
 - 备选（更强隔离）：`collection per tenant` 或 `collection per kb`，优点是天然隔离，缺点是 collection 数量增多、生命周期管理更复杂。
 - payload 字段（必须）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`。
 - payload 字段（可选）：`tags`, `title`, `source_type`。
 - 删除策略（基础）：按 `document_version_id` filter delete；回滚/重建索引走同一逻辑。
-- 更新策略：document 更新必然生成新 `document_version_id`；避免“原地更新”导致引用不可追溯。
+- 更新策略（当前）：document 更新生成新 `document_version_id`，随后删除旧版本向量与 chunk，确保检索只命中最新版本。
 
 ---
 
 ## 6. 检索策略：vector / hybrid / rerank（以及默认取舍）
 
-- 基础（Phase 3）：先做“向量检索 + TopK”，保证引用与拒答策略可落地。
-- 当前实现：启用轻量 rerank（词面 overlap），可通过 `data.rag.retrieval.rerank_weight` 调整权重。
+- 基础（Phase 3）：向量检索 + TopK + 轻量 rerank，保证引用与拒答策略可落地。
+- 当前实现：启用轻量 rerank（词面 overlap），可通过 `data.rag.retrieval.rerank_weight` 调整权重（不提供关闭开关）。
 - 优化：hybrid 检索（dense + sparse/BM25）提升覆盖；在融合后对候选做 rerank 提升相关性。
 - hybrid 的实现路径（优化）：
 - 方案 A：向量库/检索引擎自带 hybrid 能力（实现成本低、但绑定能力边界）
@@ -168,7 +168,7 @@
 - Eino 的价值：把 RAG 链路拆成可观测的节点（embedding/retrieve/rerank/prompt/llm），并在链路里统一做 tracing、耗时与成本统计。
 - 当前实现：RAG 使用 Eino compose graph 节点化编排（resolve → embed → retrieve → rerank → prompt → llm）。
 - Tracing：每个节点都会创建一个 span，记录耗时与错误（OpenTelemetry）。
-- RAG Engine pipeline（建议节点）：`DetectLanguage` → `EmbedQuery` → `Retrieve(topK, per kb)` → `Merge & Dedup` → `Rerank(optional)` → `BuildPrompt` → `CallLLM` → `PostProcess` → `PersistMessage`。
+- RAG Engine pipeline（建议节点）：`DetectLanguage` → `EmbedQuery` → `Retrieve(topK, per kb)` → `Merge & Dedup` → `Rerank` → `BuildPrompt` → `CallLLM` → `PostProcess` → `PersistMessage`。
 - 并发点：多 KB 检索可并发；merge 后进入 rerank/LLM 串行。
 - 观测点：每个节点记录 `latency_ms`、命中数量、TopK 分布、以及 LLM token usage（如果可获取）。
 - Ingestion 是否用 Eino：可选。MVP 里更常见做法是 worker pipeline（队列 + step），等流程稳定再考虑统一到 Eino。

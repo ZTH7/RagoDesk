@@ -109,6 +109,8 @@ func (uc *RAGUsecase) retrieveContext(ctx context.Context, rc *ragContext) (*rag
 	span.SetAttributes(attribute.Float64("rag.retrieve_min_score", float64(minScore)))
 	scored := make([]scoredChunk, 0)
 	var mu sync.Mutex
+	var errCount int
+	var firstErr error
 	group, groupCtx := errgroup.WithContext(retrieveCtx)
 	limit := uc.opts.retrieveConcurrency
 	if limit <= 0 {
@@ -135,7 +137,13 @@ func (uc *RAGUsecase) retrieveContext(ctx context.Context, rc *ragContext) (*rag
 					ScoreThreshold: minScore,
 				})
 				if err != nil {
-					return err
+					mu.Lock()
+					errCount++
+					if firstErr == nil {
+						firstErr = err
+					}
+					mu.Unlock()
+					return nil
 				}
 				weight := kb.Weight
 				if weight <= 0 {
@@ -168,7 +176,20 @@ func (uc *RAGUsecase) retrieveContext(ctx context.Context, rc *ragContext) (*rag
 		uc.recordSpanError(span, err)
 		return rc, err
 	}
-	uc.logStep("retrieve", start, nil)
+	if errCount > 0 {
+		span.SetAttributes(attribute.Int("rag.retrieve_error_count", errCount))
+		if firstErr != nil {
+			uc.logStep("retrieve", start, firstErr)
+		} else {
+			uc.logStep("retrieve", start, nil)
+		}
+	} else {
+		uc.logStep("retrieve", start, nil)
+	}
+	if len(scored) == 0 && errCount > 0 && firstErr != nil {
+		uc.recordSpanError(span, firstErr)
+		return rc, firstErr
+	}
 	rc.ranked = rankAndFilter(scored, rc.topK)
 	span.SetAttributes(attribute.Int("rag.candidate_count", len(rc.ranked)))
 	return rc, nil

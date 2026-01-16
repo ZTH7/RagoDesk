@@ -45,7 +45,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	ragKBRepo := data4.NewKBRepo(dataData)
 	ragVectorRepo := data4.NewVectorRepo(confData)
 	ragChunkRepo := data4.NewChunkRepo(dataData)
-	ragUsecase := biz3.NewRAGUsecase(ragKBRepo, ragVectorRepo, ragChunkRepo, confData, logger)
+	ragUsecase, err := biz3.NewRAGUsecase(ragKBRepo, ragVectorRepo, ragChunkRepo, confData, logger)
+	if err != nil {
+		return nil, nil, err
+	}
 	ragService := service3.NewRAGService(ragUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService)
 	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService)

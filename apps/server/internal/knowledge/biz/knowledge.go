@@ -153,6 +153,7 @@ type KnowledgeRepo interface {
 	LoadDocumentContent(ctx context.Context, version DocumentVersion) ([]byte, error)
 
 	IndexDocumentVersion(ctx context.Context, req IndexDocumentVersionRequest) error
+	DeleteDocumentVersionIndex(ctx context.Context, documentID string, versionID string) error
 	RollbackDocument(ctx context.Context, documentID string, version int32) error
 
 	ListDocuments(ctx context.Context, kbID string, limit int, offset int) ([]Document, error)
@@ -600,6 +601,18 @@ func (uc *KnowledgeUsecase) markIngestionFailed(ctx context.Context, job Ingesti
 func (uc *KnowledgeUsecase) markIngestionReady(ctx context.Context, job IngestionJob, version DocumentVersion) {
 	_ = uc.repo.UpdateDocumentVersionStatus(ctx, version.ID, DocumentVersionStatusReady, "")
 	_ = uc.repo.UpdateDocumentIndexState(ctx, job.DocumentID, DocumentStatusReady, version.Version)
+	if job.FallbackVersion > 0 && job.FallbackVersion != version.Version {
+		oldVersion, err := uc.repo.GetDocumentVersionByNumber(ctx, job.DocumentID, job.FallbackVersion)
+		if err != nil {
+			if uc.log != nil {
+				uc.log.Warnf("cleanup old version failed: document=%s version=%d err=%v", job.DocumentID, job.FallbackVersion, err)
+			}
+			return
+		}
+		if err := uc.repo.DeleteDocumentVersionIndex(ctx, job.DocumentID, oldVersion.ID); err != nil && uc.log != nil {
+			uc.log.Warnf("cleanup old index failed: document=%s version=%s err=%v", job.DocumentID, oldVersion.ID, err)
+		}
+	}
 }
 
 func (uc *KnowledgeUsecase) logIngestionStep(job IngestionJob, step string, start time.Time, err error) {

@@ -93,7 +93,7 @@ type RAGUsecase struct {
 }
 
 // NewRAGUsecase creates a new RAGUsecase.
-func NewRAGUsecase(kbRepo BotKBResolver, vectorRepo VectorSearcher, chunkRepo ChunkLoader, cfg *conf.Data, logger log.Logger) *RAGUsecase {
+func NewRAGUsecase(kbRepo BotKBResolver, vectorRepo VectorSearcher, chunkRepo ChunkLoader, cfg *conf.Data, logger log.Logger) (*RAGUsecase, error) {
 	opts := loadRAGOptions(cfg)
 	embedder := provider.NewProvider(opts.embeddingConfig)
 	llm := provider.NewLLMProvider(provider.LLMConfig{
@@ -114,11 +114,10 @@ func NewRAGUsecase(kbRepo BotKBResolver, vectorRepo VectorSearcher, chunkRepo Ch
 	}
 	pipeline, err := uc.buildPipeline()
 	if err != nil {
-		uc.log.Warnf("rag pipeline init failed: %v", err)
-	} else {
-		uc.pipeline = pipeline
+		return nil, err
 	}
-	return uc
+	uc.pipeline = pipeline
+	return uc, nil
 }
 
 // SendMessage handles a RAG request and returns the response.
@@ -129,9 +128,6 @@ func (uc *RAGUsecase) SendMessage(ctx context.Context, req MessageRequest) (Mess
 	ctx, cancel := withTimeout(ctx, uc.opts.ragTimeoutMs)
 	defer cancel()
 
-	if uc.pipeline == nil {
-		return MessageResponse{}, errors.InternalServer("RAG_PIPELINE_MISSING", "rag pipeline missing")
-	}
 	return uc.pipeline.Invoke(ctx, req)
 }
 
