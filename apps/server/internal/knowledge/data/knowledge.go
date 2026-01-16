@@ -792,8 +792,8 @@ func (r *knowledgeRepo) ListBotKnowledgeBases(ctx context.Context, botID string)
 	}
 	rows, err := r.db.QueryContext(
 		ctx,
-		`SELECT id, tenant_id, bot_id, kb_id, priority, weight, created_at
-		FROM bot_kb WHERE tenant_id = ? AND bot_id = ? ORDER BY priority DESC, created_at DESC`,
+		`SELECT id, tenant_id, bot_id, kb_id, weight, created_at
+		FROM bot_kb WHERE tenant_id = ? AND bot_id = ? ORDER BY created_at DESC`,
 		tenantID,
 		botID,
 	)
@@ -810,7 +810,6 @@ func (r *knowledgeRepo) ListBotKnowledgeBases(ctx context.Context, botID string)
 			&item.TenantID,
 			&item.BotID,
 			&item.KBID,
-			&item.Priority,
 			&item.Weight,
 			&item.CreatedAt,
 		); err != nil {
@@ -835,13 +834,12 @@ func (r *knowledgeRepo) BindBotKnowledgeBase(ctx context.Context, link biz.BotKn
 	}
 	_, err = r.db.ExecContext(
 		ctx,
-		`INSERT INTO bot_kb (id, tenant_id, bot_id, kb_id, priority, weight, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO bot_kb (id, tenant_id, bot_id, kb_id, weight, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`,
 		link.ID,
 		link.TenantID,
 		link.BotID,
 		link.KBID,
-		link.Priority,
 		link.Weight,
 		link.CreatedAt,
 	)

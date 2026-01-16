@@ -54,7 +54,6 @@ type BotKnowledgeBase struct {
 	TenantID  string
 	BotID     string
 	KBID      string
-	Priority  int32
 	Weight    float64
 	CreatedAt time.Time
 }
@@ -279,7 +278,7 @@ func (uc *KnowledgeUsecase) DeleteDocument(ctx context.Context, id string) error
 	return uc.repo.DeleteDocument(ctx, id)
 }
 
-func (uc *KnowledgeUsecase) BindBotKnowledgeBase(ctx context.Context, botID, kbID string, priority int32, weight float64) (BotKnowledgeBase, error) {
+func (uc *KnowledgeUsecase) BindBotKnowledgeBase(ctx context.Context, botID, kbID string, weight float64) (BotKnowledgeBase, error) {
 	botID = strings.TrimSpace(botID)
 	kbID = strings.TrimSpace(kbID)
 	if botID == "" {
@@ -297,7 +296,6 @@ func (uc *KnowledgeUsecase) BindBotKnowledgeBase(ctx context.Context, botID, kbI
 	return uc.repo.BindBotKnowledgeBase(ctx, BotKnowledgeBase{
 		BotID:    botID,
 		KBID:     kbID,
-		Priority: priority,
 		Weight:   weight,
 	})
 }

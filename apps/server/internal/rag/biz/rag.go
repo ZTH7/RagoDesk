@@ -31,7 +31,6 @@ type MessageResponse struct {
 // BotKnowledgeBase describes bot knowledge base binding.
 type BotKnowledgeBase struct {
 	KBID     string
-	Priority int32
 	Weight   float64
 }
 

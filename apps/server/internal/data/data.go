@@ -256,7 +256,6 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 			tenant_id VARCHAR(36) NOT NULL,
 			bot_id VARCHAR(36) NOT NULL,
 			kb_id VARCHAR(36) NOT NULL,
-			priority INT NOT NULL DEFAULT 0,
 			weight DOUBLE NOT NULL DEFAULT 1,
 			created_at DATETIME NOT NULL,
 			PRIMARY KEY (id),
@@ -272,6 +271,9 @@ func ensureKnowledgeSchema(ctx context.Context, db *sql.DB) error {
 		}
 	}
 	if err := ensureDropColumn(ctx, db, "document_version", "raw_text"); err != nil {
+		return err
+	}
+	if err := ensureDropColumn(ctx, db, "bot_kb", "priority"); err != nil {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "document_version", "raw_uri", "VARCHAR(1024) NULL"); err != nil {

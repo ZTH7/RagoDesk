@@ -152,7 +152,7 @@ func (s *KnowledgeService) BindBotKnowledgeBase(ctx context.Context, req *v1.Bin
 	if err := s.iamUC.RequirePermission(ctx, biz.PermissionBotKBBind); err != nil {
 		return nil, err
 	}
-	linked, err := s.uc.BindBotKnowledgeBase(ctx, req.GetBotId(), req.GetKbId(), req.GetPriority(), req.GetWeight())
+	linked, err := s.uc.BindBotKnowledgeBase(ctx, req.GetBotId(), req.GetKbId(), req.GetWeight())
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +289,6 @@ func toBotKnowledgeBase(link biz.BotKnowledgeBase) *v1.BotKnowledgeBase {
 		TenantId:  link.TenantID,
 		BotId:     link.BotID,
 		KbId:      link.KBID,
-		Priority:  link.Priority,
 		Weight:    link.Weight,
 		CreatedAt: toTimestamp(link.CreatedAt),
 	}

@@ -104,9 +104,10 @@ message BotKnowledgeBase {
   string tenant_id = 2;
   string bot_id = 3;
   string kb_id = 4;
-  int32 priority = 5;
   double weight = 6;
   google.protobuf.Timestamp created_at = 7;
+
+  reserved 5;
 }
 
 message Document {
@@ -218,8 +219,9 @@ message RollbackDocumentRequest {
 message BindBotKnowledgeBaseRequest {
   string bot_id = 1;
   string kb_id = 2;
-  int32 priority = 3;
   double weight = 4;
+
+  reserved 3;
 }
 
 message UnbindBotKnowledgeBaseRequest {

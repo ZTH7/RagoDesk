@@ -189,7 +189,7 @@
 - `GET /console/v1/bots/{id}/knowledge_bases`
 - `POST /console/v1/bots/{id}/knowledge_bases`（绑定）
 - `DELETE /console/v1/bots/{id}/knowledge_bases/{kb_id}`（解绑）
-绑定请求字段：`kb_id`, `priority`（可选）, `weight`（可选）
+绑定请求字段：`kb_id`, `weight`（可选）
 
 ### 4.4 知识库管理
 - `POST /console/v1/knowledge_bases`

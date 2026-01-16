@@ -114,7 +114,6 @@ type BotKnowledgeBase struct {
 	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	BotId         string                 `protobuf:"bytes,3,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
 	KbId          string                 `protobuf:"bytes,4,opt,name=kb_id,json=kbId,proto3" json:"kb_id,omitempty"`
-	Priority      int32                  `protobuf:"varint,5,opt,name=priority,proto3" json:"priority,omitempty"`
 	Weight        float64                `protobuf:"fixed64,6,opt,name=weight,proto3" json:"weight,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -177,13 +176,6 @@ func (x *BotKnowledgeBase) GetKbId() string {
 		return x.KbId
 	}
 	return ""
-}
-
-func (x *BotKnowledgeBase) GetPriority() int32 {
-	if x != nil {
-		return x.Priority
-	}
-	return 0
 }
 
 func (x *BotKnowledgeBase) GetWeight() float64 {
@@ -1312,7 +1304,6 @@ type BindBotKnowledgeBaseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
 	KbId          string                 `protobuf:"bytes,2,opt,name=kb_id,json=kbId,proto3" json:"kb_id,omitempty"`
-	Priority      int32                  `protobuf:"varint,3,opt,name=priority,proto3" json:"priority,omitempty"`
 	Weight        float64                `protobuf:"fixed64,4,opt,name=weight,proto3" json:"weight,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1360,13 +1351,6 @@ func (x *BindBotKnowledgeBaseRequest) GetKbId() string {
 		return x.KbId
 	}
 	return ""
-}
-
-func (x *BindBotKnowledgeBaseRequest) GetPriority() int32 {
-	if x != nil {
-		return x.Priority
-	}
-	return 0
 }
 
 func (x *BindBotKnowledgeBaseRequest) GetWeight() float64 {
@@ -1441,16 +1425,15 @@ const file_api_knowledge_v1_console_knowledge_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xda\x01\n" +
+	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xc4\x01\n" +
 	"\x10BotKnowledgeBase\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x15\n" +
 	"\x06bot_id\x18\x03 \x01(\tR\x05botId\x12\x13\n" +
-	"\x05kb_id\x18\x04 \x01(\tR\x04kbId\x12\x1a\n" +
-	"\bpriority\x18\x05 \x01(\x05R\bpriority\x12\x16\n" +
+	"\x05kb_id\x18\x04 \x01(\tR\x04kbId\x12\x16\n" +
 	"\x06weight\x18\x06 \x01(\x01R\x06weight\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xba\x02\n" +
+	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtJ\x04\b\x05\x10\x06\"\xba\x02\n" +
 	"\bDocument\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x13\n" +
@@ -1521,12 +1504,11 @@ const file_api_knowledge_v1_console_knowledge_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"C\n" +
 	"\x17RollbackDocumentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
-	"\aversion\x18\x02 \x01(\x05R\aversion\"}\n" +
+	"\aversion\x18\x02 \x01(\x05R\aversion\"g\n" +
 	"\x1bBindBotKnowledgeBaseRequest\x12\x15\n" +
 	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x13\n" +
-	"\x05kb_id\x18\x02 \x01(\tR\x04kbId\x12\x1a\n" +
-	"\bpriority\x18\x03 \x01(\x05R\bpriority\x12\x16\n" +
-	"\x06weight\x18\x04 \x01(\x01R\x06weight\"K\n" +
+	"\x05kb_id\x18\x02 \x01(\tR\x04kbId\x12\x16\n" +
+	"\x06weight\x18\x04 \x01(\x01R\x06weightJ\x04\b\x03\x10\x04\"K\n" +
 	"\x1dUnbindBotKnowledgeBaseRequest\x12\x15\n" +
 	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x13\n" +
 	"\x05kb_id\x18\x02 \x01(\tR\x04kbId2\x82\x10\n" +

@@ -74,8 +74,8 @@ func (r *kbRepo) ResolveBotKnowledgeBases(ctx context.Context, botID string) ([]
 	}
 	rows, err := r.db.QueryContext(
 		ctx,
-		`SELECT kb_id, priority, weight
-		FROM bot_kb WHERE tenant_id = ? AND bot_id = ? ORDER BY priority DESC, created_at DESC`,
+		`SELECT kb_id, weight
+		FROM bot_kb WHERE tenant_id = ? AND bot_id = ? ORDER BY created_at DESC`,
 		tenantID,
 		botID,
 	)
@@ -87,7 +87,7 @@ func (r *kbRepo) ResolveBotKnowledgeBases(ctx context.Context, botID string) ([]
 	items := make([]biz.BotKnowledgeBase, 0)
 	for rows.Next() {
 		var item biz.BotKnowledgeBase
-		if err := rows.Scan(&item.KBID, &item.Priority, &item.Weight); err != nil {
+		if err := rows.Scan(&item.KBID, &item.Weight); err != nil {
 			return nil, err
 		}
 		items = append(items, item)

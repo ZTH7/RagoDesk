@@ -164,7 +164,6 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `tenant_id`
 - `bot_id`
 - `kb_id`
-- `priority` (int, optional)
 - `weight` (float, optional)
 - `created_at`
 
