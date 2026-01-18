@@ -109,8 +109,10 @@ message Data {
     int32 timeout_ms = 1;
     Retrieval retrieval = 2;
     LLM llm = 3;
-    bool api_key_required = 4;
-    string api_key_header = 5;
+  }
+  message Conversation {
+    int32 retention_days = 1;
+    int32 purge_interval_minutes = 2;
   }
   Database database = 1;
   Redis redis = 2;
@@ -119,4 +121,5 @@ message Data {
   ObjectStorage object_storage = 5;
   Knowledge knowledge = 6;
   Rag rag = 7;
+  Conversation conversation = 8;
 }

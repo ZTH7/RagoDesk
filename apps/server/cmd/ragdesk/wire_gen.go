@@ -43,7 +43,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	apimgmtRepo := data6.NewAPIMgmtRepo(dataData, logger)
 	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, logger)
 	conversationRepo := data2.NewConversationRepo(dataData)
-	conversationUsecase := biz4.NewConversationUsecase(conversationRepo)
+	conversationUsecase := biz4.NewConversationUsecase(conversationRepo, confData)
 	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase)
 	iamRepo := data3.NewIAMRepo(dataData, logger)
 	iamUsecase := biz.NewIAMUsecase(iamRepo, logger)

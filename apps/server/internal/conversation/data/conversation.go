@@ -120,6 +120,53 @@ func (r *conversationRepo) CloseSession(ctx context.Context, sessionID string, c
 	return err
 }
 
+func (r *conversationRepo) PurgeExpired(ctx context.Context, cutoff time.Time) error {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return err
+	}
+	if cutoff.IsZero() {
+		return nil
+	}
+	_, _ = r.db.ExecContext(
+		ctx,
+		`DELETE FROM message_feedback
+		 WHERE tenant_id = ? AND session_id IN (
+			SELECT id FROM chat_session WHERE tenant_id = ? AND created_at < ?
+		 )`,
+		tenantID,
+		tenantID,
+		cutoff,
+	)
+	_, _ = r.db.ExecContext(
+		ctx,
+		`DELETE FROM session_event
+		 WHERE tenant_id = ? AND session_id IN (
+			SELECT id FROM chat_session WHERE tenant_id = ? AND created_at < ?
+		 )`,
+		tenantID,
+		tenantID,
+		cutoff,
+	)
+	_, _ = r.db.ExecContext(
+		ctx,
+		`DELETE FROM chat_message
+		 WHERE tenant_id = ? AND session_id IN (
+			SELECT id FROM chat_session WHERE tenant_id = ? AND created_at < ?
+		 )`,
+		tenantID,
+		tenantID,
+		cutoff,
+	)
+	_, err = r.db.ExecContext(
+		ctx,
+		`DELETE FROM chat_session WHERE tenant_id = ? AND created_at < ?`,
+		tenantID,
+		cutoff,
+	)
+	return err
+}
+
 func (r *conversationRepo) ListSessions(ctx context.Context, botID string, limit int, offset int) ([]biz.Session, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {

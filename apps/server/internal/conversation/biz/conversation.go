@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/paging"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/google/wire"
 	"github.com/google/uuid"
@@ -22,6 +25,12 @@ const (
 	EventOpen    = "open"
 	EventClose   = "close"
 	EventRefusal = "refusal"
+	EventEscalation = "escalation"
+)
+
+const (
+	defaultRetentionDays        = 0
+	defaultPurgeIntervalMinutes = 60
 )
 
 // Session represents a chat session.
@@ -78,6 +87,7 @@ type ConversationRepo interface {
 	GetSession(ctx context.Context, sessionID string) (Session, error)
 	ListSessions(ctx context.Context, botID string, limit int, offset int) ([]Session, error)
 	CloseSession(ctx context.Context, sessionID string, closeReason string, closedAt time.Time) error
+	PurgeExpired(ctx context.Context, cutoff time.Time) error
 
 	CreateMessages(ctx context.Context, messages []Message) error
 	ListMessages(ctx context.Context, sessionID string, limit int, offset int) ([]Message, error)
@@ -89,11 +99,20 @@ type ConversationRepo interface {
 // ConversationUsecase handles conversation business logic.
 type ConversationUsecase struct {
 	repo ConversationRepo
+	retentionDays int
+	purgeInterval time.Duration
+	lastPurge     time.Time
+	mu            sync.Mutex
 }
 
 // NewConversationUsecase creates a new ConversationUsecase
-func NewConversationUsecase(repo ConversationRepo) *ConversationUsecase {
-	return &ConversationUsecase{repo: repo}
+func NewConversationUsecase(repo ConversationRepo, cfg *conf.Data) *ConversationUsecase {
+	retentionDays, purgeInterval := loadRetentionPolicy(cfg)
+	return &ConversationUsecase{
+		repo:          repo,
+		retentionDays: retentionDays,
+		purgeInterval: purgeInterval,
+	}
 }
 
 func (uc *ConversationUsecase) CreateSession(ctx context.Context, botID string, userExternal string, metadata map[string]any) (Session, error) {
@@ -101,6 +120,7 @@ func (uc *ConversationUsecase) CreateSession(ctx context.Context, botID string, 
 	if botID == "" {
 		return Session{}, errors.BadRequest("BOT_ID_MISSING", "bot id missing")
 	}
+	uc.maybePurge(ctx)
 	metaJSON := ""
 	if metadata != nil {
 		if raw, err := json.Marshal(metadata); err == nil {
@@ -135,6 +155,7 @@ func (uc *ConversationUsecase) GetSession(ctx context.Context, sessionID string,
 	if sessionID == "" {
 		return Session{}, nil, errors.BadRequest("SESSION_ID_MISSING", "session id missing")
 	}
+	uc.maybePurge(ctx)
 	session, err := uc.repo.GetSession(ctx, sessionID)
 	if err != nil {
 		return Session{}, nil, err
@@ -155,6 +176,7 @@ func (uc *ConversationUsecase) CloseSession(ctx context.Context, sessionID strin
 	if sessionID == "" {
 		return errors.BadRequest("SESSION_ID_MISSING", "session id missing")
 	}
+	uc.maybePurge(ctx)
 	session, err := uc.repo.GetSession(ctx, sessionID)
 	if err != nil {
 		return err
@@ -176,10 +198,20 @@ func (uc *ConversationUsecase) CloseSession(ctx context.Context, sessionID strin
 		Detail:    strings.TrimSpace(closeReason),
 		CreatedAt: now,
 	})
+	if isEscalationReason(closeReason) {
+		_ = uc.repo.CreateEvent(ctx, SessionEvent{
+			ID:        uuid.NewString(),
+			SessionID: sessionID,
+			EventType: EventEscalation,
+			Detail:    strings.TrimSpace(closeReason),
+			CreatedAt: now,
+		})
+	}
 	return nil
 }
 
 func (uc *ConversationUsecase) ListSessions(ctx context.Context, botID string, limit int, offset int) ([]Session, error) {
+	uc.maybePurge(ctx)
 	limit, offset = paging.Normalize(limit, offset)
 	return uc.repo.ListSessions(ctx, botID, limit, offset)
 }
@@ -189,6 +221,7 @@ func (uc *ConversationUsecase) ListMessages(ctx context.Context, sessionID strin
 	if sessionID == "" {
 		return nil, errors.BadRequest("SESSION_ID_MISSING", "session id missing")
 	}
+	uc.maybePurge(ctx)
 	limit, offset = paging.Normalize(limit, offset)
 	return uc.repo.ListMessages(ctx, sessionID, limit, offset)
 }
@@ -199,6 +232,7 @@ func (uc *ConversationUsecase) CreateFeedback(ctx context.Context, sessionID str
 	if sessionID == "" || messageID == "" {
 		return errors.BadRequest("FEEDBACK_INVALID", "session_id or message_id missing")
 	}
+	uc.maybePurge(ctx)
 	if rating == 0 {
 		return errors.BadRequest("FEEDBACK_RATING_INVALID", "rating missing")
 	}
@@ -213,11 +247,12 @@ func (uc *ConversationUsecase) CreateFeedback(ctx context.Context, sessionID str
 	})
 }
 
-func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID string, botID string, userMessage string, answer string, confidence float32, referencesJSON string) error {
+func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID string, botID string, userMessage string, answer string, confidence float32, refused bool, referencesJSON string) error {
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
 		return nil
 	}
+	uc.maybePurge(ctx)
 	session, err := uc.repo.GetSession(ctx, sessionID)
 	if err != nil {
 		return err
@@ -245,7 +280,18 @@ func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID 
 		References: strings.TrimSpace(referencesJSON),
 		CreatedAt:  now,
 	}
-	return uc.repo.CreateMessages(ctx, []Message{user, assistant})
+	if err := uc.repo.CreateMessages(ctx, []Message{user, assistant}); err != nil {
+		return err
+	}
+	if refused {
+		_ = uc.repo.CreateEvent(ctx, SessionEvent{
+			ID:        uuid.NewString(),
+			SessionID: sessionID,
+			EventType: EventRefusal,
+			CreatedAt: now,
+		})
+	}
+	return nil
 }
 
 func canCloseSession(status string) bool {
@@ -257,6 +303,54 @@ func canCloseSession(status string) bool {
 	default:
 		return false
 	}
+}
+
+func loadRetentionPolicy(cfg *conf.Data) (int, time.Duration) {
+	retentionDays := defaultRetentionDays
+	purgeMinutes := defaultPurgeIntervalMinutes
+	if cfg != nil && cfg.Conversation != nil {
+		if cfg.Conversation.RetentionDays > 0 {
+			retentionDays = int(cfg.Conversation.RetentionDays)
+		}
+		if cfg.Conversation.PurgeIntervalMinutes > 0 {
+			purgeMinutes = int(cfg.Conversation.PurgeIntervalMinutes)
+		}
+	}
+	if retentionDays < 0 {
+		retentionDays = 0
+	}
+	if purgeMinutes <= 0 {
+		purgeMinutes = defaultPurgeIntervalMinutes
+	}
+	return retentionDays, time.Duration(purgeMinutes) * time.Minute
+}
+
+func (uc *ConversationUsecase) maybePurge(ctx context.Context) {
+	if uc == nil || uc.retentionDays <= 0 || uc.purgeInterval <= 0 {
+		return
+	}
+	tenantID, ok := tenant.TenantID(ctx)
+	if !ok || strings.TrimSpace(tenantID) == "" {
+		return
+	}
+	now := time.Now()
+	uc.mu.Lock()
+	if !uc.lastPurge.IsZero() && now.Sub(uc.lastPurge) < uc.purgeInterval {
+		uc.mu.Unlock()
+		return
+	}
+	uc.lastPurge = now
+	uc.mu.Unlock()
+	cutoff := now.AddDate(0, 0, -uc.retentionDays)
+	purgeCtx := tenant.WithTenantID(context.Background(), tenantID)
+	go func() {
+		_ = uc.repo.PurgeExpired(purgeCtx, cutoff)
+	}()
+}
+
+func isEscalationReason(reason string) bool {
+	reason = strings.ToLower(strings.TrimSpace(reason))
+	return strings.Contains(reason, "escalat") || strings.Contains(reason, "handoff")
 }
 
 // ProviderSet is conversation biz providers.

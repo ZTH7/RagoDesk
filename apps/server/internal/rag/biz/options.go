@@ -21,7 +21,6 @@ const (
 	defaultLLMTemperature    = 0.2
 	defaultLLMMaxTokens      = 512
 	defaultRerankWeight      = 0.3
-	defaultAPIKeyHeader      = "X-API-Key"
 	defaultEmbeddingModel    = "fake-embedding-v1"
 	defaultEmbeddingDim      = 384
 	defaultEmbeddingProvider = "fake"
@@ -45,8 +44,6 @@ type ragOptions struct {
 	llmMaxTokens      int
 	systemPrompt      string
 	refusalMessage    string
-	apiKeyRequired    bool
-	apiKeyHeader      string
 	embeddingConfig   provider.Config
 }
 
@@ -67,8 +64,6 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 		llmMaxTokens:      defaultLLMMaxTokens,
 		systemPrompt:      defaultSystemPrompt,
 		refusalMessage:    defaultRefusalMessage,
-		apiKeyRequired:    false,
-		apiKeyHeader:      defaultAPIKeyHeader,
 		embeddingConfig: provider.Config{
 			Provider:  defaultEmbeddingProvider,
 			Endpoint:  "",
@@ -131,10 +126,6 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 					opts.refusalMessage = llm.RefusalMessage
 				}
 			}
-			opts.apiKeyRequired = rag.ApiKeyRequired
-			if strings.TrimSpace(rag.ApiKeyHeader) != "" {
-				opts.apiKeyHeader = rag.ApiKeyHeader
-			}
 		}
 		if knowledge := cfg.Knowledge; knowledge != nil {
 			if embedding := knowledge.Embedding; embedding != nil {
@@ -176,8 +167,6 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 	opts.systemPrompt = envString("RAGDESK_RAG_SYSTEM_PROMPT", opts.systemPrompt)
 	opts.refusalMessage = envString("RAGDESK_RAG_REFUSAL_MESSAGE", opts.refusalMessage)
 	opts.rerankWeight = envFloat32("RAGDESK_RAG_RERANK_WEIGHT", opts.rerankWeight)
-	opts.apiKeyRequired = envBool("RAGDESK_API_KEY_REQUIRED", opts.apiKeyRequired)
-	opts.apiKeyHeader = envString("RAGDESK_API_KEY_HEADER", opts.apiKeyHeader)
 
 	opts.embeddingConfig.Provider = envString("RAGDESK_EMBEDDING_PROVIDER", opts.embeddingConfig.Provider)
 	opts.embeddingConfig.Endpoint = envString("RAGDESK_EMBEDDING_ENDPOINT", opts.embeddingConfig.Endpoint)
@@ -259,19 +248,4 @@ func envFloat32(key string, fallback float32) float32 {
 		return fallback
 	}
 	return float32(parsed)
-}
-
-func envBool(key string, fallback bool) bool {
-	value := strings.TrimSpace(os.Getenv(key))
-	if value == "" {
-		return fallback
-	}
-	switch strings.ToLower(value) {
-	case "1", "true", "yes", "y":
-		return true
-	case "0", "false", "no", "n":
-		return false
-	default:
-		return fallback
-	}
 }

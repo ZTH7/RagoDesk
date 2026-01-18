@@ -80,6 +80,7 @@
 - Console API: session/message listing (tenant scope)
 - Session events: open/close/refusal/escalation tags (audit)
 - Retention policy: configurable TTL for session/message storage (default keep)
+- Retention config: `data.conversation.retention_days`, `data.conversation.purge_interval_minutes`
 - Persist request/response payloads: user query, final answer, confidence, refs
 - Indexes: `tenant_id`, `bot_id`, `session_id`, `created_at`
 - DAO: tenant‑scoped queries only (no cross‑tenant access)

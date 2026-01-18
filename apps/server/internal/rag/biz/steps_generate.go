@@ -56,5 +56,6 @@ func (uc *RAGUsecase) buildResponse(_ context.Context, rc *ragContext) (MessageR
 		Reply:      reply,
 		Confidence: rc.confidence,
 		References: buildReferences(rc.ranked, rc.chunks),
+		Refused:    rc.shouldRefuse,
 	}, nil
 }

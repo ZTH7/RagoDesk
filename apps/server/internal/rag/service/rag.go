@@ -57,6 +57,7 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 			req.Message,
 			resp.Reply,
 			resp.Confidence,
+			resp.Refused,
 			convbiz.EncodeReferences(toConversationReferences(resp.References)),
 		); err != nil {
 			return nil, err

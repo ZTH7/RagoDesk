@@ -26,6 +26,7 @@ type MessageResponse struct {
 	Reply      string
 	Confidence float32
 	References References
+	Refused    bool
 }
 
 // BotKnowledgeBase describes bot knowledge base binding.
@@ -128,17 +129,6 @@ func (uc *RAGUsecase) SendMessage(ctx context.Context, req MessageRequest) (Mess
 	defer cancel()
 
 	return uc.pipeline.Invoke(ctx, req)
-}
-
-func (uc *RAGUsecase) RequireAPIKey() bool {
-	return uc != nil && uc.opts.apiKeyRequired
-}
-
-func (uc *RAGUsecase) APIKeyHeader() string {
-	if uc == nil || strings.TrimSpace(uc.opts.apiKeyHeader) == "" {
-		return defaultAPIKeyHeader
-	}
-	return uc.opts.apiKeyHeader
 }
 
 func buildReferences(ranked []scoredChunk, chunks map[string]ChunkMeta) References {

@@ -69,5 +69,6 @@ data:
       max_tokens: 512
       system_prompt: ""
       refusal_message: ""
-    api_key_required: false
-    api_key_header: X-API-Key
+  conversation:
+    retention_days: 0
+    purge_interval_minutes: 60
