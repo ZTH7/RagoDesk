@@ -82,5 +82,6 @@ func isAdminOperation(operation string) bool {
 	return strings.Contains(operation, "PlatformIAM") ||
 		strings.Contains(operation, "ConsoleIAM") ||
 		strings.Contains(operation, "ConsoleKnowledge") ||
-		strings.Contains(operation, "ConsoleConversation")
+		strings.Contains(operation, "ConsoleConversation") ||
+		strings.Contains(operation, "ConsoleAPIMgmt")
 }

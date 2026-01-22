@@ -277,10 +277,12 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `bot_id` (绑定 bot)
 - `name`
 - `key_hash`
+- `scopes` (json array, optional)
 - `status` (active/disabled)
 - `quota_daily`
 - `qps_limit`
 - `created_at`
+- `last_used_at`
 
 **api_usage_log**
 - `id` (PK)

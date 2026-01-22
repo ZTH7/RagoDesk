@@ -1,11 +1,13 @@
 package server
 
 import (
+	apimgmtv1 "github.com/ZTH7/RAGDesk/apps/server/api/apimgmt/v1"
 	conversationv1 "github.com/ZTH7/RAGDesk/apps/server/api/conversation/v1"
 	iamv1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
 	knowledgev1 "github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1"
 	ragv1 "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	apimgmtservice "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/service"
 	conversationservice "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/service"
 	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
 	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
@@ -17,7 +19,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService) *http.Server {
+func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -40,6 +42,7 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 	iamv1.RegisterPlatformIAMHTTPServer(srv, iamSvc)
 	iamv1.RegisterConsoleIAMHTTPServer(srv, iamSvc)
 	knowledgev1.RegisterConsoleKnowledgeHTTPServer(srv, knowledgeSvc)
+	apimgmtv1.RegisterConsoleAPIMgmtHTTPServer(srv, apimgmtSvc)
 	ragv1.RegisterRAGHTTPServer(srv, ragSvc)
 	conversationv1.RegisterConversationHTTPServer(srv, conversationSvc)
 	conversationv1.RegisterConsoleConversationHTTPServer(srv, conversationSvc)

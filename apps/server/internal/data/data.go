@@ -79,6 +79,7 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 			bot_id VARCHAR(36) NOT NULL,
 			name VARCHAR(128) NOT NULL,
 			key_hash VARCHAR(64) NOT NULL,
+			scopes TEXT NULL,
 			status VARCHAR(32) NOT NULL DEFAULT 'active',
 			quota_daily INT NOT NULL DEFAULT 0,
 			qps_limit INT NOT NULL DEFAULT 0,
@@ -111,6 +112,9 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "api_key", "key_hash", "VARCHAR(64) NOT NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "scopes", "TEXT NULL"); err != nil {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "api_key", "status", "VARCHAR(32) NOT NULL DEFAULT 'active'"); err != nil {

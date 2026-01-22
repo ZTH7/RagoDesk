@@ -1,0 +1,153 @@
+syntax = "proto3";
+
+package api.apimgmt.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/apimgmt/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+service ConsoleAPIMgmt {
+  rpc CreateAPIKey(CreateAPIKeyRequest) returns (CreateAPIKeyResponse) {
+    option (google.api.http) = {
+      post: "/console/v1/api_keys"
+      body: "*"
+    };
+  }
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/api_keys"
+    };
+  }
+  rpc UpdateAPIKey(UpdateAPIKeyRequest) returns (UpdateAPIKeyResponse) {
+    option (google.api.http) = {
+      patch: "/console/v1/api_keys/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteAPIKey(DeleteAPIKeyRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/console/v1/api_keys/{id}"
+    };
+  }
+  rpc RotateAPIKey(RotateAPIKeyRequest) returns (RotateAPIKeyResponse) {
+    option (google.api.http) = {
+      post: "/console/v1/api_keys/{id}/rotate"
+      body: "*"
+    };
+  }
+  rpc ListUsageLogs(ListUsageLogsRequest) returns (ListUsageLogsResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/api_usage"
+    };
+  }
+  rpc GetUsageSummary(GetUsageSummaryRequest) returns (GetUsageSummaryResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/api_usage/summary"
+    };
+  }
+}
+
+message APIKey {
+  string id = 1;
+  string tenant_id = 2;
+  string bot_id = 3;
+  string name = 4;
+  string status = 5;
+  repeated string scopes = 6;
+  int32 quota_daily = 7;
+  int32 qps_limit = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp last_used_at = 10;
+}
+
+message UsageLog {
+  string id = 1;
+  string api_key_id = 2;
+  string bot_id = 3;
+  string path = 4;
+  int32 status_code = 5;
+  int32 latency_ms = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message UsageSummary {
+  int64 total = 1;
+  int64 error_count = 2;
+  double avg_latency_ms = 3;
+}
+
+message CreateAPIKeyRequest {
+  string bot_id = 1;
+  string name = 2;
+  repeated string scopes = 3;
+  int32 quota_daily = 4;
+  int32 qps_limit = 5;
+}
+
+message CreateAPIKeyResponse {
+  APIKey api_key = 1;
+  string raw_key = 2;
+}
+
+message ListAPIKeysRequest {
+  string bot_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message ListAPIKeysResponse {
+  repeated APIKey items = 1;
+}
+
+message UpdateAPIKeyRequest {
+  string id = 1;
+  string name = 2;
+  string status = 3;
+  repeated string scopes = 4;
+  google.protobuf.Int32Value quota_daily = 5;
+  google.protobuf.Int32Value qps_limit = 6;
+}
+
+message UpdateAPIKeyResponse {
+  APIKey api_key = 1;
+}
+
+message DeleteAPIKeyRequest {
+  string id = 1;
+}
+
+message RotateAPIKeyRequest {
+  string id = 1;
+}
+
+message RotateAPIKeyResponse {
+  APIKey api_key = 1;
+  string raw_key = 2;
+}
+
+message ListUsageLogsRequest {
+  string api_key_id = 1;
+  string bot_id = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+  int32 limit = 5;
+  int32 offset = 6;
+}
+
+message ListUsageLogsResponse {
+  repeated UsageLog items = 1;
+}
+
+message GetUsageSummaryRequest {
+  string api_key_id = 1;
+  string bot_id = 2;
+  google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp end_time = 4;
+}
+
+message GetUsageSummaryResponse {
+  UsageSummary summary = 1;
+}

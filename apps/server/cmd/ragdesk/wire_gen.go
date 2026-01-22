@@ -23,6 +23,7 @@ import (
 	biz3 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
 	data5 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/data"
 	service3 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/service"
+	service5 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/service"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/server"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
@@ -41,13 +42,16 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 		return nil, nil, err
 	}
 	apimgmtRepo := data6.NewAPIMgmtRepo(dataData, logger)
-	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, logger)
+	rateLimiter := data6.NewRateLimiter(confData, logger)
+	usageSink := biz5.NewUsageSink()
+	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, rateLimiter, usageSink, logger)
 	conversationRepo := data2.NewConversationRepo(dataData)
 	conversationUsecase := biz4.NewConversationUsecase(conversationRepo, confData)
 	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase)
 	iamRepo := data3.NewIAMRepo(dataData, logger)
 	iamUsecase := biz.NewIAMUsecase(iamRepo, logger)
 	iamService := service.NewIAMService(iamUsecase, logger)
+	apimgmtService := service5.NewAPIMgmtService(apimgmtUsecase, iamUsecase, logger)
 	knowledgeRepo := data4.NewKnowledgeRepo(dataData, confData, logger)
 	ingestionQueue := data4.NewIngestionQueue(confData, logger)
 	knowledgeUsecase := biz2.NewKnowledgeUsecase(knowledgeRepo, ingestionQueue, confData, logger)
@@ -60,8 +64,8 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 		return nil, nil, err
 	}
 	ragService := service3.NewRAGService(ragUsecase, conversationUsecase, apimgmtUsecase, logger)
-	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService)
-	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService)
+	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService)
+	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

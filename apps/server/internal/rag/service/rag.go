@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"strings"
+	"time"
 
 	ragv1 "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1"
 	apimgmtbiz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
@@ -35,32 +36,39 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	ctx, botID, err := s.requireAPIKey(ctx)
+	start := time.Now()
+	operation := operationFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeRAG)
 	if err != nil {
+		s.recordUsage(ctx, key, operation, err, start)
 		return nil, err
 	}
-	resp, err := s.uc.SendMessage(ctx, biz.MessageRequest{
+	var callErr error
+	defer func() {
+		s.recordUsage(ctx, key, operation, callErr, start)
+	}()
+	resp, callErr := s.uc.SendMessage(ctx, biz.MessageRequest{
 		SessionID: req.SessionId,
-		BotID:     botID,
+		BotID:     key.BotID,
 		Message:   req.Message,
 		TopK:      req.TopK,
 		Threshold: req.Threshold,
 	})
-	if err != nil {
-		return nil, err
+	if callErr != nil {
+		return nil, callErr
 	}
 	if s.conv != nil && strings.TrimSpace(req.SessionId) != "" {
-		if err := s.conv.RecordRAGExchange(
+		if callErr = s.conv.RecordRAGExchange(
 			ctx,
 			req.SessionId,
-			botID,
+			key.BotID,
 			req.Message,
 			resp.Reply,
 			resp.Confidence,
 			resp.Refused,
 			convbiz.EncodeReferences(toConversationReferences(resp.References)),
-		); err != nil {
-			return nil, err
+		); callErr != nil {
+			return nil, callErr
 		}
 	}
 	return &ragv1.SendMessageResponse{
@@ -109,19 +117,36 @@ func toConversationReferences(refs biz.References) []convbiz.Reference {
 	return out
 }
 
-func (s *RAGService) requireAPIKey(ctx context.Context) (context.Context, string, error) {
+func (s *RAGService) requireAPIKey(ctx context.Context, scope string) (context.Context, apimgmtbiz.APIKey, error) {
 	if s.api == nil {
-		return ctx, "", errors.InternalServer("API_KEY_RESOLVER_MISSING", "api key resolver missing")
+		return ctx, apimgmtbiz.APIKey{}, errors.InternalServer("API_KEY_RESOLVER_MISSING", "api key resolver missing")
 	}
 	tr, ok := transport.FromServerContext(ctx)
 	if !ok {
-		return ctx, "", errors.Unauthorized("API_KEY_MISSING", "api key missing")
+		return ctx, apimgmtbiz.APIKey{}, errors.Unauthorized("API_KEY_MISSING", "api key missing")
 	}
 	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
-	key, err := s.api.ResolveAPIKey(ctx, rawKey)
-	if err != nil {
-		return ctx, "", err
+	key, err := s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope)
+	if key.TenantID != "" {
+		ctx = tenant.WithTenantID(ctx, key.TenantID)
 	}
-	ctx = tenant.WithTenantID(ctx, key.TenantID)
-	return ctx, key.BotID, nil
+	if err != nil {
+		return ctx, key, err
+	}
+	return ctx, key, nil
+}
+
+func (s *RAGService) recordUsage(ctx context.Context, key apimgmtbiz.APIKey, operation string, err error, start time.Time) {
+	if s == nil || s.api == nil {
+		return
+	}
+	status := apimgmtbiz.StatusCodeFromError(err)
+	s.api.RecordUsage(ctx, key, operation, status, time.Since(start))
+}
+
+func operationFromContext(ctx context.Context) string {
+	if tr, ok := transport.FromServerContext(ctx); ok {
+		return tr.Operation()
+	}
+	return ""
 }

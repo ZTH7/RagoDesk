@@ -208,7 +208,49 @@
 - `GET /console/v1/api_keys`
 - `PATCH /console/v1/api_keys/{id}`
 - `DELETE /console/v1/api_keys/{id}`
-> 支持 scope 配置与 Key 轮换（可保留历史 Key 过渡期）
+- `POST /console/v1/api_keys/{id}/rotate`
+- `GET /console/v1/api_usage`
+- `GET /console/v1/api_usage/summary`
+> 支持 scope 配置与 Key 轮换（当前为“立即失效旧 Key”）。`scopes` 默认：`["rag","conversation"]`，可用 `*` 表示全量权限。
+
+**Create**
+`POST /console/v1/api_keys`
+```json
+{
+  "bot_id": "bot_123",
+  "name": "prod-key",
+  "scopes": ["rag", "conversation"],
+  "quota_daily": 20000,
+  "qps_limit": 50
+}
+```
+返回：`api_key` + `raw_key`（仅创建/轮换时返回一次）。
+
+**List**
+`GET /console/v1/api_keys?bot_id=bot_123`
+
+**Update**
+`PATCH /console/v1/api_keys/{id}`
+```json
+{
+  "name": "prod-key-v2",
+  "status": "active",
+  "scopes": ["rag"],
+  "quota_daily": 10000,
+  "qps_limit": 20
+}
+```
+> 未传字段保持不变，`quota_daily/qps_limit=0` 表示不限制。
+
+**Rotate**
+`POST /console/v1/api_keys/{id}/rotate`
+返回：`api_key` + `raw_key`
+
+**Usage Logs**
+`GET /console/v1/api_usage?api_key_id=...&bot_id=...&start_time=...&end_time=...`
+
+**Usage Summary**
+`GET /console/v1/api_usage/summary?api_key_id=...&bot_id=...&start_time=...&end_time=...`
 
 ### 4.6 统计看板
 - `GET /console/v1/analytics/overview`

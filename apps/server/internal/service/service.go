@@ -1,6 +1,7 @@
 package service
 
 import (
+	apimgmtservice "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/service"
 	conversationservice "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/service"
 	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
 	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
@@ -11,6 +12,7 @@ import (
 
 // ProviderSet is service providers.
 var ProviderSet = wire.NewSet(
+	apimgmtservice.ProviderSet,
 	conversationservice.ProviderSet,
 	iamservice.ProviderSet,
 	knowledgeservice.ProviderSet,

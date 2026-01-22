@@ -36,14 +36,21 @@ func (s *ConversationService) CreateSession(ctx context.Context, req *v1.CreateS
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	ctx, key, err := s.requireAPIKey(ctx)
+	start := time.Now()
+	operation := operationFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
 	if err != nil {
+		s.recordUsage(ctx, key, operation, err, start)
 		return nil, err
 	}
+	var callErr error
+	defer func() {
+		s.recordUsage(ctx, key, operation, callErr, start)
+	}()
 	meta := structToMap(req.Metadata)
-	session, err := s.uc.CreateSession(ctx, key.BotID, req.UserExternalId, meta)
-	if err != nil {
-		return nil, err
+	session, callErr := s.uc.CreateSession(ctx, key.BotID, req.UserExternalId, meta)
+	if callErr != nil {
+		return nil, callErr
 	}
 	return &v1.CreateSessionResponse{Session: toAPISession(session)}, nil
 }
@@ -52,16 +59,24 @@ func (s *ConversationService) GetSession(ctx context.Context, req *v1.GetSession
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	ctx, key, err := s.requireAPIKey(ctx)
+	start := time.Now()
+	operation := operationFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
 	if err != nil {
+		s.recordUsage(ctx, key, operation, err, start)
 		return nil, err
 	}
-	session, messages, err := s.uc.GetSession(ctx, req.SessionId, req.IncludeMessages, int(req.Limit), int(req.Offset))
-	if err != nil {
-		return nil, err
+	var callErr error
+	defer func() {
+		s.recordUsage(ctx, key, operation, callErr, start)
+	}()
+	session, messages, callErr := s.uc.GetSession(ctx, req.SessionId, req.IncludeMessages, int(req.Limit), int(req.Offset))
+	if callErr != nil {
+		return nil, callErr
 	}
 	if key.BotID != "" && session.BotID != "" && key.BotID != session.BotID {
-		return nil, errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
+		callErr = errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
+		return nil, callErr
 	}
 	resp := &v1.GetSessionResponse{
 		Session:  toAPISession(session),
@@ -74,19 +89,27 @@ func (s *ConversationService) CloseSession(ctx context.Context, req *v1.CloseSes
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	ctx, key, err := s.requireAPIKey(ctx)
+	start := time.Now()
+	operation := operationFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
 	if err != nil {
+		s.recordUsage(ctx, key, operation, err, start)
 		return nil, err
 	}
-	session, _, err := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
-	if err != nil {
-		return nil, err
+	var callErr error
+	defer func() {
+		s.recordUsage(ctx, key, operation, callErr, start)
+	}()
+	session, _, callErr := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
+	if callErr != nil {
+		return nil, callErr
 	}
 	if key.BotID != "" && session.BotID != "" && key.BotID != session.BotID {
-		return nil, errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
+		callErr = errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
+		return nil, callErr
 	}
-	if err := s.uc.CloseSession(ctx, req.SessionId, req.CloseReason); err != nil {
-		return nil, err
+	if callErr = s.uc.CloseSession(ctx, req.SessionId, req.CloseReason); callErr != nil {
+		return nil, callErr
 	}
 	return &emptypb.Empty{}, nil
 }
@@ -95,19 +118,27 @@ func (s *ConversationService) CreateFeedback(ctx context.Context, req *v1.Create
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	ctx, key, err := s.requireAPIKey(ctx)
+	start := time.Now()
+	operation := operationFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
 	if err != nil {
+		s.recordUsage(ctx, key, operation, err, start)
 		return nil, err
 	}
-	session, _, err := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
-	if err != nil {
-		return nil, err
+	var callErr error
+	defer func() {
+		s.recordUsage(ctx, key, operation, callErr, start)
+	}()
+	session, _, callErr := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
+	if callErr != nil {
+		return nil, callErr
 	}
 	if key.BotID != "" && session.BotID != "" && key.BotID != session.BotID {
-		return nil, errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
+		callErr = errors.Forbidden("SESSION_FORBIDDEN", "session bot mismatch")
+		return nil, callErr
 	}
-	if err := s.uc.CreateFeedback(ctx, req.SessionId, req.MessageId, req.Rating, req.Comment, req.Correction); err != nil {
-		return nil, err
+	if callErr = s.uc.CreateFeedback(ctx, req.SessionId, req.MessageId, req.Rating, req.Comment, req.Correction); callErr != nil {
+		return nil, callErr
 	}
 	return &emptypb.Empty{}, nil
 }
@@ -213,23 +244,6 @@ func parseMetadata(raw string) *structpb.Struct {
 	return metadata
 }
 
-func (s *ConversationService) requireAPIKey(ctx context.Context) (context.Context, apimgmtbiz.APIKey, error) {
-	if s.api == nil {
-		return ctx, apimgmtbiz.APIKey{}, errors.InternalServer("API_KEY_RESOLVER_MISSING", "api key resolver missing")
-	}
-	tr, ok := transport.FromServerContext(ctx)
-	if !ok {
-		return ctx, apimgmtbiz.APIKey{}, errors.Unauthorized("API_KEY_MISSING", "api key missing")
-	}
-	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
-	key, err := s.api.ResolveAPIKey(ctx, rawKey)
-	if err != nil {
-		return ctx, apimgmtbiz.APIKey{}, err
-	}
-	ctx = tenant.WithTenantID(ctx, key.TenantID)
-	return ctx, key, nil
-}
-
 func structToMap(value *structpb.Struct) map[string]any {
 	if value == nil {
 		return nil
@@ -242,4 +256,38 @@ func timeOrNil(t time.Time) *timestamppb.Timestamp {
 		return nil
 	}
 	return timestamppb.New(t)
+}
+
+func (s *ConversationService) requireAPIKey(ctx context.Context, scope string) (context.Context, apimgmtbiz.APIKey, error) {
+	if s.api == nil {
+		return ctx, apimgmtbiz.APIKey{}, errors.InternalServer("API_KEY_RESOLVER_MISSING", "api key resolver missing")
+	}
+	tr, ok := transport.FromServerContext(ctx)
+	if !ok {
+		return ctx, apimgmtbiz.APIKey{}, errors.Unauthorized("API_KEY_MISSING", "api key missing")
+	}
+	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
+	key, err := s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope)
+	if key.TenantID != "" {
+		ctx = tenant.WithTenantID(ctx, key.TenantID)
+	}
+	if err != nil {
+		return ctx, key, err
+	}
+	return ctx, key, nil
+}
+
+func (s *ConversationService) recordUsage(ctx context.Context, key apimgmtbiz.APIKey, operation string, err error, start time.Time) {
+	if s == nil || s.api == nil {
+		return
+	}
+	status := apimgmtbiz.StatusCodeFromError(err)
+	s.api.RecordUsage(ctx, key, operation, status, time.Since(start))
+}
+
+func operationFromContext(ctx context.Context) string {
+	if tr, ok := transport.FromServerContext(ctx); ok {
+		return tr.Operation()
+	}
+	return ""
 }
