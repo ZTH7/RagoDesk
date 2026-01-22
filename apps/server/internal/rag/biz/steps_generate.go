@@ -41,6 +41,8 @@ func (uc *RAGUsecase) llmContext(ctx context.Context, rc *ragContext) (*ragConte
 		return rc, err
 	}
 	rc.reply = strings.TrimSpace(resp.Text)
+	rc.llmUsage = resp.Usage
+	rc.llmModel = uc.llm.Model()
 	return rc, nil
 }
 
@@ -57,5 +59,7 @@ func (uc *RAGUsecase) buildResponse(_ context.Context, rc *ragContext) (MessageR
 		Confidence: rc.confidence,
 		References: buildReferences(rc.ranked, rc.chunks),
 		Refused:    rc.shouldRefuse,
+		Model:      rc.llmModel,
+		Usage:      rc.llmUsage,
 	}, nil
 }

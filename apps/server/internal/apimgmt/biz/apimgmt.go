@@ -6,9 +6,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/paging"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -46,6 +49,12 @@ const (
 
 var DefaultAPIKeyScopes = []string{ScopeRAG, ScopeConversation}
 
+var DefaultAPIVersions = []string{"v1"}
+
+const (
+	defaultRotationGraceMinutes = 60
+)
+
 // APIKey represents an API key with scope and rotation metadata.
 type APIKey struct {
 	ID          string
@@ -53,6 +62,7 @@ type APIKey struct {
 	BotID       string
 	Name        string
 	KeyHash     string
+	APIVersions []string
 	Scopes      []string
 	Status      APIKeyStatus
 	RotatedFrom string
@@ -64,41 +74,61 @@ type APIKey struct {
 
 // UsageLog records API usage for analytics.
 type UsageLog struct {
-	ID         string
-	APIKeyID   string
-	BotID      string
-	Path       string
-	StatusCode int32
-	LatencyMs  int32
-	CreatedAt  time.Time
+	ID               string
+	APIKeyID         string
+	TenantID         string
+	BotID            string
+	Path             string
+	APIVersion       string
+	Model            string
+	StatusCode       int32
+	LatencyMs        int32
+	PromptTokens     int32
+	CompletionTokens int32
+	TotalTokens      int32
+	ClientIP         string
+	UserAgent        string
+	CreatedAt        time.Time
 }
 
 // UsageSummary aggregates API usage metrics.
 type UsageSummary struct {
-	Total        int64
-	ErrorCount   int64
-	AvgLatencyMs float64
+	Total            int64
+	ErrorCount       int64
+	AvgLatencyMs     float64
+	PromptTokens     int64
+	CompletionTokens int64
+	TotalTokens      int64
 }
 
 // UsageFilter describes usage query filters.
 type UsageFilter struct {
-	APIKeyID string
-	BotID    string
-	Start    time.Time
-	End      time.Time
-	Limit    int
-	Offset   int
+	APIKeyID   string
+	BotID      string
+	APIVersion string
+	Model      string
+	Start      time.Time
+	End        time.Time
+	Limit      int
+	Offset     int
 }
 
 // UsageEvent is an analytics hook payload.
 type UsageEvent struct {
-	TenantID   string
-	BotID      string
-	APIKeyID   string
-	Path       string
-	StatusCode int32
-	LatencyMs  int32
-	CreatedAt  time.Time
+	TenantID         string
+	BotID            string
+	APIKeyID         string
+	Path             string
+	APIVersion       string
+	Model            string
+	StatusCode       int32
+	LatencyMs        int32
+	PromptTokens     int32
+	CompletionTokens int32
+	TotalTokens      int32
+	ClientIP         string
+	UserAgent        string
+	CreatedAt        time.Time
 }
 
 // APIMgmtRepo is a repository interface (placeholder)
@@ -109,7 +139,7 @@ type APIMgmtRepo interface {
 	ListAPIKeys(ctx context.Context, botID string, limit int, offset int) ([]APIKey, error)
 	UpdateAPIKey(ctx context.Context, key APIKey) (APIKey, error)
 	DeleteAPIKey(ctx context.Context, keyID string) error
-	RotateKey(ctx context.Context, keyID string, newHash string) (APIKey, error)
+	RotateKey(ctx context.Context, keyID string, newHash string, graceUntil time.Time) (APIKey, error)
 	UpdateLastUsedAt(ctx context.Context, keyID string, lastUsedAt time.Time) error
 	CreateUsageLog(ctx context.Context, log UsageLog) error
 	GetAPIKeyByHash(ctx context.Context, keyHash string) (APIKey, error)
@@ -140,25 +170,31 @@ func NewUsageSink() UsageSink {
 
 // APIMgmtUsecase handles apimgmt business logic (placeholder)
 type APIMgmtUsecase struct {
-	repo    APIMgmtRepo
-	limiter RateLimiter
-	sink    UsageSink
-	log     *log.Helper
+	repo          APIMgmtRepo
+	limiter       RateLimiter
+	sink          UsageSink
+	log           *log.Helper
+	rotationGrace time.Duration
 }
 
 // NewAPIMgmtUsecase creates a new APIMgmtUsecase
-func NewAPIMgmtUsecase(repo APIMgmtRepo, limiter RateLimiter, sink UsageSink, logger log.Logger) *APIMgmtUsecase {
+func NewAPIMgmtUsecase(repo APIMgmtRepo, limiter RateLimiter, sink UsageSink, cfg *conf.Data, logger log.Logger) *APIMgmtUsecase {
+	rotationGrace := time.Duration(defaultRotationGraceMinutes) * time.Minute
+	if cfg != nil && cfg.Apimgmt != nil && cfg.Apimgmt.RotationGraceMinutes > 0 {
+		rotationGrace = time.Duration(cfg.Apimgmt.RotationGraceMinutes) * time.Minute
+	}
 	return &APIMgmtUsecase{
-		repo:    repo,
-		limiter: limiter,
-		sink:    sink,
-		log:     log.NewHelper(logger),
+		repo:          repo,
+		limiter:       limiter,
+		sink:          sink,
+		log:           log.NewHelper(logger),
+		rotationGrace: rotationGrace,
 	}
 }
 
 const DefaultAPIKeyHeader = "X-API-Key"
 
-func (uc *APIMgmtUsecase) CreateAPIKey(ctx context.Context, name string, botID string, scopes []string, quotaDaily int32, qpsLimit int32) (APIKey, string, error) {
+func (uc *APIMgmtUsecase) CreateAPIKey(ctx context.Context, name string, botID string, scopes []string, apiVersions []string, quotaDaily int32, qpsLimit int32) (APIKey, string, error) {
 	name = strings.TrimSpace(name)
 	botID = strings.TrimSpace(botID)
 	if name == "" {
@@ -171,6 +207,10 @@ func (uc *APIMgmtUsecase) CreateAPIKey(ctx context.Context, name string, botID s
 	if len(scopes) == 0 {
 		scopes = append([]string(nil), DefaultAPIKeyScopes...)
 	}
+	apiVersions = normalizeVersions(apiVersions)
+	if len(apiVersions) == 0 {
+		apiVersions = append([]string(nil), DefaultAPIVersions...)
+	}
 	if quotaDaily < 0 {
 		quotaDaily = 0
 	}
@@ -180,15 +220,16 @@ func (uc *APIMgmtUsecase) CreateAPIKey(ctx context.Context, name string, botID s
 	rawKey, keyHash := generateAPIKey()
 	now := time.Now()
 	key := APIKey{
-		ID:         uuid.NewString(),
-		BotID:      botID,
-		Name:       name,
-		KeyHash:    keyHash,
-		Scopes:     scopes,
-		Status:     APIKeyStatusActive,
-		QuotaDaily: quotaDaily,
-		QPSLimit:   qpsLimit,
-		CreatedAt:  now,
+		ID:          uuid.NewString(),
+		BotID:       botID,
+		Name:        name,
+		KeyHash:     keyHash,
+		APIVersions: apiVersions,
+		Scopes:      scopes,
+		Status:      APIKeyStatusActive,
+		QuotaDaily:  quotaDaily,
+		QPSLimit:    qpsLimit,
+		CreatedAt:   now,
 	}
 	created, err := uc.repo.CreateAPIKey(ctx, key)
 	if err != nil {
@@ -202,12 +243,12 @@ func (uc *APIMgmtUsecase) ListAPIKeys(ctx context.Context, botID string, limit i
 	return uc.repo.ListAPIKeys(ctx, strings.TrimSpace(botID), limit, offset)
 }
 
-func (uc *APIMgmtUsecase) UpdateAPIKey(ctx context.Context, keyID string, name string, status string, scopes []string, quotaDaily *int32, qpsLimit *int32) (APIKey, error) {
+func (uc *APIMgmtUsecase) UpdateAPIKey(ctx context.Context, keyID string, name string, status string, scopes []string, apiVersions []string, quotaDaily *int32, qpsLimit *int32) (APIKey, error) {
 	keyID = strings.TrimSpace(keyID)
 	if keyID == "" {
 		return APIKey{}, errors.BadRequest("API_KEY_ID_MISSING", "api key id missing")
 	}
-	if strings.TrimSpace(name) == "" && strings.TrimSpace(status) == "" && len(scopes) == 0 && quotaDaily == nil && qpsLimit == nil {
+	if strings.TrimSpace(name) == "" && strings.TrimSpace(status) == "" && len(scopes) == 0 && len(apiVersions) == 0 && quotaDaily == nil && qpsLimit == nil {
 		return APIKey{}, errors.BadRequest("API_KEY_UPDATE_EMPTY", "api key update empty")
 	}
 	current, err := uc.repo.GetAPIKey(ctx, keyID)
@@ -222,6 +263,9 @@ func (uc *APIMgmtUsecase) UpdateAPIKey(ctx context.Context, keyID string, name s
 	}
 	if len(scopes) > 0 {
 		current.Scopes = normalizeScopes(scopes)
+	}
+	if len(apiVersions) > 0 {
+		current.APIVersions = normalizeVersions(apiVersions)
 	}
 	if quotaDaily != nil {
 		if *quotaDaily < 0 {
@@ -254,7 +298,8 @@ func (uc *APIMgmtUsecase) RotateAPIKey(ctx context.Context, keyID string) (APIKe
 		return APIKey{}, "", errors.BadRequest("API_KEY_ID_MISSING", "api key id missing")
 	}
 	rawKey, keyHash := generateAPIKey()
-	updated, err := uc.repo.RotateKey(ctx, keyID, keyHash)
+	graceUntil := time.Now().Add(uc.rotationGrace)
+	updated, err := uc.repo.RotateKey(ctx, keyID, keyHash, graceUntil)
 	if err != nil {
 		return APIKey{}, "", err
 	}
@@ -290,7 +335,7 @@ func (uc *APIMgmtUsecase) AuthorizeAPIKey(ctx context.Context, rawKey string) (A
 	return key, nil
 }
 
-func (uc *APIMgmtUsecase) AuthorizeAPIKeyWithScope(ctx context.Context, rawKey string, requiredScope string) (APIKey, error) {
+func (uc *APIMgmtUsecase) AuthorizeAPIKeyWithScope(ctx context.Context, rawKey string, requiredScope string, requiredVersion string) (APIKey, error) {
 	key, err := uc.AuthorizeAPIKey(ctx, rawKey)
 	if err != nil {
 		return key, err
@@ -298,10 +343,13 @@ func (uc *APIMgmtUsecase) AuthorizeAPIKeyWithScope(ctx context.Context, rawKey s
 	if requiredScope != "" && !scopeAllowed(key.Scopes, requiredScope) {
 		return key, errors.Forbidden("API_SCOPE_FORBIDDEN", "api key scope forbidden")
 	}
+	if requiredVersion != "" && !versionAllowed(key.APIVersions, requiredVersion) {
+		return key, errors.Forbidden("API_VERSION_FORBIDDEN", "api version forbidden")
+	}
 	return key, nil
 }
 
-func (uc *APIMgmtUsecase) RecordUsage(ctx context.Context, key APIKey, operation string, statusCode int32, latency time.Duration) {
+func (uc *APIMgmtUsecase) RecordUsage(ctx context.Context, key APIKey, operation string, apiVersion string, model string, usage provider.LLMUsage, statusCode int32, latency time.Duration, clientIP string, userAgent string) {
 	if uc == nil || uc.repo == nil || key.ID == "" {
 		return
 	}
@@ -309,35 +357,95 @@ func (uc *APIMgmtUsecase) RecordUsage(ctx context.Context, key APIKey, operation
 		statusCode = 200
 	}
 	log := UsageLog{
-		APIKeyID:   key.ID,
-		Path:       strings.TrimSpace(operation),
-		StatusCode: statusCode,
-		LatencyMs:  int32(latency.Milliseconds()),
-		CreatedAt:  time.Now(),
+		APIKeyID:         key.ID,
+		TenantID:         key.TenantID,
+		BotID:            key.BotID,
+		Path:             strings.TrimSpace(operation),
+		APIVersion:       strings.TrimSpace(apiVersion),
+		Model:            strings.TrimSpace(model),
+		StatusCode:       statusCode,
+		LatencyMs:        int32(latency.Milliseconds()),
+		PromptTokens:     int32(usage.PromptTokens),
+		CompletionTokens: int32(usage.CompletionTokens),
+		TotalTokens:      int32(usage.TotalTokens),
+		ClientIP:         strings.TrimSpace(clientIP),
+		UserAgent:        strings.TrimSpace(userAgent),
+		CreatedAt:        time.Now(),
 	}
 	if err := uc.repo.CreateUsageLog(ctx, log); err != nil && uc.log != nil {
 		uc.log.Warnf("record usage failed: %v", err)
 	}
 	if uc.sink != nil {
 		_ = uc.sink.CaptureAPIUsage(ctx, UsageEvent{
-			TenantID:   key.TenantID,
-			BotID:      key.BotID,
-			APIKeyID:   key.ID,
-			Path:       log.Path,
-			StatusCode: log.StatusCode,
-			LatencyMs:  log.LatencyMs,
-			CreatedAt:  log.CreatedAt,
+			TenantID:         key.TenantID,
+			BotID:            key.BotID,
+			APIKeyID:         key.ID,
+			Path:             log.Path,
+			APIVersion:       log.APIVersion,
+			Model:            log.Model,
+			StatusCode:       log.StatusCode,
+			LatencyMs:        log.LatencyMs,
+			PromptTokens:     log.PromptTokens,
+			CompletionTokens: log.CompletionTokens,
+			TotalTokens:      log.TotalTokens,
+			ClientIP:         log.ClientIP,
+			UserAgent:        log.UserAgent,
+			CreatedAt:        log.CreatedAt,
 		})
 	}
 }
 
 func (uc *APIMgmtUsecase) ListUsageLogs(ctx context.Context, filter UsageFilter) ([]UsageLog, error) {
-	filter.Limit, filter.Offset = paging.Normalize(filter.Limit, filter.Offset)
+	filter = normalizeUsageFilter(filter, 200)
 	return uc.repo.ListUsageLogs(ctx, filter)
 }
 
 func (uc *APIMgmtUsecase) GetUsageSummary(ctx context.Context, filter UsageFilter) (UsageSummary, error) {
+	filter = normalizeUsageFilter(filter, 200)
 	return uc.repo.GetUsageSummary(ctx, filter)
+}
+
+func (uc *APIMgmtUsecase) ExportUsageLogs(ctx context.Context, filter UsageFilter) (string, error) {
+	filter = normalizeUsageFilter(filter, 10000)
+	items, err := uc.repo.ListUsageLogs(ctx, filter)
+	if err != nil {
+		return "", err
+	}
+	builder := &strings.Builder{}
+	builder.WriteString("id,api_key_id,tenant_id,bot_id,api_version,model,path,status_code,latency_ms,prompt_tokens,completion_tokens,total_tokens,client_ip,user_agent,created_at\n")
+	for _, item := range items {
+		builder.WriteString(csvEscape(item.ID))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.APIKeyID))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.TenantID))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.BotID))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.APIVersion))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.Model))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.Path))
+		builder.WriteString(",")
+		builder.WriteString(intToString(int(item.StatusCode)))
+		builder.WriteString(",")
+		builder.WriteString(intToString(int(item.LatencyMs)))
+		builder.WriteString(",")
+		builder.WriteString(intToString(int(item.PromptTokens)))
+		builder.WriteString(",")
+		builder.WriteString(intToString(int(item.CompletionTokens)))
+		builder.WriteString(",")
+		builder.WriteString(intToString(int(item.TotalTokens)))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.ClientIP))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.UserAgent))
+		builder.WriteString(",")
+		builder.WriteString(csvEscape(item.CreatedAt.Format(time.RFC3339)))
+		builder.WriteString("\n")
+	}
+	return builder.String(), nil
 }
 
 func StatusCodeFromError(err error) int32 {
@@ -415,6 +523,64 @@ func scopeAllowed(scopes []string, required string) bool {
 		}
 	}
 	return false
+}
+
+func normalizeVersions(versions []string) []string {
+	if len(versions) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{})
+	out := make([]string, 0, len(versions))
+	for _, item := range versions {
+		value := strings.ToLower(strings.TrimSpace(item))
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
+	}
+	return out
+}
+
+func versionAllowed(versions []string, required string) bool {
+	if required == "" {
+		return true
+	}
+	if len(versions) == 0 {
+		return true
+	}
+	required = strings.ToLower(strings.TrimSpace(required))
+	for _, item := range versions {
+		if strings.ToLower(strings.TrimSpace(item)) == required {
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeUsageFilter(filter UsageFilter, maxLimit int) UsageFilter {
+	if filter.Limit <= 0 || filter.Limit > maxLimit {
+		filter.Limit = maxLimit
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	return filter
+}
+
+func csvEscape(value string) string {
+	value = strings.ReplaceAll(value, "\"", "\"\"")
+	if strings.ContainsAny(value, ",\"\n") {
+		return "\"" + value + "\""
+	}
+	return value
+}
+
+func intToString(value int) string {
+	return strconv.Itoa(value)
 }
 
 // ProviderSet is apimgmt biz providers.

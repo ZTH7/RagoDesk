@@ -278,6 +278,9 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `name`
 - `key_hash`
 - `scopes` (json array, optional)
+- `api_versions` (json array, default `["v1"]`)
+- `prev_key_hash` (轮换过渡期旧 key hash)
+- `prev_expires_at` (过渡期截止时间)
 - `status` (active/disabled)
 - `quota_daily`
 - `qps_limit`
@@ -286,10 +289,19 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 
 **api_usage_log**
 - `id` (PK)
+- `tenant_id`
+- `bot_id`
 - `api_key_id`
 - `path`
+- `api_version`
+- `model`
 - `status_code`
 - `latency_ms`
+- `prompt_tokens`
+- `completion_tokens`
+- `total_tokens`
+- `client_ip` (optional)
+- `user_agent` (optional)
 - `created_at`
 
 ---

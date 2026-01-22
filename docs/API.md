@@ -211,7 +211,8 @@
 - `POST /console/v1/api_keys/{id}/rotate`
 - `GET /console/v1/api_usage`
 - `GET /console/v1/api_usage/summary`
-> 支持 scope 配置与 Key 轮换（当前为“立即失效旧 Key”）。`scopes` 默认：`["rag","conversation"]`，可用 `*` 表示全量权限。
+- `POST /console/v1/api_usage/export`
+> 支持 scope 配置与 Key 轮换（旧 Key 进入过渡期）。`scopes` 默认：`["rag","conversation"]`，可用 `*` 表示全量权限。
 
 **Create**
 `POST /console/v1/api_keys`
@@ -220,6 +221,7 @@
   "bot_id": "bot_123",
   "name": "prod-key",
   "scopes": ["rag", "conversation"],
+  "api_versions": ["v1"],
   "quota_daily": 20000,
   "qps_limit": 50
 }
@@ -236,6 +238,7 @@
   "name": "prod-key-v2",
   "status": "active",
   "scopes": ["rag"],
+  "api_versions": ["v1"],
   "quota_daily": 10000,
   "qps_limit": 20
 }
@@ -245,12 +248,26 @@
 **Rotate**
 `POST /console/v1/api_keys/{id}/rotate`
 返回：`api_key` + `raw_key`
+> 轮换后旧 Key 进入“过渡期”，默认 60 分钟（可通过配置调整）。
 
 **Usage Logs**
-`GET /console/v1/api_usage?api_key_id=...&bot_id=...&start_time=...&end_time=...`
+`GET /console/v1/api_usage?api_key_id=...&bot_id=...&api_version=v1&model=...&start_time=...&end_time=...`
+返回字段包含 `path/api_version/model/status_code/latency_ms/token_usage/created_at`，并附带 `client_ip/user_agent` 便于审计。
 
 **Usage Summary**
-`GET /console/v1/api_usage/summary?api_key_id=...&bot_id=...&start_time=...&end_time=...`
+`GET /console/v1/api_usage/summary?api_key_id=...&bot_id=...&api_version=v1&model=...&start_time=...&end_time=...`
+
+**Usage Export**
+`POST /console/v1/api_usage/export`
+```json
+{
+  "api_key_id": "key_123",
+  "bot_id": "bot_123",
+  "start_time": "2026-02-01T00:00:00Z",
+  "end_time": "2026-02-20T23:59:59Z",
+  "format": "csv"
+}
+```
 
 ### 4.6 统计看板
 - `GET /console/v1/analytics/overview`

@@ -114,6 +114,11 @@ message Data {
     int32 retention_days = 1;
     int32 purge_interval_minutes = 2;
   }
+  message APIMgmt {
+    int32 rotation_grace_minutes = 1;
+    int32 tenant_qps_limit = 2;
+    int32 tenant_quota_daily = 3;
+  }
   Database database = 1;
   Redis redis = 2;
   VectorDB vectordb = 3;
@@ -122,4 +127,5 @@ message Data {
   Knowledge knowledge = 6;
   Rag rag = 7;
   Conversation conversation = 8;
+  APIMgmt apimgmt = 9;
 }

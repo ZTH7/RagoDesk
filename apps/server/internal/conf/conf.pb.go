@@ -144,6 +144,7 @@ type Data struct {
 	Knowledge     *Data_Knowledge        `protobuf:"bytes,6,opt,name=knowledge,proto3" json:"knowledge,omitempty"`
 	Rag           *Data_Rag              `protobuf:"bytes,7,opt,name=rag,proto3" json:"rag,omitempty"`
 	Conversation  *Data_Conversation     `protobuf:"bytes,8,opt,name=conversation,proto3" json:"conversation,omitempty"`
+	Apimgmt       *Data_APIMgmt          `protobuf:"bytes,9,opt,name=apimgmt,proto3" json:"apimgmt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -230,6 +231,13 @@ func (x *Data) GetRag() *Data_Rag {
 func (x *Data) GetConversation() *Data_Conversation {
 	if x != nil {
 		return x.Conversation
+	}
+	return nil
+}
+
+func (x *Data) GetApimgmt() *Data_APIMgmt {
+	if x != nil {
+		return x.Apimgmt
 	}
 	return nil
 }
@@ -926,6 +934,66 @@ func (x *Data_Conversation) GetPurgeIntervalMinutes() int32 {
 	return 0
 }
 
+type Data_APIMgmt struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	RotationGraceMinutes int32                  `protobuf:"varint,1,opt,name=rotation_grace_minutes,json=rotationGraceMinutes,proto3" json:"rotation_grace_minutes,omitempty"`
+	TenantQpsLimit       int32                  `protobuf:"varint,2,opt,name=tenant_qps_limit,json=tenantQpsLimit,proto3" json:"tenant_qps_limit,omitempty"`
+	TenantQuotaDaily     int32                  `protobuf:"varint,3,opt,name=tenant_quota_daily,json=tenantQuotaDaily,proto3" json:"tenant_quota_daily,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *Data_APIMgmt) Reset() {
+	*x = Data_APIMgmt{}
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Data_APIMgmt) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Data_APIMgmt) ProtoMessage() {}
+
+func (x *Data_APIMgmt) ProtoReflect() protoreflect.Message {
+	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Data_APIMgmt.ProtoReflect.Descriptor instead.
+func (*Data_APIMgmt) Descriptor() ([]byte, []int) {
+	return file_internal_conf_conf_proto_rawDescGZIP(), []int{2, 8}
+}
+
+func (x *Data_APIMgmt) GetRotationGraceMinutes() int32 {
+	if x != nil {
+		return x.RotationGraceMinutes
+	}
+	return 0
+}
+
+func (x *Data_APIMgmt) GetTenantQpsLimit() int32 {
+	if x != nil {
+		return x.TenantQpsLimit
+	}
+	return 0
+}
+
+func (x *Data_APIMgmt) GetTenantQuotaDaily() int32 {
+	if x != nil {
+		return x.TenantQuotaDaily
+	}
+	return 0
+}
+
 type Data_Knowledge_Chunking struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MaxTokens     int32                  `protobuf:"varint,1,opt,name=max_tokens,json=maxTokens,proto3" json:"max_tokens,omitempty"`
@@ -936,7 +1004,7 @@ type Data_Knowledge_Chunking struct {
 
 func (x *Data_Knowledge_Chunking) Reset() {
 	*x = Data_Knowledge_Chunking{}
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -948,7 +1016,7 @@ func (x *Data_Knowledge_Chunking) String() string {
 func (*Data_Knowledge_Chunking) ProtoMessage() {}
 
 func (x *Data_Knowledge_Chunking) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[14]
+	mi := &file_internal_conf_conf_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -993,7 +1061,7 @@ type Data_Knowledge_Embedding struct {
 
 func (x *Data_Knowledge_Embedding) Reset() {
 	*x = Data_Knowledge_Embedding{}
-	mi := &file_internal_conf_conf_proto_msgTypes[15]
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1005,7 +1073,7 @@ func (x *Data_Knowledge_Embedding) String() string {
 func (*Data_Knowledge_Embedding) ProtoMessage() {}
 
 func (x *Data_Knowledge_Embedding) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[15]
+	mi := &file_internal_conf_conf_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1082,7 +1150,7 @@ type Data_Knowledge_Ingestion struct {
 
 func (x *Data_Knowledge_Ingestion) Reset() {
 	*x = Data_Knowledge_Ingestion{}
-	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1094,7 +1162,7 @@ func (x *Data_Knowledge_Ingestion) String() string {
 func (*Data_Knowledge_Ingestion) ProtoMessage() {}
 
 func (x *Data_Knowledge_Ingestion) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[16]
+	mi := &file_internal_conf_conf_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1151,7 +1219,7 @@ type Data_Rag_Retrieval struct {
 
 func (x *Data_Rag_Retrieval) Reset() {
 	*x = Data_Rag_Retrieval{}
-	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	mi := &file_internal_conf_conf_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1163,7 +1231,7 @@ func (x *Data_Rag_Retrieval) String() string {
 func (*Data_Rag_Retrieval) ProtoMessage() {}
 
 func (x *Data_Rag_Retrieval) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[17]
+	mi := &file_internal_conf_conf_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1231,7 +1299,7 @@ type Data_Rag_LLM struct {
 
 func (x *Data_Rag_LLM) Reset() {
 	*x = Data_Rag_LLM{}
-	mi := &file_internal_conf_conf_proto_msgTypes[18]
+	mi := &file_internal_conf_conf_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1243,7 +1311,7 @@ func (x *Data_Rag_LLM) String() string {
 func (*Data_Rag_LLM) ProtoMessage() {}
 
 func (x *Data_Rag_LLM) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_conf_conf_proto_msgTypes[18]
+	mi := &file_internal_conf_conf_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1347,7 +1415,7 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"\n" +
 	"jwt_secret\x18\x01 \x01(\tR\tjwtSecret\x12\x16\n" +
 	"\x06issuer\x18\x02 \x01(\tR\x06issuer\x12\x1a\n" +
-	"\baudience\x18\x03 \x01(\tR\baudience\"\xbb\x13\n" +
+	"\baudience\x18\x03 \x01(\tR\baudience\"\x89\x15\n" +
 	"\x04Data\x125\n" +
 	"\bdatabase\x18\x01 \x01(\v2\x19.kratos.api.Data.DatabaseR\bdatabase\x12,\n" +
 	"\x05redis\x18\x02 \x01(\v2\x16.kratos.api.Data.RedisR\x05redis\x125\n" +
@@ -1356,7 +1424,8 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"\x0eobject_storage\x18\x05 \x01(\v2\x1e.kratos.api.Data.ObjectStorageR\robjectStorage\x128\n" +
 	"\tknowledge\x18\x06 \x01(\v2\x1a.kratos.api.Data.KnowledgeR\tknowledge\x12&\n" +
 	"\x03rag\x18\a \x01(\v2\x14.kratos.api.Data.RagR\x03rag\x12A\n" +
-	"\fconversation\x18\b \x01(\v2\x1d.kratos.api.Data.ConversationR\fconversation\x1a:\n" +
+	"\fconversation\x18\b \x01(\v2\x1d.kratos.api.Data.ConversationR\fconversation\x122\n" +
+	"\aapimgmt\x18\t \x01(\v2\x18.kratos.api.Data.APIMgmtR\aapimgmt\x1a:\n" +
 	"\bDatabase\x12\x16\n" +
 	"\x06driver\x18\x01 \x01(\tR\x06driver\x12\x16\n" +
 	"\x06source\x18\x02 \x01(\tR\x06source\x1a\xb3\x01\n" +
@@ -1436,7 +1505,11 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"\x0frefusal_message\x18\t \x01(\tR\x0erefusalMessage\x1ak\n" +
 	"\fConversation\x12%\n" +
 	"\x0eretention_days\x18\x01 \x01(\x05R\rretentionDays\x124\n" +
-	"\x16purge_interval_minutes\x18\x02 \x01(\x05R\x14purgeIntervalMinutesB8Z6github.com/ZTH7/RAGDesk/apps/server/internal/conf;confb\x06proto3"
+	"\x16purge_interval_minutes\x18\x02 \x01(\x05R\x14purgeIntervalMinutes\x1a\x97\x01\n" +
+	"\aAPIMgmt\x124\n" +
+	"\x16rotation_grace_minutes\x18\x01 \x01(\x05R\x14rotationGraceMinutes\x12(\n" +
+	"\x10tenant_qps_limit\x18\x02 \x01(\x05R\x0etenantQpsLimit\x12,\n" +
+	"\x12tenant_quota_daily\x18\x03 \x01(\x05R\x10tenantQuotaDailyB8Z6github.com/ZTH7/RAGDesk/apps/server/internal/conf;confb\x06proto3"
 
 var (
 	file_internal_conf_conf_proto_rawDescOnce sync.Once
@@ -1450,7 +1523,7 @@ func file_internal_conf_conf_proto_rawDescGZIP() []byte {
 	return file_internal_conf_conf_proto_rawDescData
 }
 
-var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_internal_conf_conf_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_internal_conf_conf_proto_goTypes = []any{
 	(*Bootstrap)(nil),                // 0: kratos.api.Bootstrap
 	(*Server)(nil),                   // 1: kratos.api.Server
@@ -1466,12 +1539,13 @@ var file_internal_conf_conf_proto_goTypes = []any{
 	(*Data_Knowledge)(nil),           // 11: kratos.api.Data.Knowledge
 	(*Data_Rag)(nil),                 // 12: kratos.api.Data.Rag
 	(*Data_Conversation)(nil),        // 13: kratos.api.Data.Conversation
-	(*Data_Knowledge_Chunking)(nil),  // 14: kratos.api.Data.Knowledge.Chunking
-	(*Data_Knowledge_Embedding)(nil), // 15: kratos.api.Data.Knowledge.Embedding
-	(*Data_Knowledge_Ingestion)(nil), // 16: kratos.api.Data.Knowledge.Ingestion
-	(*Data_Rag_Retrieval)(nil),       // 17: kratos.api.Data.Rag.Retrieval
-	(*Data_Rag_LLM)(nil),             // 18: kratos.api.Data.Rag.LLM
-	(*durationpb.Duration)(nil),      // 19: google.protobuf.Duration
+	(*Data_APIMgmt)(nil),             // 14: kratos.api.Data.APIMgmt
+	(*Data_Knowledge_Chunking)(nil),  // 15: kratos.api.Data.Knowledge.Chunking
+	(*Data_Knowledge_Embedding)(nil), // 16: kratos.api.Data.Knowledge.Embedding
+	(*Data_Knowledge_Ingestion)(nil), // 17: kratos.api.Data.Knowledge.Ingestion
+	(*Data_Rag_Retrieval)(nil),       // 18: kratos.api.Data.Rag.Retrieval
+	(*Data_Rag_LLM)(nil),             // 19: kratos.api.Data.Rag.LLM
+	(*durationpb.Duration)(nil),      // 20: google.protobuf.Duration
 }
 var file_internal_conf_conf_proto_depIdxs = []int32{
 	1,  // 0: kratos.api.Bootstrap.server:type_name -> kratos.api.Server
@@ -1487,20 +1561,21 @@ var file_internal_conf_conf_proto_depIdxs = []int32{
 	11, // 10: kratos.api.Data.knowledge:type_name -> kratos.api.Data.Knowledge
 	12, // 11: kratos.api.Data.rag:type_name -> kratos.api.Data.Rag
 	13, // 12: kratos.api.Data.conversation:type_name -> kratos.api.Data.Conversation
-	19, // 13: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
-	19, // 14: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
-	19, // 15: kratos.api.Data.Redis.read_timeout:type_name -> google.protobuf.Duration
-	19, // 16: kratos.api.Data.Redis.write_timeout:type_name -> google.protobuf.Duration
-	14, // 17: kratos.api.Data.Knowledge.chunking:type_name -> kratos.api.Data.Knowledge.Chunking
-	15, // 18: kratos.api.Data.Knowledge.embedding:type_name -> kratos.api.Data.Knowledge.Embedding
-	16, // 19: kratos.api.Data.Knowledge.ingestion:type_name -> kratos.api.Data.Knowledge.Ingestion
-	17, // 20: kratos.api.Data.Rag.retrieval:type_name -> kratos.api.Data.Rag.Retrieval
-	18, // 21: kratos.api.Data.Rag.llm:type_name -> kratos.api.Data.Rag.LLM
-	22, // [22:22] is the sub-list for method output_type
-	22, // [22:22] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	14, // 13: kratos.api.Data.apimgmt:type_name -> kratos.api.Data.APIMgmt
+	20, // 14: kratos.api.Server.HTTP.timeout:type_name -> google.protobuf.Duration
+	20, // 15: kratos.api.Server.GRPC.timeout:type_name -> google.protobuf.Duration
+	20, // 16: kratos.api.Data.Redis.read_timeout:type_name -> google.protobuf.Duration
+	20, // 17: kratos.api.Data.Redis.write_timeout:type_name -> google.protobuf.Duration
+	15, // 18: kratos.api.Data.Knowledge.chunking:type_name -> kratos.api.Data.Knowledge.Chunking
+	16, // 19: kratos.api.Data.Knowledge.embedding:type_name -> kratos.api.Data.Knowledge.Embedding
+	17, // 20: kratos.api.Data.Knowledge.ingestion:type_name -> kratos.api.Data.Knowledge.Ingestion
+	18, // 21: kratos.api.Data.Rag.retrieval:type_name -> kratos.api.Data.Rag.Retrieval
+	19, // 22: kratos.api.Data.Rag.llm:type_name -> kratos.api.Data.Rag.LLM
+	23, // [23:23] is the sub-list for method output_type
+	23, // [23:23] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_internal_conf_conf_proto_init() }
@@ -1514,7 +1589,7 @@ func file_internal_conf_conf_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_conf_conf_proto_rawDesc), len(file_internal_conf_conf_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

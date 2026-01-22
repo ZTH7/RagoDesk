@@ -7,6 +7,7 @@ import (
 	"time"
 
 	v1 "github.com/ZTH7/RAGDesk/apps/server/api/conversation/v1"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
 	apimgmtbiz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
@@ -38,14 +39,16 @@ func (s *ConversationService) CreateSession(ctx context.Context, req *v1.CreateS
 	}
 	start := time.Now()
 	operation := operationFromContext(ctx)
-	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
+	apiVersion := apiVersionFromOperation(operation)
+	clientIP, userAgent := clientInfoFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation, apiVersion)
 	if err != nil {
-		s.recordUsage(ctx, key, operation, err, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, err, start, clientIP, userAgent)
 		return nil, err
 	}
 	var callErr error
 	defer func() {
-		s.recordUsage(ctx, key, operation, callErr, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, callErr, start, clientIP, userAgent)
 	}()
 	meta := structToMap(req.Metadata)
 	session, callErr := s.uc.CreateSession(ctx, key.BotID, req.UserExternalId, meta)
@@ -61,14 +64,16 @@ func (s *ConversationService) GetSession(ctx context.Context, req *v1.GetSession
 	}
 	start := time.Now()
 	operation := operationFromContext(ctx)
-	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
+	apiVersion := apiVersionFromOperation(operation)
+	clientIP, userAgent := clientInfoFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation, apiVersion)
 	if err != nil {
-		s.recordUsage(ctx, key, operation, err, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, err, start, clientIP, userAgent)
 		return nil, err
 	}
 	var callErr error
 	defer func() {
-		s.recordUsage(ctx, key, operation, callErr, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, callErr, start, clientIP, userAgent)
 	}()
 	session, messages, callErr := s.uc.GetSession(ctx, req.SessionId, req.IncludeMessages, int(req.Limit), int(req.Offset))
 	if callErr != nil {
@@ -91,14 +96,16 @@ func (s *ConversationService) CloseSession(ctx context.Context, req *v1.CloseSes
 	}
 	start := time.Now()
 	operation := operationFromContext(ctx)
-	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
+	apiVersion := apiVersionFromOperation(operation)
+	clientIP, userAgent := clientInfoFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation, apiVersion)
 	if err != nil {
-		s.recordUsage(ctx, key, operation, err, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, err, start, clientIP, userAgent)
 		return nil, err
 	}
 	var callErr error
 	defer func() {
-		s.recordUsage(ctx, key, operation, callErr, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, callErr, start, clientIP, userAgent)
 	}()
 	session, _, callErr := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
 	if callErr != nil {
@@ -120,14 +127,16 @@ func (s *ConversationService) CreateFeedback(ctx context.Context, req *v1.Create
 	}
 	start := time.Now()
 	operation := operationFromContext(ctx)
-	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation)
+	apiVersion := apiVersionFromOperation(operation)
+	clientIP, userAgent := clientInfoFromContext(ctx)
+	ctx, key, err := s.requireAPIKey(ctx, apimgmtbiz.ScopeConversation, apiVersion)
 	if err != nil {
-		s.recordUsage(ctx, key, operation, err, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, err, start, clientIP, userAgent)
 		return nil, err
 	}
 	var callErr error
 	defer func() {
-		s.recordUsage(ctx, key, operation, callErr, start)
+		s.recordUsage(ctx, key, operation, apiVersion, provider.LLMUsage{}, callErr, start, clientIP, userAgent)
 	}()
 	session, _, callErr := s.uc.GetSession(ctx, req.SessionId, false, 0, 0)
 	if callErr != nil {
@@ -177,16 +186,16 @@ func toAPISession(session biz.Session) *v1.Session {
 		return nil
 	}
 	return &v1.Session{
-		Id:            session.ID,
-		TenantId:      session.TenantID,
-		BotId:         session.BotID,
-		Status:        session.Status,
-		CloseReason:   session.CloseReason,
+		Id:             session.ID,
+		TenantId:       session.TenantID,
+		BotId:          session.BotID,
+		Status:         session.Status,
+		CloseReason:    session.CloseReason,
 		UserExternalId: session.UserExternal,
-		Metadata:      parseMetadata(session.Metadata),
-		CreatedAt:     timestamppb.New(session.CreatedAt),
-		UpdatedAt:     timestamppb.New(session.UpdatedAt),
-		ClosedAt:      timeOrNil(session.ClosedAt),
+		Metadata:       parseMetadata(session.Metadata),
+		CreatedAt:      timestamppb.New(session.CreatedAt),
+		UpdatedAt:      timestamppb.New(session.UpdatedAt),
+		ClosedAt:       timeOrNil(session.ClosedAt),
 	}
 }
 
@@ -258,7 +267,7 @@ func timeOrNil(t time.Time) *timestamppb.Timestamp {
 	return timestamppb.New(t)
 }
 
-func (s *ConversationService) requireAPIKey(ctx context.Context, scope string) (context.Context, apimgmtbiz.APIKey, error) {
+func (s *ConversationService) requireAPIKey(ctx context.Context, scope string, apiVersion string) (context.Context, apimgmtbiz.APIKey, error) {
 	if s.api == nil {
 		return ctx, apimgmtbiz.APIKey{}, errors.InternalServer("API_KEY_RESOLVER_MISSING", "api key resolver missing")
 	}
@@ -267,7 +276,7 @@ func (s *ConversationService) requireAPIKey(ctx context.Context, scope string) (
 		return ctx, apimgmtbiz.APIKey{}, errors.Unauthorized("API_KEY_MISSING", "api key missing")
 	}
 	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
-	key, err := s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope)
+	key, err := s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope, apiVersion)
 	if key.TenantID != "" {
 		ctx = tenant.WithTenantID(ctx, key.TenantID)
 	}
@@ -277,12 +286,12 @@ func (s *ConversationService) requireAPIKey(ctx context.Context, scope string) (
 	return ctx, key, nil
 }
 
-func (s *ConversationService) recordUsage(ctx context.Context, key apimgmtbiz.APIKey, operation string, err error, start time.Time) {
+func (s *ConversationService) recordUsage(ctx context.Context, key apimgmtbiz.APIKey, operation string, apiVersion string, usage provider.LLMUsage, err error, start time.Time, clientIP string, userAgent string) {
 	if s == nil || s.api == nil {
 		return
 	}
 	status := apimgmtbiz.StatusCodeFromError(err)
-	s.api.RecordUsage(ctx, key, operation, status, time.Since(start))
+	s.api.RecordUsage(ctx, key, operation, apiVersion, "", usage, status, time.Since(start), clientIP, userAgent)
 }
 
 func operationFromContext(ctx context.Context) string {
@@ -290,4 +299,49 @@ func operationFromContext(ctx context.Context) string {
 		return tr.Operation()
 	}
 	return ""
+}
+
+func clientInfoFromContext(ctx context.Context) (string, string) {
+	tr, ok := transport.FromServerContext(ctx)
+	if !ok {
+		return "", ""
+	}
+	header := tr.RequestHeader()
+	forwarded := strings.TrimSpace(header.Get("X-Forwarded-For"))
+	if forwarded != "" {
+		if parts := strings.Split(forwarded, ","); len(parts) > 0 {
+			forwarded = strings.TrimSpace(parts[0])
+		}
+	}
+	if forwarded == "" {
+		forwarded = strings.TrimSpace(header.Get("X-Real-IP"))
+	}
+	return forwarded, strings.TrimSpace(header.Get("User-Agent"))
+}
+
+func apiVersionFromOperation(operation string) string {
+	if operation == "" {
+		return "v1"
+	}
+	if idx := strings.Index(operation, "/api/v"); idx >= 0 {
+		segment := operation[idx+6:]
+		digits := ""
+		for _, r := range segment {
+			if r < '0' || r > '9' {
+				break
+			}
+			digits += string(r)
+		}
+		if digits != "" {
+			return "v" + digits
+		}
+	}
+	parts := strings.Split(operation, ".")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if len(part) > 1 && part[0] == 'v' {
+			return strings.ToLower(part)
+		}
+	}
+	return "v1"
 }

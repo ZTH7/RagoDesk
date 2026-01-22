@@ -44,7 +44,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	apimgmtRepo := data6.NewAPIMgmtRepo(dataData, logger)
 	rateLimiter := data6.NewRateLimiter(confData, logger)
 	usageSink := biz5.NewUsageSink()
-	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, rateLimiter, usageSink, logger)
+	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, rateLimiter, usageSink, confData, logger)
 	conversationRepo := data2.NewConversationRepo(dataData)
 	conversationUsecase := biz4.NewConversationUsecase(conversationRepo, confData)
 	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase)

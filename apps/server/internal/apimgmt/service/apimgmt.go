@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	v1 "github.com/ZTH7/RAGDesk/apps/server/api/apimgmt/v1"
@@ -39,7 +40,7 @@ func (s *APIMgmtService) CreateAPIKey(ctx context.Context, req *v1.CreateAPIKeyR
 	if err := s.iam.RequirePermission(ctx, biz.PermissionAPIKeyWrite); err != nil {
 		return nil, err
 	}
-	created, rawKey, err := s.uc.CreateAPIKey(ctx, req.GetName(), req.GetBotId(), req.GetScopes(), req.GetQuotaDaily(), req.GetQpsLimit())
+	created, rawKey, err := s.uc.CreateAPIKey(ctx, req.GetName(), req.GetBotId(), req.GetScopes(), req.GetApiVersions(), req.GetQuotaDaily(), req.GetQpsLimit())
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func (s *APIMgmtService) UpdateAPIKey(ctx context.Context, req *v1.UpdateAPIKeyR
 		value := req.QpsLimit.Value
 		qpsLimit = &value
 	}
-	updated, err := s.uc.UpdateAPIKey(ctx, req.GetId(), req.GetName(), req.GetStatus(), req.GetScopes(), quotaDaily, qpsLimit)
+	updated, err := s.uc.UpdateAPIKey(ctx, req.GetId(), req.GetName(), req.GetStatus(), req.GetScopes(), req.GetApiVersions(), quotaDaily, qpsLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -144,12 +145,14 @@ func (s *APIMgmtService) ListUsageLogs(ctx context.Context, req *v1.ListUsageLog
 		return nil, err
 	}
 	filter := biz.UsageFilter{
-		APIKeyID: req.GetApiKeyId(),
-		BotID:    req.GetBotId(),
-		Start:    fromTimestamp(req.GetStartTime()),
-		End:      fromTimestamp(req.GetEndTime()),
-		Limit:    int(req.GetLimit()),
-		Offset:   int(req.GetOffset()),
+		APIKeyID:   req.GetApiKeyId(),
+		BotID:      req.GetBotId(),
+		APIVersion: req.GetApiVersion(),
+		Model:      req.GetModel(),
+		Start:      fromTimestamp(req.GetStartTime()),
+		End:        fromTimestamp(req.GetEndTime()),
+		Limit:      int(req.GetLimit()),
+		Offset:     int(req.GetOffset()),
 	}
 	items, err := s.uc.ListUsageLogs(ctx, filter)
 	if err != nil {
@@ -173,19 +176,61 @@ func (s *APIMgmtService) GetUsageSummary(ctx context.Context, req *v1.GetUsageSu
 		return nil, err
 	}
 	summary, err := s.uc.GetUsageSummary(ctx, biz.UsageFilter{
-		APIKeyID: req.GetApiKeyId(),
-		BotID:    req.GetBotId(),
-		Start:    fromTimestamp(req.GetStartTime()),
-		End:      fromTimestamp(req.GetEndTime()),
+		APIKeyID:   req.GetApiKeyId(),
+		BotID:      req.GetBotId(),
+		APIVersion: req.GetApiVersion(),
+		Model:      req.GetModel(),
+		Start:      fromTimestamp(req.GetStartTime()),
+		End:        fromTimestamp(req.GetEndTime()),
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &v1.GetUsageSummaryResponse{Summary: &v1.UsageSummary{
-		Total:        summary.Total,
-		ErrorCount:   summary.ErrorCount,
-		AvgLatencyMs: summary.AvgLatencyMs,
+		Total:            summary.Total,
+		ErrorCount:       summary.ErrorCount,
+		AvgLatencyMs:     summary.AvgLatencyMs,
+		PromptTokens:     summary.PromptTokens,
+		CompletionTokens: summary.CompletionTokens,
+		TotalTokens:      summary.TotalTokens,
 	}}, nil
+}
+
+func (s *APIMgmtService) ExportUsageLogs(ctx context.Context, req *v1.ExportUsageLogsRequest) (*v1.ExportUsageLogsResponse, error) {
+	if req == nil {
+		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
+	}
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iam.RequirePermission(ctx, biz.PermissionAPIUsageRead); err != nil {
+		return nil, err
+	}
+	format := strings.ToLower(strings.TrimSpace(req.GetFormat()))
+	if format == "" {
+		format = "csv"
+	}
+	if format != "csv" {
+		return nil, errors.BadRequest("EXPORT_FORMAT_INVALID", "unsupported export format")
+	}
+	content, err := s.uc.ExportUsageLogs(ctx, biz.UsageFilter{
+		APIKeyID:   req.GetApiKeyId(),
+		BotID:      req.GetBotId(),
+		APIVersion: req.GetApiVersion(),
+		Model:      req.GetModel(),
+		Start:      fromTimestamp(req.GetStartTime()),
+		End:        fromTimestamp(req.GetEndTime()),
+		Limit:      int(req.GetLimit()),
+		Offset:     int(req.GetOffset()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &v1.ExportUsageLogsResponse{
+		Content:     content,
+		ContentType: "text/csv",
+		Filename:    "api_usage.csv",
+	}, nil
 }
 
 // ProviderSet is apimgmt service providers.
@@ -203,16 +248,17 @@ func toAPIKey(key biz.APIKey) *v1.APIKey {
 		return nil
 	}
 	return &v1.APIKey{
-		Id:         key.ID,
-		TenantId:   key.TenantID,
-		BotId:      key.BotID,
-		Name:       key.Name,
-		Status:     string(key.Status),
-		Scopes:     key.Scopes,
-		QuotaDaily: key.QuotaDaily,
-		QpsLimit:   key.QPSLimit,
-		CreatedAt:  toTimestamp(key.CreatedAt),
-		LastUsedAt: toTimestamp(key.LastUsedAt),
+		Id:          key.ID,
+		TenantId:    key.TenantID,
+		BotId:       key.BotID,
+		Name:        key.Name,
+		Status:      string(key.Status),
+		Scopes:      key.Scopes,
+		ApiVersions: key.APIVersions,
+		QuotaDaily:  key.QuotaDaily,
+		QpsLimit:    key.QPSLimit,
+		CreatedAt:   toTimestamp(key.CreatedAt),
+		LastUsedAt:  toTimestamp(key.LastUsedAt),
 	}
 }
 
@@ -221,13 +267,20 @@ func toUsageLog(log biz.UsageLog) *v1.UsageLog {
 		return nil
 	}
 	return &v1.UsageLog{
-		Id:         log.ID,
-		ApiKeyId:   log.APIKeyID,
-		BotId:      log.BotID,
-		Path:       log.Path,
-		StatusCode: log.StatusCode,
-		LatencyMs:  log.LatencyMs,
-		CreatedAt:  toTimestamp(log.CreatedAt),
+		Id:               log.ID,
+		ApiKeyId:         log.APIKeyID,
+		BotId:            log.BotID,
+		Path:             log.Path,
+		ApiVersion:       log.APIVersion,
+		Model:            log.Model,
+		StatusCode:       log.StatusCode,
+		LatencyMs:        log.LatencyMs,
+		PromptTokens:     log.PromptTokens,
+		CompletionTokens: log.CompletionTokens,
+		TotalTokens:      log.TotalTokens,
+		CreatedAt:        toTimestamp(log.CreatedAt),
+		ClientIp:         log.ClientIP,
+		UserAgent:        log.UserAgent,
 	}
 }
 

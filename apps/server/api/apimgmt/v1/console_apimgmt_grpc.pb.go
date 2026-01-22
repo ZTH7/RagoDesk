@@ -27,6 +27,7 @@ const (
 	ConsoleAPIMgmt_RotateAPIKey_FullMethodName    = "/api.apimgmt.v1.ConsoleAPIMgmt/RotateAPIKey"
 	ConsoleAPIMgmt_ListUsageLogs_FullMethodName   = "/api.apimgmt.v1.ConsoleAPIMgmt/ListUsageLogs"
 	ConsoleAPIMgmt_GetUsageSummary_FullMethodName = "/api.apimgmt.v1.ConsoleAPIMgmt/GetUsageSummary"
+	ConsoleAPIMgmt_ExportUsageLogs_FullMethodName = "/api.apimgmt.v1.ConsoleAPIMgmt/ExportUsageLogs"
 )
 
 // ConsoleAPIMgmtClient is the client API for ConsoleAPIMgmt service.
@@ -40,6 +41,7 @@ type ConsoleAPIMgmtClient interface {
 	RotateAPIKey(ctx context.Context, in *RotateAPIKeyRequest, opts ...grpc.CallOption) (*RotateAPIKeyResponse, error)
 	ListUsageLogs(ctx context.Context, in *ListUsageLogsRequest, opts ...grpc.CallOption) (*ListUsageLogsResponse, error)
 	GetUsageSummary(ctx context.Context, in *GetUsageSummaryRequest, opts ...grpc.CallOption) (*GetUsageSummaryResponse, error)
+	ExportUsageLogs(ctx context.Context, in *ExportUsageLogsRequest, opts ...grpc.CallOption) (*ExportUsageLogsResponse, error)
 }
 
 type consoleAPIMgmtClient struct {
@@ -120,6 +122,16 @@ func (c *consoleAPIMgmtClient) GetUsageSummary(ctx context.Context, in *GetUsage
 	return out, nil
 }
 
+func (c *consoleAPIMgmtClient) ExportUsageLogs(ctx context.Context, in *ExportUsageLogsRequest, opts ...grpc.CallOption) (*ExportUsageLogsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExportUsageLogsResponse)
+	err := c.cc.Invoke(ctx, ConsoleAPIMgmt_ExportUsageLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConsoleAPIMgmtServer is the server API for ConsoleAPIMgmt service.
 // All implementations must embed UnimplementedConsoleAPIMgmtServer
 // for forward compatibility.
@@ -131,6 +143,7 @@ type ConsoleAPIMgmtServer interface {
 	RotateAPIKey(context.Context, *RotateAPIKeyRequest) (*RotateAPIKeyResponse, error)
 	ListUsageLogs(context.Context, *ListUsageLogsRequest) (*ListUsageLogsResponse, error)
 	GetUsageSummary(context.Context, *GetUsageSummaryRequest) (*GetUsageSummaryResponse, error)
+	ExportUsageLogs(context.Context, *ExportUsageLogsRequest) (*ExportUsageLogsResponse, error)
 	mustEmbedUnimplementedConsoleAPIMgmtServer()
 }
 
@@ -161,6 +174,9 @@ func (UnimplementedConsoleAPIMgmtServer) ListUsageLogs(context.Context, *ListUsa
 }
 func (UnimplementedConsoleAPIMgmtServer) GetUsageSummary(context.Context, *GetUsageSummaryRequest) (*GetUsageSummaryResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUsageSummary not implemented")
+}
+func (UnimplementedConsoleAPIMgmtServer) ExportUsageLogs(context.Context, *ExportUsageLogsRequest) (*ExportUsageLogsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExportUsageLogs not implemented")
 }
 func (UnimplementedConsoleAPIMgmtServer) mustEmbedUnimplementedConsoleAPIMgmtServer() {}
 func (UnimplementedConsoleAPIMgmtServer) testEmbeddedByValue()                        {}
@@ -309,6 +325,24 @@ func _ConsoleAPIMgmt_GetUsageSummary_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ConsoleAPIMgmt_ExportUsageLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportUsageLogsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsoleAPIMgmtServer).ExportUsageLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConsoleAPIMgmt_ExportUsageLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsoleAPIMgmtServer).ExportUsageLogs(ctx, req.(*ExportUsageLogsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ConsoleAPIMgmt_ServiceDesc is the grpc.ServiceDesc for ConsoleAPIMgmt service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -343,6 +377,10 @@ var ConsoleAPIMgmt_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUsageSummary",
 			Handler:    _ConsoleAPIMgmt_GetUsageSummary_Handler,
+		},
+		{
+			MethodName: "ExportUsageLogs",
+			Handler:    _ConsoleAPIMgmt_ExportUsageLogs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

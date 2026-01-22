@@ -3,6 +3,7 @@ package biz
 import (
 	"context"
 
+	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
 	"github.com/cloudwego/eino/compose"
 )
 
@@ -22,6 +23,8 @@ type ragContext struct {
 	reply        string
 	confidence   float32
 	shouldRefuse bool
+	llmUsage     provider.LLMUsage
+	llmModel     string
 }
 
 func (uc *RAGUsecase) buildPipeline() (compose.Runnable[MessageRequest, MessageResponse], error) {

@@ -33,10 +33,11 @@ type APIKey struct {
 	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
 	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
 	Scopes        []string               `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	QuotaDaily    int32                  `protobuf:"varint,7,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
-	QpsLimit      int32                  `protobuf:"varint,8,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	LastUsedAt    *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
+	ApiVersions   []string               `protobuf:"bytes,7,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	QuotaDaily    int32                  `protobuf:"varint,8,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
+	QpsLimit      int32                  `protobuf:"varint,9,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	LastUsedAt    *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -113,6 +114,13 @@ func (x *APIKey) GetScopes() []string {
 	return nil
 }
 
+func (x *APIKey) GetApiVersions() []string {
+	if x != nil {
+		return x.ApiVersions
+	}
+	return nil
+}
+
 func (x *APIKey) GetQuotaDaily() int32 {
 	if x != nil {
 		return x.QuotaDaily
@@ -142,16 +150,23 @@ func (x *APIKey) GetLastUsedAt() *timestamppb.Timestamp {
 }
 
 type UsageLog struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	ApiKeyId      string                 `protobuf:"bytes,2,opt,name=api_key_id,json=apiKeyId,proto3" json:"api_key_id,omitempty"`
-	BotId         string                 `protobuf:"bytes,3,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
-	Path          string                 `protobuf:"bytes,4,opt,name=path,proto3" json:"path,omitempty"`
-	StatusCode    int32                  `protobuf:"varint,5,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	LatencyMs     int32                  `protobuf:"varint,6,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ApiKeyId         string                 `protobuf:"bytes,2,opt,name=api_key_id,json=apiKeyId,proto3" json:"api_key_id,omitempty"`
+	BotId            string                 `protobuf:"bytes,3,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	Path             string                 `protobuf:"bytes,4,opt,name=path,proto3" json:"path,omitempty"`
+	ApiVersion       string                 `protobuf:"bytes,5,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
+	Model            string                 `protobuf:"bytes,6,opt,name=model,proto3" json:"model,omitempty"`
+	StatusCode       int32                  `protobuf:"varint,7,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
+	LatencyMs        int32                  `protobuf:"varint,8,opt,name=latency_ms,json=latencyMs,proto3" json:"latency_ms,omitempty"`
+	PromptTokens     int32                  `protobuf:"varint,9,opt,name=prompt_tokens,json=promptTokens,proto3" json:"prompt_tokens,omitempty"`
+	CompletionTokens int32                  `protobuf:"varint,10,opt,name=completion_tokens,json=completionTokens,proto3" json:"completion_tokens,omitempty"`
+	TotalTokens      int32                  `protobuf:"varint,11,opt,name=total_tokens,json=totalTokens,proto3" json:"total_tokens,omitempty"`
+	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	ClientIp         string                 `protobuf:"bytes,13,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitempty"`
+	UserAgent        string                 `protobuf:"bytes,14,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *UsageLog) Reset() {
@@ -212,6 +227,20 @@ func (x *UsageLog) GetPath() string {
 	return ""
 }
 
+func (x *UsageLog) GetApiVersion() string {
+	if x != nil {
+		return x.ApiVersion
+	}
+	return ""
+}
+
+func (x *UsageLog) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
 func (x *UsageLog) GetStatusCode() int32 {
 	if x != nil {
 		return x.StatusCode
@@ -226,6 +255,27 @@ func (x *UsageLog) GetLatencyMs() int32 {
 	return 0
 }
 
+func (x *UsageLog) GetPromptTokens() int32 {
+	if x != nil {
+		return x.PromptTokens
+	}
+	return 0
+}
+
+func (x *UsageLog) GetCompletionTokens() int32 {
+	if x != nil {
+		return x.CompletionTokens
+	}
+	return 0
+}
+
+func (x *UsageLog) GetTotalTokens() int32 {
+	if x != nil {
+		return x.TotalTokens
+	}
+	return 0
+}
+
 func (x *UsageLog) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
@@ -233,13 +283,30 @@ func (x *UsageLog) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *UsageLog) GetClientIp() string {
+	if x != nil {
+		return x.ClientIp
+	}
+	return ""
+}
+
+func (x *UsageLog) GetUserAgent() string {
+	if x != nil {
+		return x.UserAgent
+	}
+	return ""
+}
+
 type UsageSummary struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Total         int64                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
-	ErrorCount    int64                  `protobuf:"varint,2,opt,name=error_count,json=errorCount,proto3" json:"error_count,omitempty"`
-	AvgLatencyMs  float64                `protobuf:"fixed64,3,opt,name=avg_latency_ms,json=avgLatencyMs,proto3" json:"avg_latency_ms,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Total            int64                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	ErrorCount       int64                  `protobuf:"varint,2,opt,name=error_count,json=errorCount,proto3" json:"error_count,omitempty"`
+	AvgLatencyMs     float64                `protobuf:"fixed64,3,opt,name=avg_latency_ms,json=avgLatencyMs,proto3" json:"avg_latency_ms,omitempty"`
+	PromptTokens     int64                  `protobuf:"varint,4,opt,name=prompt_tokens,json=promptTokens,proto3" json:"prompt_tokens,omitempty"`
+	CompletionTokens int64                  `protobuf:"varint,5,opt,name=completion_tokens,json=completionTokens,proto3" json:"completion_tokens,omitempty"`
+	TotalTokens      int64                  `protobuf:"varint,6,opt,name=total_tokens,json=totalTokens,proto3" json:"total_tokens,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *UsageSummary) Reset() {
@@ -293,13 +360,35 @@ func (x *UsageSummary) GetAvgLatencyMs() float64 {
 	return 0
 }
 
+func (x *UsageSummary) GetPromptTokens() int64 {
+	if x != nil {
+		return x.PromptTokens
+	}
+	return 0
+}
+
+func (x *UsageSummary) GetCompletionTokens() int64 {
+	if x != nil {
+		return x.CompletionTokens
+	}
+	return 0
+}
+
+func (x *UsageSummary) GetTotalTokens() int64 {
+	if x != nil {
+		return x.TotalTokens
+	}
+	return 0
+}
+
 type CreateAPIKeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Scopes        []string               `protobuf:"bytes,3,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	QuotaDaily    int32                  `protobuf:"varint,4,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
-	QpsLimit      int32                  `protobuf:"varint,5,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
+	ApiVersions   []string               `protobuf:"bytes,4,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	QuotaDaily    int32                  `protobuf:"varint,5,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
+	QpsLimit      int32                  `protobuf:"varint,6,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -351,6 +440,13 @@ func (x *CreateAPIKeyRequest) GetName() string {
 func (x *CreateAPIKeyRequest) GetScopes() []string {
 	if x != nil {
 		return x.Scopes
+	}
+	return nil
+}
+
+func (x *CreateAPIKeyRequest) GetApiVersions() []string {
+	if x != nil {
+		return x.ApiVersions
 	}
 	return nil
 }
@@ -531,8 +627,9 @@ type UpdateAPIKeyRequest struct {
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
 	Scopes        []string               `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	QuotaDaily    *wrapperspb.Int32Value `protobuf:"bytes,5,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
-	QpsLimit      *wrapperspb.Int32Value `protobuf:"bytes,6,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
+	ApiVersions   []string               `protobuf:"bytes,5,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	QuotaDaily    *wrapperspb.Int32Value `protobuf:"bytes,6,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
+	QpsLimit      *wrapperspb.Int32Value `protobuf:"bytes,7,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -591,6 +688,13 @@ func (x *UpdateAPIKeyRequest) GetStatus() string {
 func (x *UpdateAPIKeyRequest) GetScopes() []string {
 	if x != nil {
 		return x.Scopes
+	}
+	return nil
+}
+
+func (x *UpdateAPIKeyRequest) GetApiVersions() []string {
+	if x != nil {
+		return x.ApiVersions
 	}
 	return nil
 }
@@ -797,10 +901,12 @@ type ListUsageLogsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ApiKeyId      string                 `protobuf:"bytes,1,opt,name=api_key_id,json=apiKeyId,proto3" json:"api_key_id,omitempty"`
 	BotId         string                 `protobuf:"bytes,2,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
-	StartTime     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	Limit         int32                  `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset        int32                  `protobuf:"varint,6,opt,name=offset,proto3" json:"offset,omitempty"`
+	ApiVersion    string                 `protobuf:"bytes,3,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
+	Model         string                 `protobuf:"bytes,4,opt,name=model,proto3" json:"model,omitempty"`
+	StartTime     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime       *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Limit         int32                  `protobuf:"varint,7,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,8,opt,name=offset,proto3" json:"offset,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -845,6 +951,20 @@ func (x *ListUsageLogsRequest) GetApiKeyId() string {
 func (x *ListUsageLogsRequest) GetBotId() string {
 	if x != nil {
 		return x.BotId
+	}
+	return ""
+}
+
+func (x *ListUsageLogsRequest) GetApiVersion() string {
+	if x != nil {
+		return x.ApiVersion
+	}
+	return ""
+}
+
+func (x *ListUsageLogsRequest) GetModel() string {
+	if x != nil {
+		return x.Model
 	}
 	return ""
 }
@@ -925,8 +1045,10 @@ type GetUsageSummaryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ApiKeyId      string                 `protobuf:"bytes,1,opt,name=api_key_id,json=apiKeyId,proto3" json:"api_key_id,omitempty"`
 	BotId         string                 `protobuf:"bytes,2,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
-	StartTime     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	ApiVersion    string                 `protobuf:"bytes,3,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
+	Model         string                 `protobuf:"bytes,4,opt,name=model,proto3" json:"model,omitempty"`
+	StartTime     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime       *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -971,6 +1093,20 @@ func (x *GetUsageSummaryRequest) GetApiKeyId() string {
 func (x *GetUsageSummaryRequest) GetBotId() string {
 	if x != nil {
 		return x.BotId
+	}
+	return ""
+}
+
+func (x *GetUsageSummaryRequest) GetApiVersion() string {
+	if x != nil {
+		return x.ApiVersion
+	}
+	return ""
+}
+
+func (x *GetUsageSummaryRequest) GetModel() string {
+	if x != nil {
+		return x.Model
 	}
 	return ""
 }
@@ -1033,50 +1169,233 @@ func (x *GetUsageSummaryResponse) GetSummary() *UsageSummary {
 	return nil
 }
 
+type ExportUsageLogsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApiKeyId      string                 `protobuf:"bytes,1,opt,name=api_key_id,json=apiKeyId,proto3" json:"api_key_id,omitempty"`
+	BotId         string                 `protobuf:"bytes,2,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	ApiVersion    string                 `protobuf:"bytes,3,opt,name=api_version,json=apiVersion,proto3" json:"api_version,omitempty"`
+	Model         string                 `protobuf:"bytes,4,opt,name=model,proto3" json:"model,omitempty"`
+	StartTime     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime       *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Limit         int32                  `protobuf:"varint,7,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,8,opt,name=offset,proto3" json:"offset,omitempty"`
+	Format        string                 `protobuf:"bytes,9,opt,name=format,proto3" json:"format,omitempty"` // csv only for MVP
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportUsageLogsRequest) Reset() {
+	*x = ExportUsageLogsRequest{}
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportUsageLogsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportUsageLogsRequest) ProtoMessage() {}
+
+func (x *ExportUsageLogsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportUsageLogsRequest.ProtoReflect.Descriptor instead.
+func (*ExportUsageLogsRequest) Descriptor() ([]byte, []int) {
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ExportUsageLogsRequest) GetApiKeyId() string {
+	if x != nil {
+		return x.ApiKeyId
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsRequest) GetBotId() string {
+	if x != nil {
+		return x.BotId
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsRequest) GetApiVersion() string {
+	if x != nil {
+		return x.ApiVersion
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsRequest) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsRequest) GetStartTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.StartTime
+	}
+	return nil
+}
+
+func (x *ExportUsageLogsRequest) GetEndTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.EndTime
+	}
+	return nil
+}
+
+func (x *ExportUsageLogsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ExportUsageLogsRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *ExportUsageLogsRequest) GetFormat() string {
+	if x != nil {
+		return x.Format
+	}
+	return ""
+}
+
+type ExportUsageLogsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	ContentType   string                 `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
+	Filename      string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportUsageLogsResponse) Reset() {
+	*x = ExportUsageLogsResponse{}
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportUsageLogsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportUsageLogsResponse) ProtoMessage() {}
+
+func (x *ExportUsageLogsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportUsageLogsResponse.ProtoReflect.Descriptor instead.
+func (*ExportUsageLogsResponse) Descriptor() ([]byte, []int) {
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ExportUsageLogsResponse) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsResponse) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsResponse) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
+}
+
 var File_api_apimgmt_v1_console_apimgmt_proto protoreflect.FileDescriptor
 
 const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\n" +
-	"$api/apimgmt/v1/console_apimgmt.proto\x12\x0eapi.apimgmt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"\xc7\x02\n" +
+	"$api/apimgmt/v1/console_apimgmt.proto\x12\x0eapi.apimgmt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"\xea\x02\n" +
 	"\x06APIKey\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x15\n" +
 	"\x06bot_id\x18\x03 \x01(\tR\x05botId\x12\x12\n" +
 	"\x04name\x18\x04 \x01(\tR\x04name\x12\x16\n" +
 	"\x06status\x18\x05 \x01(\tR\x06status\x12\x16\n" +
-	"\x06scopes\x18\x06 \x03(\tR\x06scopes\x12\x1f\n" +
-	"\vquota_daily\x18\a \x01(\x05R\n" +
+	"\x06scopes\x18\x06 \x03(\tR\x06scopes\x12!\n" +
+	"\fapi_versions\x18\a \x03(\tR\vapiVersions\x12\x1f\n" +
+	"\vquota_daily\x18\b \x01(\x05R\n" +
 	"quotaDaily\x12\x1b\n" +
-	"\tqps_limit\x18\b \x01(\x05R\bqpsLimit\x129\n" +
+	"\tqps_limit\x18\t \x01(\x05R\bqpsLimit\x129\n" +
 	"\n" +
-	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12<\n" +
-	"\flast_used_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"lastUsedAt\"\xde\x01\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12<\n" +
+	"\flast_used_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"lastUsedAt\"\xc6\x03\n" +
 	"\bUsageLog\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +
 	"\n" +
 	"api_key_id\x18\x02 \x01(\tR\bapiKeyId\x12\x15\n" +
 	"\x06bot_id\x18\x03 \x01(\tR\x05botId\x12\x12\n" +
 	"\x04path\x18\x04 \x01(\tR\x04path\x12\x1f\n" +
-	"\vstatus_code\x18\x05 \x01(\x05R\n" +
+	"\vapi_version\x18\x05 \x01(\tR\n" +
+	"apiVersion\x12\x14\n" +
+	"\x05model\x18\x06 \x01(\tR\x05model\x12\x1f\n" +
+	"\vstatus_code\x18\a \x01(\x05R\n" +
 	"statusCode\x12\x1d\n" +
 	"\n" +
-	"latency_ms\x18\x06 \x01(\x05R\tlatencyMs\x129\n" +
+	"latency_ms\x18\b \x01(\x05R\tlatencyMs\x12#\n" +
+	"\rprompt_tokens\x18\t \x01(\x05R\fpromptTokens\x12+\n" +
+	"\x11completion_tokens\x18\n" +
+	" \x01(\x05R\x10completionTokens\x12!\n" +
+	"\ftotal_tokens\x18\v \x01(\x05R\vtotalTokens\x129\n" +
 	"\n" +
-	"created_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"k\n" +
+	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x1b\n" +
+	"\tclient_ip\x18\r \x01(\tR\bclientIp\x12\x1d\n" +
+	"\n" +
+	"user_agent\x18\x0e \x01(\tR\tuserAgent\"\xe0\x01\n" +
 	"\fUsageSummary\x12\x14\n" +
 	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x1f\n" +
 	"\verror_count\x18\x02 \x01(\x03R\n" +
 	"errorCount\x12$\n" +
-	"\x0eavg_latency_ms\x18\x03 \x01(\x01R\favgLatencyMs\"\x96\x01\n" +
+	"\x0eavg_latency_ms\x18\x03 \x01(\x01R\favgLatencyMs\x12#\n" +
+	"\rprompt_tokens\x18\x04 \x01(\x03R\fpromptTokens\x12+\n" +
+	"\x11completion_tokens\x18\x05 \x01(\x03R\x10completionTokens\x12!\n" +
+	"\ftotal_tokens\x18\x06 \x01(\x03R\vtotalTokens\"\xb9\x01\n" +
 	"\x13CreateAPIKeyRequest\x12\x15\n" +
 	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
-	"\x06scopes\x18\x03 \x03(\tR\x06scopes\x12\x1f\n" +
-	"\vquota_daily\x18\x04 \x01(\x05R\n" +
+	"\x06scopes\x18\x03 \x03(\tR\x06scopes\x12!\n" +
+	"\fapi_versions\x18\x04 \x03(\tR\vapiVersions\x12\x1f\n" +
+	"\vquota_daily\x18\x05 \x01(\x05R\n" +
 	"quotaDaily\x12\x1b\n" +
-	"\tqps_limit\x18\x05 \x01(\x05R\bqpsLimit\"`\n" +
+	"\tqps_limit\x18\x06 \x01(\x05R\bqpsLimit\"`\n" +
 	"\x14CreateAPIKeyResponse\x12/\n" +
 	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\x12\x17\n" +
 	"\araw_key\x18\x02 \x01(\tR\x06rawKey\"Y\n" +
@@ -1085,15 +1404,16 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06offset\x18\x03 \x01(\x05R\x06offset\"C\n" +
 	"\x13ListAPIKeysResponse\x12,\n" +
-	"\x05items\x18\x01 \x03(\v2\x16.api.apimgmt.v1.APIKeyR\x05items\"\xe1\x01\n" +
+	"\x05items\x18\x01 \x03(\v2\x16.api.apimgmt.v1.APIKeyR\x05items\"\x84\x02\n" +
 	"\x13UpdateAPIKeyRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
 	"\x06status\x18\x03 \x01(\tR\x06status\x12\x16\n" +
-	"\x06scopes\x18\x04 \x03(\tR\x06scopes\x12<\n" +
-	"\vquota_daily\x18\x05 \x01(\v2\x1b.google.protobuf.Int32ValueR\n" +
+	"\x06scopes\x18\x04 \x03(\tR\x06scopes\x12!\n" +
+	"\fapi_versions\x18\x05 \x03(\tR\vapiVersions\x12<\n" +
+	"\vquota_daily\x18\x06 \x01(\v2\x1b.google.protobuf.Int32ValueR\n" +
 	"quotaDaily\x128\n" +
-	"\tqps_limit\x18\x06 \x01(\v2\x1b.google.protobuf.Int32ValueR\bqpsLimit\"G\n" +
+	"\tqps_limit\x18\a \x01(\v2\x1b.google.protobuf.Int32ValueR\bqpsLimit\"G\n" +
 	"\x14UpdateAPIKeyResponse\x12/\n" +
 	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\"%\n" +
 	"\x13DeleteAPIKeyRequest\x12\x0e\n" +
@@ -1102,27 +1422,50 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"`\n" +
 	"\x14RotateAPIKeyResponse\x12/\n" +
 	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\x12\x17\n" +
-	"\araw_key\x18\x02 \x01(\tR\x06rawKey\"\xeb\x01\n" +
+	"\araw_key\x18\x02 \x01(\tR\x06rawKey\"\xa2\x02\n" +
 	"\x14ListUsageLogsRequest\x12\x1c\n" +
 	"\n" +
 	"api_key_id\x18\x01 \x01(\tR\bapiKeyId\x12\x15\n" +
-	"\x06bot_id\x18\x02 \x01(\tR\x05botId\x129\n" +
+	"\x06bot_id\x18\x02 \x01(\tR\x05botId\x12\x1f\n" +
+	"\vapi_version\x18\x03 \x01(\tR\n" +
+	"apiVersion\x12\x14\n" +
+	"\x05model\x18\x04 \x01(\tR\x05model\x129\n" +
 	"\n" +
-	"start_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
-	"\bend_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x14\n" +
-	"\x05limit\x18\x05 \x01(\x05R\x05limit\x12\x16\n" +
-	"\x06offset\x18\x06 \x01(\x05R\x06offset\"G\n" +
+	"start_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
+	"\bend_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x14\n" +
+	"\x05limit\x18\a \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\b \x01(\x05R\x06offset\"G\n" +
 	"\x15ListUsageLogsResponse\x12.\n" +
-	"\x05items\x18\x01 \x03(\v2\x18.api.apimgmt.v1.UsageLogR\x05items\"\xbf\x01\n" +
+	"\x05items\x18\x01 \x03(\v2\x18.api.apimgmt.v1.UsageLogR\x05items\"\xf6\x01\n" +
 	"\x16GetUsageSummaryRequest\x12\x1c\n" +
 	"\n" +
 	"api_key_id\x18\x01 \x01(\tR\bapiKeyId\x12\x15\n" +
-	"\x06bot_id\x18\x02 \x01(\tR\x05botId\x129\n" +
+	"\x06bot_id\x18\x02 \x01(\tR\x05botId\x12\x1f\n" +
+	"\vapi_version\x18\x03 \x01(\tR\n" +
+	"apiVersion\x12\x14\n" +
+	"\x05model\x18\x04 \x01(\tR\x05model\x129\n" +
 	"\n" +
-	"start_time\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
-	"\bend_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\"Q\n" +
+	"start_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
+	"\bend_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\"Q\n" +
 	"\x17GetUsageSummaryResponse\x126\n" +
-	"\asummary\x18\x01 \x01(\v2\x1c.api.apimgmt.v1.UsageSummaryR\asummary2\x85\a\n" +
+	"\asummary\x18\x01 \x01(\v2\x1c.api.apimgmt.v1.UsageSummaryR\asummary\"\xbc\x02\n" +
+	"\x16ExportUsageLogsRequest\x12\x1c\n" +
+	"\n" +
+	"api_key_id\x18\x01 \x01(\tR\bapiKeyId\x12\x15\n" +
+	"\x06bot_id\x18\x02 \x01(\tR\x05botId\x12\x1f\n" +
+	"\vapi_version\x18\x03 \x01(\tR\n" +
+	"apiVersion\x12\x14\n" +
+	"\x05model\x18\x04 \x01(\tR\x05model\x129\n" +
+	"\n" +
+	"start_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
+	"\bend_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x14\n" +
+	"\x05limit\x18\a \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\b \x01(\x05R\x06offset\x12\x16\n" +
+	"\x06format\x18\t \x01(\tR\x06format\"r\n" +
+	"\x17ExportUsageLogsResponse\x12\x18\n" +
+	"\acontent\x18\x01 \x01(\tR\acontent\x12!\n" +
+	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1a\n" +
+	"\bfilename\x18\x03 \x01(\tR\bfilename2\x93\b\n" +
 	"\x0eConsoleAPIMgmt\x12z\n" +
 	"\fCreateAPIKey\x12#.api.apimgmt.v1.CreateAPIKeyRequest\x1a$.api.apimgmt.v1.CreateAPIKeyResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/console/v1/api_keys\x12t\n" +
 	"\vListAPIKeys\x12\".api.apimgmt.v1.ListAPIKeysRequest\x1a#.api.apimgmt.v1.ListAPIKeysResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/console/v1/api_keys\x12\x7f\n" +
@@ -1130,7 +1473,8 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\fDeleteAPIKey\x12#.api.apimgmt.v1.DeleteAPIKeyRequest\x1a\x16.google.protobuf.Empty\"!\x82\xd3\xe4\x93\x02\x1b*\x19/console/v1/api_keys/{id}\x12\x86\x01\n" +
 	"\fRotateAPIKey\x12#.api.apimgmt.v1.RotateAPIKeyRequest\x1a$.api.apimgmt.v1.RotateAPIKeyResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /console/v1/api_keys/{id}/rotate\x12{\n" +
 	"\rListUsageLogs\x12$.api.apimgmt.v1.ListUsageLogsRequest\x1a%.api.apimgmt.v1.ListUsageLogsResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/console/v1/api_usage\x12\x89\x01\n" +
-	"\x0fGetUsageSummary\x12&.api.apimgmt.v1.GetUsageSummaryRequest\x1a'.api.apimgmt.v1.GetUsageSummaryResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/console/v1/api_usage/summaryB7Z5github.com/ZTH7/RAGDesk/apps/server/api/apimgmt/v1;v1b\x06proto3"
+	"\x0fGetUsageSummary\x12&.api.apimgmt.v1.GetUsageSummaryRequest\x1a'.api.apimgmt.v1.GetUsageSummaryResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/console/v1/api_usage/summary\x12\x8b\x01\n" +
+	"\x0fExportUsageLogs\x12&.api.apimgmt.v1.ExportUsageLogsRequest\x1a'.api.apimgmt.v1.ExportUsageLogsResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/console/v1/api_usage/exportB7Z5github.com/ZTH7/RAGDesk/apps/server/api/apimgmt/v1;v1b\x06proto3"
 
 var (
 	file_api_apimgmt_v1_console_apimgmt_proto_rawDescOnce sync.Once
@@ -1144,7 +1488,7 @@ func file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP() []byte {
 	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescData
 }
 
-var file_api_apimgmt_v1_console_apimgmt_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_api_apimgmt_v1_console_apimgmt_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_api_apimgmt_v1_console_apimgmt_proto_goTypes = []any{
 	(*APIKey)(nil),                  // 0: api.apimgmt.v1.APIKey
 	(*UsageLog)(nil),                // 1: api.apimgmt.v1.UsageLog
@@ -1162,45 +1506,51 @@ var file_api_apimgmt_v1_console_apimgmt_proto_goTypes = []any{
 	(*ListUsageLogsResponse)(nil),   // 13: api.apimgmt.v1.ListUsageLogsResponse
 	(*GetUsageSummaryRequest)(nil),  // 14: api.apimgmt.v1.GetUsageSummaryRequest
 	(*GetUsageSummaryResponse)(nil), // 15: api.apimgmt.v1.GetUsageSummaryResponse
-	(*timestamppb.Timestamp)(nil),   // 16: google.protobuf.Timestamp
-	(*wrapperspb.Int32Value)(nil),   // 17: google.protobuf.Int32Value
-	(*emptypb.Empty)(nil),           // 18: google.protobuf.Empty
+	(*ExportUsageLogsRequest)(nil),  // 16: api.apimgmt.v1.ExportUsageLogsRequest
+	(*ExportUsageLogsResponse)(nil), // 17: api.apimgmt.v1.ExportUsageLogsResponse
+	(*timestamppb.Timestamp)(nil),   // 18: google.protobuf.Timestamp
+	(*wrapperspb.Int32Value)(nil),   // 19: google.protobuf.Int32Value
+	(*emptypb.Empty)(nil),           // 20: google.protobuf.Empty
 }
 var file_api_apimgmt_v1_console_apimgmt_proto_depIdxs = []int32{
-	16, // 0: api.apimgmt.v1.APIKey.created_at:type_name -> google.protobuf.Timestamp
-	16, // 1: api.apimgmt.v1.APIKey.last_used_at:type_name -> google.protobuf.Timestamp
-	16, // 2: api.apimgmt.v1.UsageLog.created_at:type_name -> google.protobuf.Timestamp
+	18, // 0: api.apimgmt.v1.APIKey.created_at:type_name -> google.protobuf.Timestamp
+	18, // 1: api.apimgmt.v1.APIKey.last_used_at:type_name -> google.protobuf.Timestamp
+	18, // 2: api.apimgmt.v1.UsageLog.created_at:type_name -> google.protobuf.Timestamp
 	0,  // 3: api.apimgmt.v1.CreateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
 	0,  // 4: api.apimgmt.v1.ListAPIKeysResponse.items:type_name -> api.apimgmt.v1.APIKey
-	17, // 5: api.apimgmt.v1.UpdateAPIKeyRequest.quota_daily:type_name -> google.protobuf.Int32Value
-	17, // 6: api.apimgmt.v1.UpdateAPIKeyRequest.qps_limit:type_name -> google.protobuf.Int32Value
+	19, // 5: api.apimgmt.v1.UpdateAPIKeyRequest.quota_daily:type_name -> google.protobuf.Int32Value
+	19, // 6: api.apimgmt.v1.UpdateAPIKeyRequest.qps_limit:type_name -> google.protobuf.Int32Value
 	0,  // 7: api.apimgmt.v1.UpdateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
 	0,  // 8: api.apimgmt.v1.RotateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
-	16, // 9: api.apimgmt.v1.ListUsageLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	16, // 10: api.apimgmt.v1.ListUsageLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	18, // 9: api.apimgmt.v1.ListUsageLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	18, // 10: api.apimgmt.v1.ListUsageLogsRequest.end_time:type_name -> google.protobuf.Timestamp
 	1,  // 11: api.apimgmt.v1.ListUsageLogsResponse.items:type_name -> api.apimgmt.v1.UsageLog
-	16, // 12: api.apimgmt.v1.GetUsageSummaryRequest.start_time:type_name -> google.protobuf.Timestamp
-	16, // 13: api.apimgmt.v1.GetUsageSummaryRequest.end_time:type_name -> google.protobuf.Timestamp
+	18, // 12: api.apimgmt.v1.GetUsageSummaryRequest.start_time:type_name -> google.protobuf.Timestamp
+	18, // 13: api.apimgmt.v1.GetUsageSummaryRequest.end_time:type_name -> google.protobuf.Timestamp
 	2,  // 14: api.apimgmt.v1.GetUsageSummaryResponse.summary:type_name -> api.apimgmt.v1.UsageSummary
-	3,  // 15: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:input_type -> api.apimgmt.v1.CreateAPIKeyRequest
-	5,  // 16: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:input_type -> api.apimgmt.v1.ListAPIKeysRequest
-	7,  // 17: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:input_type -> api.apimgmt.v1.UpdateAPIKeyRequest
-	9,  // 18: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:input_type -> api.apimgmt.v1.DeleteAPIKeyRequest
-	10, // 19: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:input_type -> api.apimgmt.v1.RotateAPIKeyRequest
-	12, // 20: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:input_type -> api.apimgmt.v1.ListUsageLogsRequest
-	14, // 21: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:input_type -> api.apimgmt.v1.GetUsageSummaryRequest
-	4,  // 22: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:output_type -> api.apimgmt.v1.CreateAPIKeyResponse
-	6,  // 23: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:output_type -> api.apimgmt.v1.ListAPIKeysResponse
-	8,  // 24: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:output_type -> api.apimgmt.v1.UpdateAPIKeyResponse
-	18, // 25: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:output_type -> google.protobuf.Empty
-	11, // 26: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:output_type -> api.apimgmt.v1.RotateAPIKeyResponse
-	13, // 27: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:output_type -> api.apimgmt.v1.ListUsageLogsResponse
-	15, // 28: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:output_type -> api.apimgmt.v1.GetUsageSummaryResponse
-	22, // [22:29] is the sub-list for method output_type
-	15, // [15:22] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	18, // 15: api.apimgmt.v1.ExportUsageLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	18, // 16: api.apimgmt.v1.ExportUsageLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	3,  // 17: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:input_type -> api.apimgmt.v1.CreateAPIKeyRequest
+	5,  // 18: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:input_type -> api.apimgmt.v1.ListAPIKeysRequest
+	7,  // 19: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:input_type -> api.apimgmt.v1.UpdateAPIKeyRequest
+	9,  // 20: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:input_type -> api.apimgmt.v1.DeleteAPIKeyRequest
+	10, // 21: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:input_type -> api.apimgmt.v1.RotateAPIKeyRequest
+	12, // 22: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:input_type -> api.apimgmt.v1.ListUsageLogsRequest
+	14, // 23: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:input_type -> api.apimgmt.v1.GetUsageSummaryRequest
+	16, // 24: api.apimgmt.v1.ConsoleAPIMgmt.ExportUsageLogs:input_type -> api.apimgmt.v1.ExportUsageLogsRequest
+	4,  // 25: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:output_type -> api.apimgmt.v1.CreateAPIKeyResponse
+	6,  // 26: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:output_type -> api.apimgmt.v1.ListAPIKeysResponse
+	8,  // 27: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:output_type -> api.apimgmt.v1.UpdateAPIKeyResponse
+	20, // 28: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:output_type -> google.protobuf.Empty
+	11, // 29: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:output_type -> api.apimgmt.v1.RotateAPIKeyResponse
+	13, // 30: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:output_type -> api.apimgmt.v1.ListUsageLogsResponse
+	15, // 31: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:output_type -> api.apimgmt.v1.GetUsageSummaryResponse
+	17, // 32: api.apimgmt.v1.ConsoleAPIMgmt.ExportUsageLogs:output_type -> api.apimgmt.v1.ExportUsageLogsResponse
+	25, // [25:33] is the sub-list for method output_type
+	17, // [17:25] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_api_apimgmt_v1_console_apimgmt_proto_init() }
@@ -1214,7 +1564,7 @@ func file_api_apimgmt_v1_console_apimgmt_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_apimgmt_v1_console_apimgmt_proto_rawDesc), len(file_api_apimgmt_v1_console_apimgmt_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -72,3 +72,7 @@ data:
   conversation:
     retention_days: 0
     purge_interval_minutes: 60
+  apimgmt:
+    rotation_grace_minutes: 60
+    tenant_qps_limit: 0
+    tenant_quota_daily: 0

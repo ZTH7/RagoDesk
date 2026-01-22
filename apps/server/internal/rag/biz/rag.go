@@ -27,12 +27,14 @@ type MessageResponse struct {
 	Confidence float32
 	References References
 	Refused    bool
+	Model      string
+	Usage      provider.LLMUsage
 }
 
 // BotKnowledgeBase describes bot knowledge base binding.
 type BotKnowledgeBase struct {
-	KBID     string
-	Weight   float64
+	KBID   string
+	Weight float64
 }
 
 // VectorSearchRequest describes a vector search input.
@@ -81,11 +83,11 @@ type ChunkLoader interface {
 
 // RAGUsecase handles rag business logic.
 type RAGUsecase struct {
-	kbRepo    BotKBResolver
+	kbRepo     BotKBResolver
 	vectorRepo VectorSearcher
 	chunkRepo  ChunkLoader
-	log       *log.Helper
-	pipeline  compose.Runnable[MessageRequest, MessageResponse]
+	log        *log.Helper
+	pipeline   compose.Runnable[MessageRequest, MessageResponse]
 
 	embedder provider.Provider
 	llm      provider.LLMProvider

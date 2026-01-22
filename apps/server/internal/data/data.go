@@ -80,6 +80,9 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 			name VARCHAR(128) NOT NULL,
 			key_hash VARCHAR(64) NOT NULL,
 			scopes TEXT NULL,
+			api_versions TEXT NULL,
+			prev_key_hash VARCHAR(64) NULL,
+			prev_expires_at DATETIME NULL,
 			status VARCHAR(32) NOT NULL DEFAULT 'active',
 			quota_daily INT NOT NULL DEFAULT 0,
 			qps_limit INT NOT NULL DEFAULT 0,
@@ -92,12 +95,22 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 		`CREATE TABLE IF NOT EXISTS api_usage_log (
 			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			bot_id VARCHAR(36) NOT NULL,
 			api_key_id VARCHAR(36) NOT NULL,
 			path VARCHAR(255) NOT NULL,
+			api_version VARCHAR(16) NULL,
+			model VARCHAR(128) NULL,
 			status_code INT NOT NULL,
 			latency_ms INT NOT NULL,
+			prompt_tokens INT NOT NULL DEFAULT 0,
+			completion_tokens INT NOT NULL DEFAULT 0,
+			total_tokens INT NOT NULL DEFAULT 0,
+			client_ip VARCHAR(64) NULL,
+			user_agent VARCHAR(255) NULL,
 			created_at DATETIME NOT NULL,
 			PRIMARY KEY (id),
+			KEY idx_api_usage_tenant (tenant_id),
 			KEY idx_api_usage_key (api_key_id),
 			KEY idx_api_usage_created_at (created_at)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
@@ -117,6 +130,15 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 	if err := ensureColumn(ctx, db, "api_key", "scopes", "TEXT NULL"); err != nil {
 		return err
 	}
+	if err := ensureColumn(ctx, db, "api_key", "api_versions", "TEXT NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "prev_key_hash", "VARCHAR(64) NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "prev_expires_at", "DATETIME NULL"); err != nil {
+		return err
+	}
 	if err := ensureColumn(ctx, db, "api_key", "status", "VARCHAR(32) NOT NULL DEFAULT 'active'"); err != nil {
 		return err
 	}
@@ -127,6 +149,33 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "api_key", "last_used_at", "DATETIME NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "tenant_id", "VARCHAR(36) NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "bot_id", "VARCHAR(36) NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "api_version", "VARCHAR(16) NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "model", "VARCHAR(128) NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "prompt_tokens", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "completion_tokens", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "total_tokens", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "client_ip", "VARCHAR(64) NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_usage_log", "user_agent", "VARCHAR(255) NULL"); err != nil {
 		return err
 	}
 	return nil

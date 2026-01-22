@@ -22,6 +22,7 @@ const _ = http.SupportPackageIsVersion1
 
 const OperationConsoleAPIMgmtCreateAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/CreateAPIKey"
 const OperationConsoleAPIMgmtDeleteAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/DeleteAPIKey"
+const OperationConsoleAPIMgmtExportUsageLogs = "/api.apimgmt.v1.ConsoleAPIMgmt/ExportUsageLogs"
 const OperationConsoleAPIMgmtGetUsageSummary = "/api.apimgmt.v1.ConsoleAPIMgmt/GetUsageSummary"
 const OperationConsoleAPIMgmtListAPIKeys = "/api.apimgmt.v1.ConsoleAPIMgmt/ListAPIKeys"
 const OperationConsoleAPIMgmtListUsageLogs = "/api.apimgmt.v1.ConsoleAPIMgmt/ListUsageLogs"
@@ -31,6 +32,7 @@ const OperationConsoleAPIMgmtUpdateAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/Upda
 type ConsoleAPIMgmtHTTPServer interface {
 	CreateAPIKey(context.Context, *CreateAPIKeyRequest) (*CreateAPIKeyResponse, error)
 	DeleteAPIKey(context.Context, *DeleteAPIKeyRequest) (*emptypb.Empty, error)
+	ExportUsageLogs(context.Context, *ExportUsageLogsRequest) (*ExportUsageLogsResponse, error)
 	GetUsageSummary(context.Context, *GetUsageSummaryRequest) (*GetUsageSummaryResponse, error)
 	ListAPIKeys(context.Context, *ListAPIKeysRequest) (*ListAPIKeysResponse, error)
 	ListUsageLogs(context.Context, *ListUsageLogsRequest) (*ListUsageLogsResponse, error)
@@ -47,6 +49,7 @@ func RegisterConsoleAPIMgmtHTTPServer(s *http.Server, srv ConsoleAPIMgmtHTTPServ
 	r.POST("/console/v1/api_keys/{id}/rotate", _ConsoleAPIMgmt_RotateAPIKey0_HTTP_Handler(srv))
 	r.GET("/console/v1/api_usage", _ConsoleAPIMgmt_ListUsageLogs0_HTTP_Handler(srv))
 	r.GET("/console/v1/api_usage/summary", _ConsoleAPIMgmt_GetUsageSummary0_HTTP_Handler(srv))
+	r.POST("/console/v1/api_usage/export", _ConsoleAPIMgmt_ExportUsageLogs0_HTTP_Handler(srv))
 }
 
 func _ConsoleAPIMgmt_CreateAPIKey0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer) func(ctx http.Context) error {
@@ -200,9 +203,32 @@ func _ConsoleAPIMgmt_GetUsageSummary0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer)
 	}
 }
 
+func _ConsoleAPIMgmt_ExportUsageLogs0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ExportUsageLogsRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationConsoleAPIMgmtExportUsageLogs)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ExportUsageLogs(ctx, req.(*ExportUsageLogsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ExportUsageLogsResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type ConsoleAPIMgmtHTTPClient interface {
 	CreateAPIKey(ctx context.Context, req *CreateAPIKeyRequest, opts ...http.CallOption) (rsp *CreateAPIKeyResponse, err error)
 	DeleteAPIKey(ctx context.Context, req *DeleteAPIKeyRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	ExportUsageLogs(ctx context.Context, req *ExportUsageLogsRequest, opts ...http.CallOption) (rsp *ExportUsageLogsResponse, err error)
 	GetUsageSummary(ctx context.Context, req *GetUsageSummaryRequest, opts ...http.CallOption) (rsp *GetUsageSummaryResponse, err error)
 	ListAPIKeys(ctx context.Context, req *ListAPIKeysRequest, opts ...http.CallOption) (rsp *ListAPIKeysResponse, err error)
 	ListUsageLogs(ctx context.Context, req *ListUsageLogsRequest, opts ...http.CallOption) (rsp *ListUsageLogsResponse, err error)
@@ -238,6 +264,19 @@ func (c *ConsoleAPIMgmtHTTPClientImpl) DeleteAPIKey(ctx context.Context, in *Del
 	opts = append(opts, http.Operation(OperationConsoleAPIMgmtDeleteAPIKey))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ConsoleAPIMgmtHTTPClientImpl) ExportUsageLogs(ctx context.Context, in *ExportUsageLogsRequest, opts ...http.CallOption) (*ExportUsageLogsResponse, error) {
+	var out ExportUsageLogsResponse
+	pattern := "/console/v1/api_usage/export"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationConsoleAPIMgmtExportUsageLogs))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

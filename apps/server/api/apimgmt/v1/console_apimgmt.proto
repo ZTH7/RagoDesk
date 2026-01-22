@@ -48,6 +48,12 @@ service ConsoleAPIMgmt {
       get: "/console/v1/api_usage/summary"
     };
   }
+  rpc ExportUsageLogs(ExportUsageLogsRequest) returns (ExportUsageLogsResponse) {
+    option (google.api.http) = {
+      post: "/console/v1/api_usage/export"
+      body: "*"
+    };
+  }
 }
 
 message APIKey {
@@ -57,10 +63,11 @@ message APIKey {
   string name = 4;
   string status = 5;
   repeated string scopes = 6;
-  int32 quota_daily = 7;
-  int32 qps_limit = 8;
-  google.protobuf.Timestamp created_at = 9;
-  google.protobuf.Timestamp last_used_at = 10;
+  repeated string api_versions = 7;
+  int32 quota_daily = 8;
+  int32 qps_limit = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp last_used_at = 11;
 }
 
 message UsageLog {
@@ -68,23 +75,34 @@ message UsageLog {
   string api_key_id = 2;
   string bot_id = 3;
   string path = 4;
-  int32 status_code = 5;
-  int32 latency_ms = 6;
-  google.protobuf.Timestamp created_at = 7;
+  string api_version = 5;
+  string model = 6;
+  int32 status_code = 7;
+  int32 latency_ms = 8;
+  int32 prompt_tokens = 9;
+  int32 completion_tokens = 10;
+  int32 total_tokens = 11;
+  google.protobuf.Timestamp created_at = 12;
+  string client_ip = 13;
+  string user_agent = 14;
 }
 
 message UsageSummary {
   int64 total = 1;
   int64 error_count = 2;
   double avg_latency_ms = 3;
+  int64 prompt_tokens = 4;
+  int64 completion_tokens = 5;
+  int64 total_tokens = 6;
 }
 
 message CreateAPIKeyRequest {
   string bot_id = 1;
   string name = 2;
   repeated string scopes = 3;
-  int32 quota_daily = 4;
-  int32 qps_limit = 5;
+  repeated string api_versions = 4;
+  int32 quota_daily = 5;
+  int32 qps_limit = 6;
 }
 
 message CreateAPIKeyResponse {
@@ -107,8 +125,9 @@ message UpdateAPIKeyRequest {
   string name = 2;
   string status = 3;
   repeated string scopes = 4;
-  google.protobuf.Int32Value quota_daily = 5;
-  google.protobuf.Int32Value qps_limit = 6;
+  repeated string api_versions = 5;
+  google.protobuf.Int32Value quota_daily = 6;
+  google.protobuf.Int32Value qps_limit = 7;
 }
 
 message UpdateAPIKeyResponse {
@@ -131,10 +150,12 @@ message RotateAPIKeyResponse {
 message ListUsageLogsRequest {
   string api_key_id = 1;
   string bot_id = 2;
-  google.protobuf.Timestamp start_time = 3;
-  google.protobuf.Timestamp end_time = 4;
-  int32 limit = 5;
-  int32 offset = 6;
+  string api_version = 3;
+  string model = 4;
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Timestamp end_time = 6;
+  int32 limit = 7;
+  int32 offset = 8;
 }
 
 message ListUsageLogsResponse {
@@ -144,10 +165,30 @@ message ListUsageLogsResponse {
 message GetUsageSummaryRequest {
   string api_key_id = 1;
   string bot_id = 2;
-  google.protobuf.Timestamp start_time = 3;
-  google.protobuf.Timestamp end_time = 4;
+  string api_version = 3;
+  string model = 4;
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Timestamp end_time = 6;
 }
 
 message GetUsageSummaryResponse {
   UsageSummary summary = 1;
+}
+
+message ExportUsageLogsRequest {
+  string api_key_id = 1;
+  string bot_id = 2;
+  string api_version = 3;
+  string model = 4;
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Timestamp end_time = 6;
+  int32 limit = 7;
+  int32 offset = 8;
+  string format = 9; // csv only for MVP
+}
+
+message ExportUsageLogsResponse {
+  string content = 1;
+  string content_type = 2;
+  string filename = 3;
 }
