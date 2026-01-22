@@ -27,13 +27,6 @@ func NewAPIMgmtRepo(data *internaldata.Data, logger log.Logger) biz.APIMgmtRepo 
 	return &apimgmtRepo{log: log.NewHelper(logger), db: data.DB}
 }
 
-func (r *apimgmtRepo) Ping(ctx context.Context) error {
-	if _, err := tenant.RequireTenantID(ctx); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *apimgmtRepo) GetAPIKeyByHash(ctx context.Context, keyHash string) (biz.APIKey, error) {
 	var key biz.APIKey
 	if r.db == nil {
@@ -55,8 +48,8 @@ func (r *apimgmtRepo) GetAPIKeyByHash(ctx context.Context, keyHash string) (biz.
 	if err != nil {
 		return biz.APIKey{}, err
 	}
-	key.Scopes = decodeScopes(scopesRaw)
-	key.APIVersions = decodeScopes(versionsRaw)
+	key.Scopes = decodeStringList(scopesRaw)
+	key.APIVersions = decodeStringList(versionsRaw)
 	return key, nil
 }
 
@@ -79,8 +72,8 @@ func (r *apimgmtRepo) CreateAPIKey(ctx context.Context, key biz.APIKey) (biz.API
 		key.BotID,
 		key.Name,
 		key.KeyHash,
-		encodeScopes(key.Scopes),
-		encodeScopes(key.APIVersions),
+		encodeStringList(key.Scopes),
+		encodeStringList(key.APIVersions),
 		key.Status,
 		key.QuotaDaily,
 		key.QPSLimit,
@@ -128,8 +121,8 @@ func (r *apimgmtRepo) GetAPIKey(ctx context.Context, keyID string) (biz.APIKey, 
 		}
 		return biz.APIKey{}, err
 	}
-	key.Scopes = decodeScopes(scopesRaw)
-	key.APIVersions = decodeScopes(versionsRaw)
+	key.Scopes = decodeStringList(scopesRaw)
+	key.APIVersions = decodeStringList(versionsRaw)
 	if lastUsedAt.Valid {
 		key.LastUsedAt = lastUsedAt.Time
 	}
@@ -178,8 +171,8 @@ func (r *apimgmtRepo) ListAPIKeys(ctx context.Context, botID string, limit int, 
 		); err != nil {
 			return nil, err
 		}
-		key.Scopes = decodeScopes(scopesRaw)
-		key.APIVersions = decodeScopes(versionsRaw)
+		key.Scopes = decodeStringList(scopesRaw)
+		key.APIVersions = decodeStringList(versionsRaw)
 		if lastUsedAt.Valid {
 			key.LastUsedAt = lastUsedAt.Time
 		}
@@ -199,8 +192,8 @@ func (r *apimgmtRepo) UpdateAPIKey(ctx context.Context, key biz.APIKey) (biz.API
 		WHERE tenant_id = ? AND id = ?`,
 		key.Name,
 		key.Status,
-		encodeScopes(key.Scopes),
-		encodeScopes(key.APIVersions),
+		encodeStringList(key.Scopes),
+		encodeStringList(key.APIVersions),
 		key.QuotaDaily,
 		key.QPSLimit,
 		tenantID,
@@ -450,7 +443,7 @@ func (r *apimgmtRepo) GetUsageSummary(ctx context.Context, filter biz.UsageFilte
 }
 
 // ProviderSet is apimgmt data providers.
-var ProviderSet = wire.NewSet(NewAPIMgmtRepo, NewRateLimiter)
+var ProviderSet = wire.NewSet(NewAPIMgmtRepo, NewRateLimiter, NewUsageExporter)
 
 type rateLimiter struct {
 	client           *redis.Client
@@ -533,7 +526,7 @@ func (l *rateLimiter) checkLimit(ctx context.Context, key string, limit int64, t
 		_ = l.client.Expire(ctx, key, ttl).Err()
 	}
 	if count > limit {
-		return errors.TooManyRequests(code, message)
+		return errors.New(429, code, message)
 	}
 	return nil
 }
@@ -552,18 +545,18 @@ func nullString(value string) any {
 	return strings.TrimSpace(value)
 }
 
-func encodeScopes(scopes []string) string {
-	if len(scopes) == 0 {
+func encodeStringList(items []string) string {
+	if len(items) == 0 {
 		return ""
 	}
-	raw, err := json.Marshal(scopes)
+	raw, err := json.Marshal(items)
 	if err != nil {
-		return strings.Join(scopes, ",")
+		return strings.Join(items, ",")
 	}
 	return string(raw)
 }
 
-func decodeScopes(raw sql.NullString) []string {
+func decodeStringList(raw sql.NullString) []string {
 	if !raw.Valid {
 		return nil
 	}
@@ -571,9 +564,9 @@ func decodeScopes(raw sql.NullString) []string {
 	if value == "" {
 		return nil
 	}
-	var scopes []string
-	if err := json.Unmarshal([]byte(value), &scopes); err == nil && len(scopes) > 0 {
-		return scopes
+	var items []string
+	if err := json.Unmarshal([]byte(value), &items); err == nil && len(items) > 0 {
+		return items
 	}
 	parts := strings.Split(value, ",")
 	out := make([]string, 0, len(parts))

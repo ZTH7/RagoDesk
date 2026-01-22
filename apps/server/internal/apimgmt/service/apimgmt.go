@@ -200,8 +200,9 @@ func (s *APIMgmtService) ExportUsageLogs(ctx context.Context, req *v1.ExportUsag
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	if err := requireTenantContext(ctx); err != nil {
-		return nil, err
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return nil, errors.Forbidden("TENANT_MISSING", "tenant missing")
 	}
 	if err := s.iam.RequirePermission(ctx, biz.PermissionAPIUsageRead); err != nil {
 		return nil, err
@@ -213,7 +214,7 @@ func (s *APIMgmtService) ExportUsageLogs(ctx context.Context, req *v1.ExportUsag
 	if format != "csv" {
 		return nil, errors.BadRequest("EXPORT_FORMAT_INVALID", "unsupported export format")
 	}
-	content, err := s.uc.ExportUsageLogs(ctx, biz.UsageFilter{
+	result, err := s.uc.ExportUsageLogs(ctx, tenantID, biz.UsageFilter{
 		APIKeyID:   req.GetApiKeyId(),
 		BotID:      req.GetBotId(),
 		APIVersion: req.GetApiVersion(),
@@ -227,9 +228,11 @@ func (s *APIMgmtService) ExportUsageLogs(ctx context.Context, req *v1.ExportUsag
 		return nil, err
 	}
 	return &v1.ExportUsageLogsResponse{
-		Content:     content,
-		ContentType: "text/csv",
-		Filename:    "api_usage.csv",
+		Content:     result.Content,
+		ContentType: result.ContentType,
+		Filename:    result.Filename,
+		DownloadUrl: result.DownloadURL,
+		ObjectUri:   result.ObjectURI,
 	}, nil
 }
 

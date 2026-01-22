@@ -1,11 +1,15 @@
 package biz
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/csv"
 	"encoding/hex"
+	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -28,11 +32,6 @@ const (
 	PermissionAPIUsageRead = "tenant.api_usage.read"
 )
 
-// APIMgmt domain model (placeholder)
-type APIMgmt struct {
-	ID string
-}
-
 // APIKeyStatus represents api key lifecycle state.
 type APIKeyStatus string
 
@@ -53,6 +52,8 @@ var DefaultAPIVersions = []string{"v1"}
 
 const (
 	defaultRotationGraceMinutes = 60
+	defaultUsageListWindow      = 7 * 24 * time.Hour
+	defaultUsageSummaryWindow   = 30 * 24 * time.Hour
 )
 
 // APIKey represents an API key with scope and rotation metadata.
@@ -101,6 +102,15 @@ type UsageSummary struct {
 	TotalTokens      int64
 }
 
+// UsageExportResult represents exported usage payload.
+type UsageExportResult struct {
+	Content     string
+	ContentType string
+	Filename    string
+	ObjectURI   string
+	DownloadURL string
+}
+
 // UsageFilter describes usage query filters.
 type UsageFilter struct {
 	APIKeyID   string
@@ -133,7 +143,6 @@ type UsageEvent struct {
 
 // APIMgmtRepo is a repository interface (placeholder)
 type APIMgmtRepo interface {
-	Ping(context.Context) error
 	CreateAPIKey(ctx context.Context, key APIKey) (APIKey, error)
 	GetAPIKey(ctx context.Context, keyID string) (APIKey, error)
 	ListAPIKeys(ctx context.Context, botID string, limit int, offset int) ([]APIKey, error)
@@ -150,6 +159,11 @@ type APIMgmtRepo interface {
 // RateLimiter enforces QPS/quota limits.
 type RateLimiter interface {
 	Check(ctx context.Context, key APIKey) error
+}
+
+// UsageExporter writes usage exports to object storage.
+type UsageExporter interface {
+	ExportUsageCSV(ctx context.Context, tenantID string, filename string, reader io.Reader, contentType string) (objectURI string, downloadURL string, err error)
 }
 
 // UsageSink forwards usage events to analytics (phase 6 placeholder).
@@ -171,6 +185,7 @@ func NewUsageSink() UsageSink {
 // APIMgmtUsecase handles apimgmt business logic (placeholder)
 type APIMgmtUsecase struct {
 	repo          APIMgmtRepo
+	exporter      UsageExporter
 	limiter       RateLimiter
 	sink          UsageSink
 	log           *log.Helper
@@ -178,13 +193,14 @@ type APIMgmtUsecase struct {
 }
 
 // NewAPIMgmtUsecase creates a new APIMgmtUsecase
-func NewAPIMgmtUsecase(repo APIMgmtRepo, limiter RateLimiter, sink UsageSink, cfg *conf.Data, logger log.Logger) *APIMgmtUsecase {
+func NewAPIMgmtUsecase(repo APIMgmtRepo, exporter UsageExporter, limiter RateLimiter, sink UsageSink, cfg *conf.Data, logger log.Logger) *APIMgmtUsecase {
 	rotationGrace := time.Duration(defaultRotationGraceMinutes) * time.Minute
 	if cfg != nil && cfg.Apimgmt != nil && cfg.Apimgmt.RotationGraceMinutes > 0 {
 		rotationGrace = time.Duration(cfg.Apimgmt.RotationGraceMinutes) * time.Minute
 	}
 	return &APIMgmtUsecase{
 		repo:          repo,
+		exporter:      exporter,
 		limiter:       limiter,
 		sink:          sink,
 		log:           log.NewHelper(logger),
@@ -396,56 +412,51 @@ func (uc *APIMgmtUsecase) RecordUsage(ctx context.Context, key APIKey, operation
 }
 
 func (uc *APIMgmtUsecase) ListUsageLogs(ctx context.Context, filter UsageFilter) ([]UsageLog, error) {
-	filter = normalizeUsageFilter(filter, 200)
+	filter = normalizeUsageFilter(filter, 200, defaultUsageListWindow)
 	return uc.repo.ListUsageLogs(ctx, filter)
 }
 
 func (uc *APIMgmtUsecase) GetUsageSummary(ctx context.Context, filter UsageFilter) (UsageSummary, error) {
-	filter = normalizeUsageFilter(filter, 200)
+	filter = normalizeUsageFilter(filter, 200, defaultUsageSummaryWindow)
 	return uc.repo.GetUsageSummary(ctx, filter)
 }
 
-func (uc *APIMgmtUsecase) ExportUsageLogs(ctx context.Context, filter UsageFilter) (string, error) {
-	filter = normalizeUsageFilter(filter, 10000)
+func (uc *APIMgmtUsecase) ExportUsageLogs(ctx context.Context, tenantID string, filter UsageFilter) (UsageExportResult, error) {
+	filter = normalizeUsageFilter(filter, 10000, defaultUsageSummaryWindow)
 	items, err := uc.repo.ListUsageLogs(ctx, filter)
 	if err != nil {
-		return "", err
+		return UsageExportResult{}, err
 	}
-	builder := &strings.Builder{}
-	builder.WriteString("id,api_key_id,tenant_id,bot_id,api_version,model,path,status_code,latency_ms,prompt_tokens,completion_tokens,total_tokens,client_ip,user_agent,created_at\n")
-	for _, item := range items {
-		builder.WriteString(csvEscape(item.ID))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.APIKeyID))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.TenantID))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.BotID))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.APIVersion))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.Model))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.Path))
-		builder.WriteString(",")
-		builder.WriteString(intToString(int(item.StatusCode)))
-		builder.WriteString(",")
-		builder.WriteString(intToString(int(item.LatencyMs)))
-		builder.WriteString(",")
-		builder.WriteString(intToString(int(item.PromptTokens)))
-		builder.WriteString(",")
-		builder.WriteString(intToString(int(item.CompletionTokens)))
-		builder.WriteString(",")
-		builder.WriteString(intToString(int(item.TotalTokens)))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.ClientIP))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.UserAgent))
-		builder.WriteString(",")
-		builder.WriteString(csvEscape(item.CreatedAt.Format(time.RFC3339)))
-		builder.WriteString("\n")
+	filename := fmt.Sprintf("api_usage_%s.csv", time.Now().UTC().Format("20060102_150405"))
+	result := UsageExportResult{
+		ContentType: "text/csv",
+		Filename:    filename,
 	}
-	return builder.String(), nil
+	if uc.exporter == nil {
+		var buf bytes.Buffer
+		if err := writeUsageCSV(&buf, items); err != nil {
+			return UsageExportResult{}, err
+		}
+		result.Content = buf.String()
+		return result, nil
+	}
+	reader, writer := io.Pipe()
+	writerErr := make(chan error, 1)
+	go func() {
+		err := writeUsageCSV(writer, items)
+		_ = writer.CloseWithError(err)
+		writerErr <- err
+	}()
+	objectURI, downloadURL, err := uc.exporter.ExportUsageCSV(ctx, tenantID, filename, reader, result.ContentType)
+	if err != nil {
+		return UsageExportResult{}, err
+	}
+	if err := <-writerErr; err != nil {
+		return UsageExportResult{}, err
+	}
+	result.ObjectURI = objectURI
+	result.DownloadURL = downloadURL
+	return result, nil
 }
 
 func StatusCodeFromError(err error) int32 {
@@ -561,26 +572,71 @@ func versionAllowed(versions []string, required string) bool {
 	return false
 }
 
-func normalizeUsageFilter(filter UsageFilter, maxLimit int) UsageFilter {
+func normalizeUsageFilter(filter UsageFilter, maxLimit int, defaultWindow time.Duration) UsageFilter {
 	if filter.Limit <= 0 || filter.Limit > maxLimit {
 		filter.Limit = maxLimit
 	}
 	if filter.Offset < 0 {
 		filter.Offset = 0
 	}
+	if defaultWindow > 0 && filter.Start.IsZero() && filter.End.IsZero() {
+		end := time.Now()
+		filter.End = end
+		filter.Start = end.Add(-defaultWindow)
+	}
+	if !filter.Start.IsZero() && !filter.End.IsZero() && filter.End.Before(filter.Start) {
+		filter.Start, filter.End = filter.End, filter.Start
+	}
 	return filter
 }
 
-func csvEscape(value string) string {
-	value = strings.ReplaceAll(value, "\"", "\"\"")
-	if strings.ContainsAny(value, ",\"\n") {
-		return "\"" + value + "\""
+func writeUsageCSV(writer io.Writer, items []UsageLog) error {
+	csvWriter := csv.NewWriter(writer)
+	if err := csvWriter.Write([]string{
+		"id",
+		"api_key_id",
+		"tenant_id",
+		"bot_id",
+		"api_version",
+		"model",
+		"path",
+		"status_code",
+		"latency_ms",
+		"prompt_tokens",
+		"completion_tokens",
+		"total_tokens",
+		"client_ip",
+		"user_agent",
+		"created_at",
+	}); err != nil {
+		csvWriter.Flush()
+		return err
 	}
-	return value
-}
-
-func intToString(value int) string {
-	return strconv.Itoa(value)
+	for _, item := range items {
+		record := []string{
+			item.ID,
+			item.APIKeyID,
+			item.TenantID,
+			item.BotID,
+			item.APIVersion,
+			item.Model,
+			item.Path,
+			strconv.Itoa(int(item.StatusCode)),
+			strconv.Itoa(int(item.LatencyMs)),
+			strconv.Itoa(int(item.PromptTokens)),
+			strconv.Itoa(int(item.CompletionTokens)),
+			strconv.Itoa(int(item.TotalTokens)),
+			item.ClientIP,
+			item.UserAgent,
+			item.CreatedAt.Format(time.RFC3339),
+		}
+		if err := csvWriter.Write(record); err != nil {
+			csvWriter.Flush()
+			return err
+		}
+	}
+	csvWriter.Flush()
+	return csvWriter.Error()
 }
 
 // ProviderSet is apimgmt biz providers.

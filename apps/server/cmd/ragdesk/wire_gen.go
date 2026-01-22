@@ -7,9 +7,10 @@
 package main
 
 import (
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	biz5 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
 	data6 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/data"
+	service5 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/service"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	biz4 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
 	data2 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/data"
 	service4 "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/service"
@@ -23,7 +24,6 @@ import (
 	biz3 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
 	data5 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/data"
 	service3 "github.com/ZTH7/RAGDesk/apps/server/internal/rag/service"
-	service5 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/service"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/server"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
@@ -42,9 +42,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 		return nil, nil, err
 	}
 	apimgmtRepo := data6.NewAPIMgmtRepo(dataData, logger)
+	usageExporter := data6.NewUsageExporter(confData, logger)
 	rateLimiter := data6.NewRateLimiter(confData, logger)
 	usageSink := biz5.NewUsageSink()
-	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, rateLimiter, usageSink, confData, logger)
+	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, usageExporter, rateLimiter, usageSink, confData, logger)
 	conversationRepo := data2.NewConversationRepo(dataData)
 	conversationUsecase := biz4.NewConversationUsecase(conversationRepo, confData)
 	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase)

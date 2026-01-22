@@ -253,9 +253,11 @@
 **Usage Logs**
 `GET /console/v1/api_usage?api_key_id=...&bot_id=...&api_version=v1&model=...&start_time=...&end_time=...`
 返回字段包含 `path/api_version/model/status_code/latency_ms/token_usage/created_at`，并附带 `client_ip/user_agent` 便于审计。
+> 未指定时间范围时默认查询最近 7 天。
 
 **Usage Summary**
 `GET /console/v1/api_usage/summary?api_key_id=...&bot_id=...&api_version=v1&model=...&start_time=...&end_time=...`
+> 未指定时间范围时默认汇总最近 30 天。
 
 **Usage Export**
 `POST /console/v1/api_usage/export`
@@ -268,6 +270,8 @@
   "format": "csv"
 }
 ```
+返回 `download_url/object_uri`（若配置对象存储）；未配置时返回 `content`（CSV 文本）。
+> 未指定时间范围时默认导出最近 30 天。
 
 ### 4.6 统计看板
 - `GET /console/v1/analytics/overview`

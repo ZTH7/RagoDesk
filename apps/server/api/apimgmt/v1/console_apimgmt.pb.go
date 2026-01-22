@@ -1282,6 +1282,8 @@ type ExportUsageLogsResponse struct {
 	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	ContentType   string                 `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
 	Filename      string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
+	DownloadUrl   string                 `protobuf:"bytes,4,opt,name=download_url,json=downloadUrl,proto3" json:"download_url,omitempty"`
+	ObjectUri     string                 `protobuf:"bytes,5,opt,name=object_uri,json=objectUri,proto3" json:"object_uri,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1333,6 +1335,20 @@ func (x *ExportUsageLogsResponse) GetContentType() string {
 func (x *ExportUsageLogsResponse) GetFilename() string {
 	if x != nil {
 		return x.Filename
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsResponse) GetDownloadUrl() string {
+	if x != nil {
+		return x.DownloadUrl
+	}
+	return ""
+}
+
+func (x *ExportUsageLogsResponse) GetObjectUri() string {
+	if x != nil {
+		return x.ObjectUri
 	}
 	return ""
 }
@@ -1461,11 +1477,14 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\bend_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\x12\x14\n" +
 	"\x05limit\x18\a \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06offset\x18\b \x01(\x05R\x06offset\x12\x16\n" +
-	"\x06format\x18\t \x01(\tR\x06format\"r\n" +
+	"\x06format\x18\t \x01(\tR\x06format\"\xb4\x01\n" +
 	"\x17ExportUsageLogsResponse\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x12!\n" +
 	"\fcontent_type\x18\x02 \x01(\tR\vcontentType\x12\x1a\n" +
-	"\bfilename\x18\x03 \x01(\tR\bfilename2\x93\b\n" +
+	"\bfilename\x18\x03 \x01(\tR\bfilename\x12!\n" +
+	"\fdownload_url\x18\x04 \x01(\tR\vdownloadUrl\x12\x1d\n" +
+	"\n" +
+	"object_uri\x18\x05 \x01(\tR\tobjectUri2\x93\b\n" +
 	"\x0eConsoleAPIMgmt\x12z\n" +
 	"\fCreateAPIKey\x12#.api.apimgmt.v1.CreateAPIKeyRequest\x1a$.api.apimgmt.v1.CreateAPIKeyResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/console/v1/api_keys\x12t\n" +
 	"\vListAPIKeys\x12\".api.apimgmt.v1.ListAPIKeysRequest\x1a#.api.apimgmt.v1.ListAPIKeysResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/console/v1/api_keys\x12\x7f\n" +

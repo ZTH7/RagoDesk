@@ -191,4 +191,6 @@ message ExportUsageLogsResponse {
   string content = 1;
   string content_type = 2;
   string filename = 3;
+  string download_url = 4;
+  string object_uri = 5;
 }
