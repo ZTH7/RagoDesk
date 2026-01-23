@@ -2,44 +2,31 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
-	"fmt"
+	"encoding/hex"
 	"math"
 	"sort"
 	"strings"
 	"time"
 
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/biz"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	internaldata "github.com/ZTH7/RAGDesk/apps/server/internal/data"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
 	"github.com/google/wire"
-	"github.com/redis/go-redis/v9"
 )
 
-const metricsTTL = 7 * 24 * time.Hour
-
 type analyticsRepo struct {
-	log   *log.Helper
-	db    *sql.DB
-	redis *redis.Client
+	db *sql.DB
 }
 
 // NewAnalyticsRepo creates a new analytics repo.
-func NewAnalyticsRepo(data *internaldata.Data, cfg *conf.Data, logger log.Logger) biz.AnalyticsRepo {
-	repo := &analyticsRepo{log: log.NewHelper(logger)}
+func NewAnalyticsRepo(data *internaldata.Data) biz.AnalyticsRepo {
+	repo := &analyticsRepo{}
 	if data != nil {
 		repo.db = data.DB
-	}
-	if cfg != nil && cfg.Redis != nil && cfg.Redis.Addr != "" {
-		repo.redis = redis.NewClient(&redis.Options{
-			Addr:         cfg.Redis.Addr,
-			ReadTimeout:  cfg.Redis.ReadTimeout.AsDuration(),
-			WriteTimeout: cfg.Redis.WriteTimeout.AsDuration(),
-		})
 	}
 	return repo
 }
@@ -67,8 +54,8 @@ func (r *analyticsRepo) CreateEvent(ctx context.Context, event biz.AnalyticsEven
 	_, err = r.db.ExecContext(
 		ctx,
 		`INSERT INTO analytics_event
-			(id, tenant_id, bot_id, event_type, session_id, message_id, query, hit, confidence, latency_ms, status_code, rating, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			(id, tenant_id, bot_id, event_type, session_id, message_id, query, query_hash, hit, confidence, latency_ms, status_code, rating, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		event.ID,
 		event.TenantID,
 		strings.TrimSpace(event.BotID),
@@ -76,6 +63,7 @@ func (r *analyticsRepo) CreateEvent(ctx context.Context, event biz.AnalyticsEven
 		nullString(event.SessionID),
 		nullString(event.MessageID),
 		nullString(event.Query),
+		nullString(hashQuery(event.Query)),
 		boolToInt(event.Hit),
 		event.Confidence,
 		event.LatencyMs,
@@ -85,9 +73,6 @@ func (r *analyticsRepo) CreateEvent(ctx context.Context, event biz.AnalyticsEven
 	)
 	if err != nil {
 		return err
-	}
-	if r.redis != nil && event.EventType == biz.EventRAGQuery {
-		r.recordRealtime(ctx, event)
 	}
 	return nil
 }
@@ -155,12 +140,12 @@ func (r *analyticsRepo) ListTopQuestions(ctx context.Context, filter biz.Analyti
 	if limit <= 0 {
 		limit = 20
 	}
-	query := `SELECT query, COUNT(*) AS cnt, SUM(CASE WHEN hit = 1 THEN 1 ELSE 0 END), MAX(created_at)
+	query := `SELECT query_hash, MAX(query), COUNT(*) AS cnt, SUM(CASE WHEN hit = 1 THEN 1 ELSE 0 END), MAX(created_at)
 		FROM analytics_event
-		WHERE tenant_id = ? AND event_type = ? AND query IS NOT NULL AND query <> ''`
+		WHERE tenant_id = ? AND event_type = ? AND query_hash IS NOT NULL AND query_hash <> ''`
 	args := []any{tenantID, biz.EventRAGQuery}
 	query, args = applyEventFilters(query, args, filter)
-	query += " GROUP BY query ORDER BY cnt DESC LIMIT ?"
+	query += " GROUP BY query_hash ORDER BY cnt DESC LIMIT ?"
 	args = append(args, limit)
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -171,7 +156,8 @@ func (r *analyticsRepo) ListTopQuestions(ctx context.Context, filter biz.Analyti
 	for rows.Next() {
 		var item biz.QuestionStat
 		var hitCount sql.NullInt64
-		if err := rows.Scan(&item.Query, &item.Count, &hitCount, &item.LastSeenAt); err != nil {
+		var queryHash sql.NullString
+		if err := rows.Scan(&queryHash, &item.Query, &item.Count, &hitCount, &item.LastSeenAt); err != nil {
 			return nil, err
 		}
 		if hitCount.Valid && item.Count > 0 {
@@ -191,12 +177,12 @@ func (r *analyticsRepo) ListKBGaps(ctx context.Context, filter biz.AnalyticsFilt
 	if limit <= 0 {
 		limit = 20
 	}
-	query := `SELECT query, COUNT(*) AS cnt, AVG(confidence), MAX(created_at)
+	query := `SELECT query_hash, MAX(query), COUNT(*) AS cnt, AVG(confidence), MAX(created_at)
 		FROM analytics_event
-		WHERE tenant_id = ? AND event_type = ? AND hit = 0 AND query IS NOT NULL AND query <> ''`
-	args := []any{tenantID, biz.EventRAGQuery}
+		WHERE tenant_id = ? AND event_type = ? AND hit = 0 AND query_hash IS NOT NULL AND query_hash <> ''`
+	args := []any{tenantID, biz.EventRetrieval}
 	query, args = applyEventFilters(query, args, filter)
-	query += " GROUP BY query ORDER BY cnt DESC LIMIT ?"
+	query += " GROUP BY query_hash ORDER BY cnt DESC LIMIT ?"
 	args = append(args, limit)
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -207,7 +193,8 @@ func (r *analyticsRepo) ListKBGaps(ctx context.Context, filter biz.AnalyticsFilt
 	for rows.Next() {
 		var item biz.GapStat
 		var avgConfidence sql.NullFloat64
-		if err := rows.Scan(&item.Query, &item.MissCount, &avgConfidence, &item.LastSeenAt); err != nil {
+		var queryHash sql.NullString
+		if err := rows.Scan(&queryHash, &item.Query, &item.MissCount, &avgConfidence, &item.LastSeenAt); err != nil {
 			return nil, err
 		}
 		if avgConfidence.Valid {
@@ -384,26 +371,6 @@ func computePercentile(values []int, percentile float64) float64 {
 	return float64(values[index])
 }
 
-func (r *analyticsRepo) recordRealtime(ctx context.Context, event biz.AnalyticsEvent) {
-	if r.redis == nil {
-		return
-	}
-	day := event.CreatedAt.UTC().Format("20060102")
-	prefix := fmt.Sprintf("analytics:%s:%s:%s", event.TenantID, event.BotID, day)
-	pipe := r.redis.Pipeline()
-	pipe.Incr(ctx, prefix+":total")
-	if event.Hit {
-		pipe.Incr(ctx, prefix+":hit")
-	}
-	pipe.IncrBy(ctx, prefix+":latency_sum", int64(event.LatencyMs))
-	pipe.Incr(ctx, prefix+":latency_count")
-	pipe.Expire(ctx, prefix+":total", metricsTTL)
-	pipe.Expire(ctx, prefix+":hit", metricsTTL)
-	pipe.Expire(ctx, prefix+":latency_sum", metricsTTL)
-	pipe.Expire(ctx, prefix+":latency_count", metricsTTL)
-	_, _ = pipe.Exec(ctx)
-}
-
 func nullString(value string) any {
 	if strings.TrimSpace(value) == "" {
 		return nil
@@ -423,6 +390,15 @@ func boolToInt(value bool) int {
 		return 1
 	}
 	return 0
+}
+
+func hashQuery(query string) string {
+	query = strings.TrimSpace(strings.ToLower(query))
+	if query == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(query))
+	return hex.EncodeToString(sum[:])
 }
 
 // ProviderSet is analytics data providers.

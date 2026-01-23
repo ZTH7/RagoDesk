@@ -80,7 +80,8 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 	respRefused = resp.Refused
 	respRefs = resp.References
 	if s.conv != nil && strings.TrimSpace(req.SessionId) != "" {
-		if callErr = s.conv.RecordRAGExchange(
+		var userMsgID string
+		if userMsgID, callErr = s.conv.RecordRAGExchange(
 			ctx,
 			req.SessionId,
 			key.BotID,
@@ -92,6 +93,7 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 		); callErr != nil {
 			return nil, callErr
 		}
+		s.recordMessageAnalytics(ctx, key, req.GetSessionId(), userMsgID, req.GetMessage())
 	}
 	return &ragv1.SendMessageResponse{
 		Reply:      resp.Reply,
@@ -183,6 +185,35 @@ func (s *RAGService) recordAnalytics(ctx context.Context, key apimgmtbiz.APIKey,
 		StatusCode: status,
 		CreatedAt:  time.Now(),
 	})
+	if err == nil {
+		s.ana.RecordRetrievalEvent(ctx, analyticsbiz.AnalyticsEvent{
+			TenantID:   key.TenantID,
+			BotID:      key.BotID,
+			SessionID:  strings.TrimSpace(req.GetSessionId()),
+			Query:      req.GetMessage(),
+			Hit:        hit,
+			Confidence: float64(confidence),
+			LatencyMs:  int32(time.Since(start).Milliseconds()),
+			StatusCode: status,
+			CreatedAt:  time.Now(),
+		})
+	}
+}
+
+func (s *RAGService) recordMessageAnalytics(ctx context.Context, key apimgmtbiz.APIKey, sessionID string, userMsgID string, userMessage string) {
+	if s == nil || s.ana == nil {
+		return
+	}
+	if strings.TrimSpace(userMsgID) != "" {
+		s.ana.RecordMessageEvent(ctx, analyticsbiz.AnalyticsEvent{
+			TenantID:  key.TenantID,
+			BotID:     key.BotID,
+			MessageID: userMsgID,
+			SessionID: strings.TrimSpace(sessionID),
+			Query:     userMessage,
+			CreatedAt: time.Now(),
+		})
+	}
 }
 
 func operationFromContext(ctx context.Context) string {

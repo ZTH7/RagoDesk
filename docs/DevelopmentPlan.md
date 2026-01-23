@@ -152,3 +152,5 @@
 - hybrid + rerank：融合引擎选择、alpha 权重、默认重排模型、可配置化与评测驱动调参
 - Prompt registry & A/B：版本化、灰度、回滚、效果对比
 - 多语言/多模型路由：按租户/机器人配置，配合评测与成本控制
+- Analytics performance: 增量刷新 `analytics_daily`（避免全量扫描）
+- Analytics performance: P95/分位数改为近似算法或复用日聚合，避免全量排序

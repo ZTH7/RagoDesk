@@ -11,8 +11,16 @@ import (
 )
 
 const (
-	EventRAGQuery = "rag_query"
-	EventFeedback = "feedback"
+	EventRAGQuery       = "rag_query"
+	EventFeedback       = "feedback"
+	EventRetrieval      = "retrieval"
+	EventSessionOpen    = "session_open"
+	EventSessionClose   = "session_close"
+	EventMessageCreated = "message_created"
+)
+
+const (
+	PermissionAnalyticsRead = "tenant.analytics.read"
 )
 
 const (
@@ -114,27 +122,36 @@ func NewAnalyticsUsecase(repo AnalyticsRepo, logger log.Logger) *AnalyticsUsecas
 }
 
 func (uc *AnalyticsUsecase) RecordRAGEvent(ctx context.Context, event AnalyticsEvent) {
-	if uc == nil || uc.repo == nil {
-		return
-	}
-	event.EventType = EventRAGQuery
-	event.Query = normalizeQuery(event.Query)
-	if event.CreatedAt.IsZero() {
-		event.CreatedAt = time.Now()
-	}
-	if event.ID == "" {
-		event.ID = uuid.NewString()
-	}
-	if err := uc.repo.CreateEvent(ctx, event); err != nil && uc.log != nil {
-		uc.log.Warnf("record rag event failed: %v", err)
-	}
+	uc.recordEvent(ctx, event, EventRAGQuery)
 }
 
 func (uc *AnalyticsUsecase) RecordFeedback(ctx context.Context, event AnalyticsEvent) {
+	uc.recordEvent(ctx, event, EventFeedback)
+}
+
+func (uc *AnalyticsUsecase) RecordRetrievalEvent(ctx context.Context, event AnalyticsEvent) {
+	uc.recordEvent(ctx, event, EventRetrieval)
+}
+
+func (uc *AnalyticsUsecase) RecordSessionEvent(ctx context.Context, event AnalyticsEvent, eventType string) {
+	if eventType != EventSessionOpen && eventType != EventSessionClose {
+		eventType = EventSessionOpen
+	}
+	uc.recordEvent(ctx, event, eventType)
+}
+
+func (uc *AnalyticsUsecase) RecordMessageEvent(ctx context.Context, event AnalyticsEvent) {
+	uc.recordEvent(ctx, event, EventMessageCreated)
+}
+
+func (uc *AnalyticsUsecase) recordEvent(ctx context.Context, event AnalyticsEvent, eventType string) {
 	if uc == nil || uc.repo == nil {
 		return
 	}
-	event.EventType = EventFeedback
+	event.EventType = eventType
+	if event.Query != "" {
+		event.Query = normalizeQuery(event.Query)
+	}
 	if event.CreatedAt.IsZero() {
 		event.CreatedAt = time.Now()
 	}
@@ -142,7 +159,7 @@ func (uc *AnalyticsUsecase) RecordFeedback(ctx context.Context, event AnalyticsE
 		event.ID = uuid.NewString()
 	}
 	if err := uc.repo.CreateEvent(ctx, event); err != nil && uc.log != nil {
-		uc.log.Warnf("record feedback event failed: %v", err)
+		uc.log.Warnf("record analytics event failed: %v", err)
 	}
 }
 

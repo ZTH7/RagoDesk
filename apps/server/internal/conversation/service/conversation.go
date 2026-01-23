@@ -57,6 +57,14 @@ func (s *ConversationService) CreateSession(ctx context.Context, req *v1.CreateS
 	if callErr != nil {
 		return nil, callErr
 	}
+	if s.ana != nil {
+		s.ana.RecordSessionEvent(ctx, analyticsbiz.AnalyticsEvent{
+			TenantID:  key.TenantID,
+			BotID:     key.BotID,
+			SessionID: session.ID,
+			CreatedAt: time.Now(),
+		}, analyticsbiz.EventSessionOpen)
+	}
 	return &v1.CreateSessionResponse{Session: toAPISession(session)}, nil
 }
 
@@ -119,6 +127,14 @@ func (s *ConversationService) CloseSession(ctx context.Context, req *v1.CloseSes
 	}
 	if callErr = s.uc.CloseSession(ctx, req.SessionId, req.CloseReason); callErr != nil {
 		return nil, callErr
+	}
+	if s.ana != nil {
+		s.ana.RecordSessionEvent(ctx, analyticsbiz.AnalyticsEvent{
+			TenantID:  key.TenantID,
+			BotID:     key.BotID,
+			SessionID: strings.TrimSpace(req.GetSessionId()),
+			CreatedAt: time.Now(),
+		}, analyticsbiz.EventSessionClose)
 	}
 	return &emptypb.Empty{}, nil
 }

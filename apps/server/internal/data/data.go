@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
@@ -84,6 +85,7 @@ func ensureAnalyticsSchema(ctx context.Context, db *sql.DB) error {
 			session_id VARCHAR(36) NULL,
 			message_id VARCHAR(36) NULL,
 			query TEXT NULL,
+			query_hash VARCHAR(64) NULL,
 			hit TINYINT NOT NULL DEFAULT 0,
 			confidence DOUBLE NOT NULL DEFAULT 0,
 			latency_ms INT NOT NULL DEFAULT 0,
@@ -94,6 +96,7 @@ func ensureAnalyticsSchema(ctx context.Context, db *sql.DB) error {
 			KEY idx_analytics_event_tenant (tenant_id),
 			KEY idx_analytics_event_bot (tenant_id, bot_id),
 			KEY idx_analytics_event_type (tenant_id, event_type, created_at),
+			KEY idx_analytics_event_query_hash (tenant_id, event_type, query_hash, created_at),
 			KEY idx_analytics_event_created (tenant_id, created_at)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 		`CREATE TABLE IF NOT EXISTS analytics_daily (
@@ -121,6 +124,9 @@ func ensureAnalyticsSchema(ctx context.Context, db *sql.DB) error {
 	if err := ensureColumn(ctx, db, "analytics_event", "query", "TEXT NULL"); err != nil {
 		return err
 	}
+	if err := ensureColumn(ctx, db, "analytics_event", "query_hash", "VARCHAR(64) NULL"); err != nil {
+		return err
+	}
 	if err := ensureColumn(ctx, db, "analytics_event", "hit", "TINYINT NOT NULL DEFAULT 0"); err != nil {
 		return err
 	}
@@ -134,6 +140,9 @@ func ensureAnalyticsSchema(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "analytics_event", "rating", "INT NULL"); err != nil {
+		return err
+	}
+	if err := ensureIndex(ctx, db, "analytics_event", "idx_analytics_event_query_hash", "`tenant_id`, `event_type`, `query_hash`, `created_at`"); err != nil {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "analytics_daily", "total_queries", "INT NOT NULL DEFAULT 0"); err != nil {
@@ -591,6 +600,30 @@ func ensureDropColumn(ctx context.Context, db *sql.DB, table string, column stri
 		return nil
 	}
 	query := fmt.Sprintf("ALTER TABLE `%s` DROP COLUMN `%s`", table, column)
+	_, err = db.ExecContext(ctx, query)
+	return err
+}
+
+func ensureIndex(ctx context.Context, db *sql.DB, table string, indexName string, definition string) error {
+	if strings.TrimSpace(indexName) == "" || strings.TrimSpace(definition) == "" {
+		return nil
+	}
+	var count int
+	err := db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(*)
+		FROM INFORMATION_SCHEMA.STATISTICS
+		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
+		table,
+		indexName,
+	).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	query := fmt.Sprintf("CREATE INDEX `%s` ON `%s` (%s)", indexName, table, definition)
 	_, err = db.ExecContext(ctx, query)
 	return err
 }

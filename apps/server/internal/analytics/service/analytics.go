@@ -35,7 +35,7 @@ func (s *AnalyticsService) GetOverview(ctx context.Context, req *v1.GetOverviewR
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err
 	}
-	if err := s.iam.RequirePermission(ctx, "tenant.analytics.read"); err != nil {
+	if err := s.iam.RequirePermission(ctx, biz.PermissionAnalyticsRead); err != nil {
 		return nil, err
 	}
 	overview, err := s.uc.GetOverview(ctx, biz.AnalyticsFilter{
@@ -64,7 +64,7 @@ func (s *AnalyticsService) GetLatency(ctx context.Context, req *v1.GetLatencyReq
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err
 	}
-	if err := s.iam.RequirePermission(ctx, "tenant.analytics.read"); err != nil {
+	if err := s.iam.RequirePermission(ctx, biz.PermissionAnalyticsRead); err != nil {
 		return nil, err
 	}
 	points, err := s.uc.ListLatencySeries(ctx, biz.AnalyticsFilter{
@@ -95,7 +95,7 @@ func (s *AnalyticsService) GetTopQuestions(ctx context.Context, req *v1.GetTopQu
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err
 	}
-	if err := s.iam.RequirePermission(ctx, "tenant.analytics.read"); err != nil {
+	if err := s.iam.RequirePermission(ctx, biz.PermissionAnalyticsRead); err != nil {
 		return nil, err
 	}
 	items, err := s.uc.ListTopQuestions(ctx, biz.AnalyticsFilter{
@@ -126,7 +126,7 @@ func (s *AnalyticsService) GetKBGaps(ctx context.Context, req *v1.GetKBGapsReque
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err
 	}
-	if err := s.iam.RequirePermission(ctx, "tenant.analytics.read"); err != nil {
+	if err := s.iam.RequirePermission(ctx, biz.PermissionAnalyticsRead); err != nil {
 		return nil, err
 	}
 	items, err := s.uc.ListKBGaps(ctx, biz.AnalyticsFilter{

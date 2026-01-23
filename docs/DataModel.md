@@ -315,6 +315,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `session_id` (optional)
 - `message_id` (optional)
 - `query` (optional)
+- `query_hash` (normalized query hash)
 - `hit` (bool)
 - `confidence`
 - `latency_ms`

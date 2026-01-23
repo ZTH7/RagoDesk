@@ -11,8 +11,8 @@ import (
 	"github.com/ZTH7/RAGDesk/apps/server/internal/paging"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
-	"github.com/google/wire"
 	"github.com/google/uuid"
+	"github.com/google/wire"
 )
 
 const (
@@ -22,9 +22,9 @@ const (
 	MessageRoleUser      = "user"
 	MessageRoleAssistant = "assistant"
 
-	EventOpen    = "open"
-	EventClose   = "close"
-	EventRefusal = "refusal"
+	EventOpen       = "open"
+	EventClose      = "close"
+	EventRefusal    = "refusal"
 	EventEscalation = "escalation"
 )
 
@@ -35,28 +35,28 @@ const (
 
 // Session represents a chat session.
 type Session struct {
-	ID            string
-	TenantID      string
-	BotID         string
-	Status        string
-	CloseReason   string
-	UserExternal  string
-	Metadata      string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	ClosedAt      time.Time
+	ID           string
+	TenantID     string
+	BotID        string
+	Status       string
+	CloseReason  string
+	UserExternal string
+	Metadata     string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	ClosedAt     time.Time
 }
 
 // Message represents a chat message.
 type Message struct {
-	ID            string
-	TenantID      string
-	SessionID     string
-	Role          string
-	Content       string
-	Confidence    float32
-	References    string
-	CreatedAt     time.Time
+	ID         string
+	TenantID   string
+	SessionID  string
+	Role       string
+	Content    string
+	Confidence float32
+	References string
+	CreatedAt  time.Time
 }
 
 // SessionEvent represents a session audit event.
@@ -98,7 +98,7 @@ type ConversationRepo interface {
 
 // ConversationUsecase handles conversation business logic.
 type ConversationUsecase struct {
-	repo ConversationRepo
+	repo          ConversationRepo
 	retentionDays int
 	purgeInterval time.Duration
 	lastPurge     time.Time
@@ -247,25 +247,26 @@ func (uc *ConversationUsecase) CreateFeedback(ctx context.Context, sessionID str
 	})
 }
 
-func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID string, botID string, userMessage string, answer string, confidence float32, refused bool, referencesJSON string) error {
+func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID string, botID string, userMessage string, answer string, confidence float32, refused bool, referencesJSON string) (string, error) {
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID == "" {
-		return nil
+		return "", nil
 	}
 	uc.maybePurge(ctx)
 	session, err := uc.repo.GetSession(ctx, sessionID)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if botID != "" && session.BotID != "" && botID != session.BotID {
-		return errors.BadRequest("SESSION_BOT_MISMATCH", "session bot mismatch")
+		return "", errors.BadRequest("SESSION_BOT_MISMATCH", "session bot mismatch")
 	}
 	if session.Status == SessionStatusClosed {
-		return errors.New(412, "SESSION_CLOSED", "session already closed")
+		return "", errors.New(412, "SESSION_CLOSED", "session already closed")
 	}
 	now := time.Now()
+	userID := uuid.NewString()
 	user := Message{
-		ID:        uuid.NewString(),
+		ID:        userID,
 		SessionID: sessionID,
 		Role:      MessageRoleUser,
 		Content:   strings.TrimSpace(userMessage),
@@ -281,7 +282,7 @@ func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID 
 		CreatedAt:  now,
 	}
 	if err := uc.repo.CreateMessages(ctx, []Message{user, assistant}); err != nil {
-		return err
+		return "", err
 	}
 	if refused {
 		_ = uc.repo.CreateEvent(ctx, SessionEvent{
@@ -291,7 +292,7 @@ func (uc *ConversationUsecase) RecordRAGExchange(ctx context.Context, sessionID 
 			CreatedAt: now,
 		})
 	}
-	return nil
+	return userID, nil
 }
 
 func canCloseSession(status string) bool {
