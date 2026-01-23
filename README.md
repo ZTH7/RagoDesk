@@ -6,7 +6,7 @@ A Go-based multi-tenant support platform powered by RAG.
 RagoDesk/
 ├── apps/
 │   ├── server/        # Go backend (Kratos, modular monolith)
-│   └── admin-web/     # React + Vite + Ant Design admin console
+│   └── dashboard/     # React + Vite + Ant Design dashboard
 ├── docs/              # PRD / Architecture / Data Model / API / Tech Stack
 ├── deploy/            # Docker / K8s manifests
 ├── go.work
@@ -52,9 +52,9 @@ cd apps/server
 go run ./cmd/ingester
 ```
 
-### Admin Web (React + Vite)
+### Dashboard (React + Vite)
 ```bash
-cd apps/admin-web
+cd apps/dashboard
 npm run dev
 ```
 
