@@ -1,0 +1,17 @@
+// Legacy mock exports kept empty to avoid accidental usage.
+export const tenants = []
+export const platformAdmins = []
+export const platformRoles = []
+export const platformPermissions = []
+export const users = []
+export const tenantRoles = []
+export const tenantPermissions = []
+export const knowledgeBases = []
+export const documents = []
+export const apiKeys = []
+export const apiUsage = []
+export const sessions = []
+export const analyticsOverview = null
+export const latencyPoints = []
+export const topQuestions = []
+export const kbGaps = []

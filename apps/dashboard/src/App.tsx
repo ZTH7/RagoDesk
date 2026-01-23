@@ -1,34 +1,63 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+﻿import { Navigate, Route, Routes } from 'react-router-dom'
+import { ConsoleLayout } from './layouts/ConsoleLayout'
+import { PlatformLayout } from './layouts/PlatformLayout'
+import { consoleRoutes, consoleDefaultPath } from './routes/console'
+import { platformRoutes, platformDefaultPath } from './routes/platform'
+import { NotFound } from './pages/NotFound'
+import { ConsoleLogin } from './pages/auth/ConsoleLogin'
+import { PlatformLogin } from './pages/auth/PlatformLogin'
+import { RequirePermission } from './components/RequirePermission'
+import { PermissionProvider } from './auth/PermissionContext'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Routes>
+      <Route path="/" element={<Navigate to={consoleDefaultPath} replace />} />
+      <Route path="/console/login" element={<ConsoleLogin />} />
+      <Route path="/platform/login" element={<PlatformLogin />} />
+
+      <Route
+        path="/console"
+        element={
+          <PermissionProvider scope="console">
+            <ConsoleLayout />
+          </PermissionProvider>
+        }
+      >
+        <Route index element={<Navigate to="analytics/overview" replace />} />
+        {consoleRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <RequirePermission permission={route.permission}>{route.element}</RequirePermission>
+            }
+          />
+        ))}
+      </Route>
+
+      <Route
+        path="/platform"
+        element={
+          <PermissionProvider scope="platform">
+            <PlatformLayout />
+          </PermissionProvider>
+        }
+      >
+        <Route index element={<Navigate to={platformDefaultPath.replace('/platform/', '')} replace />} />
+        {platformRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <RequirePermission permission={route.permission}>{route.element}</RequirePermission>
+            }
+          />
+        ))}
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   )
 }
 
