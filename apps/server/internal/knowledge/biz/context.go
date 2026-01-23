@@ -3,7 +3,7 @@ package biz
 import (
 	"context"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 )
 

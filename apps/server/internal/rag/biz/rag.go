@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/ai/provider"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	"github.com/cloudwego/eino/compose"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"

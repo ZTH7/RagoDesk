@@ -1,4 +1,4 @@
-module github.com/ZTH7/RAGDesk/apps/server
+module github.com/ZTH7/RagoDesk/apps/server
 
 go 1.24.6
 

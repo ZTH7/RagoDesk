@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/data"
-	knowledgebiz "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
-	knowledgedata "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/data"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/data"
+	knowledgebiz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
+	knowledgedata "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/data"
 	"github.com/go-kratos/kratos/v2/config"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
@@ -19,10 +19,10 @@ import (
 	_ "go.uber.org/automaxprocs"
 )
 
-// go build -ldflags "-X main.Name=ragdesk-ingester -X main.Version=x.y.z"
+// go build -ldflags "-X main.Name=ragodesk-ingester -X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name = "ragdesk-ingester"
+	Name = "ragodesk-ingester"
 	// Version is the version of the compiled software.
 	Version string
 	// flagconf is the config flag.
@@ -64,8 +64,8 @@ func main() {
 		panic(err)
 	}
 
-	if os.Getenv("RAGDESK_INGESTION_ASYNC") == "" {
-		_ = os.Setenv("RAGDESK_INGESTION_ASYNC", "1")
+	if os.Getenv("RAGODESK_INGESTION_ASYNC") == "" {
+		_ = os.Setenv("RAGODESK_INGESTION_ASYNC", "1")
 	}
 
 	dataData, cleanup, err := data.NewData(bc.Data)

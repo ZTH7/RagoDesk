@@ -7,19 +7,19 @@ go install github.com/go-kratos/kratos/cmd/kratos/v2@latest
 ## Create a service
 ```
 # Create a template project
-kratos new ragdesk
+kratos new ragodesk
 
-cd ragdesk
+cd ragodesk
 # Add a proto template
-kratos proto add api/ragdesk/ragdesk.proto
+kratos proto add api/ragodesk/ragodesk.proto
 # Generate the proto code
-kratos proto client api/ragdesk/ragdesk.proto
+kratos proto client api/ragodesk/ragodesk.proto
 # Generate the source code of service by proto file
-kratos proto server api/ragdesk/ragdesk.proto -t internal/service
+kratos proto server api/ragodesk/ragodesk.proto -t internal/service
 
 go generate ./...
 go build -o ./bin/ ./...
-./bin/ragdesk -conf ./configs
+./bin/ragodesk -conf ./configs
 ```
 ## Generate other auxiliary files by Makefile
 ```
@@ -36,7 +36,7 @@ make all
 go get github.com/google/wire/cmd/wire
 
 # generate wire
-cd cmd/ragdesk
+cd cmd/ragodesk
 wire
 ```
 

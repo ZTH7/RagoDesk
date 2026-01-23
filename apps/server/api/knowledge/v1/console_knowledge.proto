@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api.knowledge.v1;
 
-option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1;v1";
+option go_package = "github.com/ZTH7/RagoDesk/apps/server/api/knowledge/v1;v1";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";

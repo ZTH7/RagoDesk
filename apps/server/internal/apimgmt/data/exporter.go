@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	biz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"

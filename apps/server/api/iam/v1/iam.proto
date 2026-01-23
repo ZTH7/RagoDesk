@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package api.iam.v1;
 
-option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1";
+option go_package = "github.com/ZTH7/RagoDesk/apps/server/api/iam/v1;v1";
 
 import "google/protobuf/timestamp.proto";
 

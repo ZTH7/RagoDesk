@@ -2041,7 +2041,7 @@ const file_api_iam_v1_iam_proto_rawDesc = "" +
 	"\x15PlatformAdminResponse\x12/\n" +
 	"\x05admin\x18\x01 \x01(\v2\x19.api.iam.v1.PlatformAdminR\x05admin\"D\n" +
 	"\x14PlatformRoleResponse\x12,\n" +
-	"\x04role\x18\x01 \x01(\v2\x18.api.iam.v1.PlatformRoleR\x04roleB3Z1github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1b\x06proto3"
+	"\x04role\x18\x01 \x01(\v2\x18.api.iam.v1.PlatformRoleR\x04roleB4Z2github.com/ZTH7/RagoDesk/apps/server/api/iam/v1;v1b\x06proto3"
 
 var (
 	file_api_iam_v1_iam_proto_rawDescOnce sync.Once

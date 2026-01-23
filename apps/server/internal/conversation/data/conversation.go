@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	internaldata "github.com/ZTH7/RAGDesk/apps/server/internal/data"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
 
-	biz "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/biz"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/google/wire"
 )

@@ -263,7 +263,7 @@ const file_api_rag_v1_rag_proto_rawDesc = "" +
 	"references\x18\x03 \x03(\v2\x15.api.rag.v1.ReferenceR\n" +
 	"references2q\n" +
 	"\x03RAG\x12j\n" +
-	"\vSendMessage\x12\x1e.api.rag.v1.SendMessageRequest\x1a\x1f.api.rag.v1.SendMessageResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/messageB3Z1github.com/ZTH7/RAGDesk/apps/server/api/rag/v1;v1b\x06proto3"
+	"\vSendMessage\x12\x1e.api.rag.v1.SendMessageRequest\x1a\x1f.api.rag.v1.SendMessageResponse\"\x1a\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/messageB4Z2github.com/ZTH7/RagoDesk/apps/server/api/rag/v1;v1b\x06proto3"
 
 var (
 	file_api_rag_v1_rag_proto_rawDescOnce sync.Once

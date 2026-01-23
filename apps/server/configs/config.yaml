@@ -6,13 +6,13 @@ server:
     addr: 0.0.0.0:9000
     timeout: 1s
   auth:
-    jwt_secret: "ragdesk-dev-secret"
-    issuer: "ragdesk"
-    audience: "ragdesk-admin"
+    jwt_secret: "ragodesk-dev-secret"
+    issuer: "ragodesk"
+    audience: "ragodesk-admin"
 data:
   database:
     driver: mysql
-    source: root:ragdesk@tcp(127.0.0.1:3306)/ragdesk?parseTime=True&loc=Local
+    source: root:ragodesk@tcp(127.0.0.1:3306)/ragodesk?parseTime=True&loc=Local
   redis:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s
@@ -21,7 +21,7 @@ data:
     driver: qdrant
     endpoint: http://127.0.0.1:6333
     api_key: ""
-    collection: ragdesk_default
+    collection: ragodesk_default
   rabbitmq:
     addr: amqp://guest:guest@127.0.0.1:5672/
     username: guest
@@ -31,7 +31,7 @@ data:
     endpoint: http://127.0.0.1:9000
     access_key: minioadmin
     secret_key: minioadmin
-    bucket: ragdesk
+    bucket: ragodesk
     region: ""
     use_ssl: false
   knowledge:

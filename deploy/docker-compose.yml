@@ -3,26 +3,26 @@ version: "3.9"
 services:
   mysql:
     image: mysql:8.4
-    container_name: ragdesk-mysql
+    container_name: rd-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ragdesk
-      MYSQL_DATABASE: ragdesk
-      MYSQL_USER: ragdesk
-      MYSQL_PASSWORD: ragdesk
+      MYSQL_ROOT_PASSWORD: ragodesk
+      MYSQL_DATABASE: ragodesk
+      MYSQL_USER: ragodesk
+      MYSQL_PASSWORD: ragodesk
     ports:
       - "3306:3306"
     volumes:
       - ./data/mysql:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pragdesk"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pragodesk"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:8.4-alpine
-    container_name: ragdesk-redis
+    container_name: rd-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -32,7 +32,7 @@ services:
 
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: ragdesk-qdrant
+    container_name: rd-qdrant
     restart: unless-stopped
     ports:
       - "6333:6333"
@@ -42,7 +42,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:latest
-    container_name: ragdesk-rabbitmq
+    container_name: rd-rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: guest
@@ -61,7 +61,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: ragdesk-minio
+    container_name: rd-minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: minioadmin

@@ -1,4 +1,4 @@
-# Development Plan — RAGDesk (Module-First Roadmap)
+# Development Plan — RagoDesk (Module-First Roadmap)
 
 > Goal: ship a working MVP by first closing one end‑to‑end loop, then expanding each module.
 > This roadmap matches the current modular monolith layout under `apps/server/internal/<module>`.

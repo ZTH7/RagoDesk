@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 )
 
 const (
@@ -85,16 +85,16 @@ func loadIngestionOptions(cfg *conf.Data) ingestionOptions {
 		}
 	}
 
-	opts.chunkSizeTokens = envInt("RAGDESK_CHUNK_SIZE_TOKENS", opts.chunkSizeTokens)
-	opts.chunkOverlapTokens = envInt("RAGDESK_CHUNK_OVERLAP_TOKENS", opts.chunkOverlapTokens)
-	opts.embeddingModel = envString("RAGDESK_EMBEDDING_MODEL", opts.embeddingModel)
-	opts.embeddingProvider = envString("RAGDESK_EMBEDDING_PROVIDER", opts.embeddingProvider)
-	opts.embeddingEndpoint = envString("RAGDESK_EMBEDDING_ENDPOINT", opts.embeddingEndpoint)
-	opts.embeddingAPIKey = envString("RAGDESK_EMBEDDING_API_KEY", opts.embeddingAPIKey)
-	opts.embeddingTimeoutMs = envInt("RAGDESK_EMBEDDING_TIMEOUT_MS", opts.embeddingTimeoutMs)
-	opts.embeddingBatchSize = envInt("RAGDESK_EMBEDDING_BATCH_SIZE", opts.embeddingBatchSize)
+	opts.chunkSizeTokens = envInt("RAGODESK_CHUNK_SIZE_TOKENS", opts.chunkSizeTokens)
+	opts.chunkOverlapTokens = envInt("RAGODESK_CHUNK_OVERLAP_TOKENS", opts.chunkOverlapTokens)
+	opts.embeddingModel = envString("RAGODESK_EMBEDDING_MODEL", opts.embeddingModel)
+	opts.embeddingProvider = envString("RAGODESK_EMBEDDING_PROVIDER", opts.embeddingProvider)
+	opts.embeddingEndpoint = envString("RAGODESK_EMBEDDING_ENDPOINT", opts.embeddingEndpoint)
+	opts.embeddingAPIKey = envString("RAGODESK_EMBEDDING_API_KEY", opts.embeddingAPIKey)
+	opts.embeddingTimeoutMs = envInt("RAGODESK_EMBEDDING_TIMEOUT_MS", opts.embeddingTimeoutMs)
+	opts.embeddingBatchSize = envInt("RAGODESK_EMBEDDING_BATCH_SIZE", opts.embeddingBatchSize)
 
-	if raw := strings.TrimSpace(os.Getenv("RAGDESK_EMBEDDING_DIM")); raw != "" {
+	if raw := strings.TrimSpace(os.Getenv("RAGODESK_EMBEDDING_DIM")); raw != "" {
 		if parsed, err := strconv.Atoi(raw); err == nil {
 			opts.embeddingDim = parsed
 			dimSet = true
@@ -103,7 +103,7 @@ func loadIngestionOptions(cfg *conf.Data) ingestionOptions {
 	if !dimSet && (strings.EqualFold(opts.embeddingProvider, "openai") || strings.EqualFold(opts.embeddingProvider, "http")) {
 		opts.embeddingDim = 0
 	}
-	if raw := strings.TrimSpace(os.Getenv("RAGDESK_INGESTION_ASYNC")); raw != "" {
+	if raw := strings.TrimSpace(os.Getenv("RAGODESK_INGESTION_ASYNC")); raw != "" {
 		switch strings.ToLower(raw) {
 		case "1", "true", "yes", "y":
 			opts.asyncEnabled = true

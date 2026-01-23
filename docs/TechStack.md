@@ -1,4 +1,4 @@
-# 技术栈说明（Tech Stack）— RAGDesk
+# 技术栈说明（Tech Stack）— RagoDesk
 
 > 目标：清晰展示“前后端 + RAG + 基础设施 + 可运维性”的完整技术体系，适合作为面试项目技术说明。
 

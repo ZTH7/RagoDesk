@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
-	internaldata "github.com/ZTH7/RAGDesk/apps/server/internal/data"
-	biz "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
+	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/rag/biz"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 	"github.com/google/wire"
 )
@@ -50,7 +50,7 @@ func NewVectorRepo(cfg *conf.Data) biz.VectorSearcher {
 		}
 	}
 	if strings.TrimSpace(collection) == "" {
-		collection = "ragdesk_chunks"
+		collection = "ragodesk_chunks"
 	}
 	return &vectorRepo{
 		vector:     vector,

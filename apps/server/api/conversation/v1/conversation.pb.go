@@ -959,7 +959,7 @@ const file_api_conversation_v1_conversation_proto_rawDesc = "" +
 	"\x0eCreateFeedback\x12*.api.conversation.v1.CreateFeedbackRequest\x1a\x16.google.protobuf.Empty\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/api/v1/feedback2\xb3\x02\n" +
 	"\x13ConsoleConversation\x12\x81\x01\n" +
 	"\fListSessions\x12(.api.conversation.v1.ListSessionsRequest\x1a).api.conversation.v1.ListSessionsResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/console/v1/sessions\x12\x97\x01\n" +
-	"\fListMessages\x12(.api.conversation.v1.ListMessagesRequest\x1a).api.conversation.v1.ListMessagesResponse\"2\x82\xd3\xe4\x93\x02,\x12*/console/v1/sessions/{session_id}/messagesB<Z:github.com/ZTH7/RAGDesk/apps/server/api/conversation/v1;v1b\x06proto3"
+	"\fListMessages\x12(.api.conversation.v1.ListMessagesRequest\x1a).api.conversation.v1.ListMessagesResponse\"2\x82\xd3\xe4\x93\x02,\x12*/console/v1/sessions/{session_id}/messagesB=Z;github.com/ZTH7/RagoDesk/apps/server/api/conversation/v1;v1b\x06proto3"
 
 var (
 	file_api_conversation_v1_conversation_proto_rawDescOnce sync.Once

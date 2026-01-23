@@ -1,4 +1,4 @@
-# RAGDesk Admin Web (GUI) 设计稿
+# RagoDesk Admin Web (GUI) 设计稿
 
 > 基于当前 **PRD.md / API.md / 代码实现** 的前端信息架构与页面设计。前端采用 **React + Vite + Ant Design**。
 > 设计分为两大分区：**Platform 管理区** 与 **Tenant Console 区**。

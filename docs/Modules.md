@@ -1,4 +1,4 @@
-# Modules — RAGDesk
+# Modules — RagoDesk
 
 > 模块划分遵循 DDD / Clean Architecture：**接口层 → 应用层 → 领域层 → 基础设施层**。
 

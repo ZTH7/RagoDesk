@@ -1,4 +1,4 @@
-# Architecture — RAGDesk（模块化单体）
+# Architecture — RagoDesk（模块化单体）
 
 > 设计原则：**模块化单体（Modular Monolith）** + 明确边界 + 可演进微服务。核心优先保证“可落地、可解释、可扩展”。
 
@@ -92,7 +92,7 @@
 ### 2.2 同步与异步边界
 - **同步路径**：用户请求 → RAG → 回复（要求低延迟）
 - **异步路径**：文档处理 / 统计聚合（高吞吐、可重试）
-- **执行方式**：由独立 ingestion worker（`apps/server/cmd/ingester`）消费 RabbitMQ；API 进程设置 `RAGDESK_INGESTION_ASYNC=1` 仅负责入队
+- **执行方式**：由独立 ingestion worker（`apps/server/cmd/ingester`）消费 RabbitMQ；API 进程设置 `RAGODESK_INGESTION_ASYNC=1` 仅负责入队
 - **重试机制**：使用 retry queue（TTL + DLX）+ DLQ，按指数退避控制重试间隔
 
 ### 2.3 RAG 责任边界
@@ -175,7 +175,7 @@ API-->>Client: reply
 - MySQL `doc_chunk`：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `content`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`
 - Qdrant payload：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `document_title`, `source_type`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`
 - Chunking（默认）：结构优先（block）+ 句子边界切分 + token 目标长度 + overlap（默认 max 800 / 10-15%）
-- 可配置参数：`RAGDESK_CHUNK_SIZE_TOKENS`, `RAGDESK_CHUNK_OVERLAP_TOKENS`, `RAGDESK_EMBEDDING_PROVIDER`, `RAGDESK_EMBEDDING_MODEL`, `RAGDESK_EMBEDDING_DIM`, `RAGDESK_EMBEDDING_ENDPOINT`, `RAGDESK_EMBEDDING_API_KEY`, `RAGDESK_EMBEDDING_TIMEOUT_MS`, `RAGDESK_EMBEDDING_BATCH_SIZE`, `RAGDESK_INGESTION_MAX_RETRIES`, `RAGDESK_INGESTION_BACKOFF_MS`
+- 可配置参数：`RAGODESK_CHUNK_SIZE_TOKENS`, `RAGODESK_CHUNK_OVERLAP_TOKENS`, `RAGODESK_EMBEDDING_PROVIDER`, `RAGODESK_EMBEDDING_MODEL`, `RAGODESK_EMBEDDING_DIM`, `RAGODESK_EMBEDDING_ENDPOINT`, `RAGODESK_EMBEDDING_API_KEY`, `RAGODESK_EMBEDDING_TIMEOUT_MS`, `RAGODESK_EMBEDDING_BATCH_SIZE`, `RAGODESK_INGESTION_MAX_RETRIES`, `RAGODESK_INGESTION_BACKOFF_MS`
 - 详细契约见 `docs/RAG.md`
 
 ### 3.4 统计分析流程

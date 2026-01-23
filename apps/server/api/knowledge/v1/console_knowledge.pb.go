@@ -1526,7 +1526,7 @@ const file_api_knowledge_v1_console_knowledge_proto_rawDesc = "" +
 	"\vGetDocument\x12$.api.knowledge.v1.GetDocumentRequest\x1a%.api.knowledge.v1.GetDocumentResponse\"\"\x82\xd3\xe4\x93\x02\x1c\x12\x1a/console/v1/documents/{id}\x12u\n" +
 	"\x0eDeleteDocument\x12'.api.knowledge.v1.DeleteDocumentRequest\x1a\x16.google.protobuf.Empty\"\"\x82\xd3\xe4\x93\x02\x1c*\x1a/console/v1/documents/{id}\x12\x82\x01\n" +
 	"\x0fReindexDocument\x12(.api.knowledge.v1.ReindexDocumentRequest\x1a\x16.google.protobuf.Empty\"-\x82\xd3\xe4\x93\x02':\x01*\"\"/console/v1/documents/{id}/reindex\x12\x85\x01\n" +
-	"\x10RollbackDocument\x12).api.knowledge.v1.RollbackDocumentRequest\x1a\x16.google.protobuf.Empty\".\x82\xd3\xe4\x93\x02(:\x01*\"#/console/v1/documents/{id}/rollbackB9Z7github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1;v1b\x06proto3"
+	"\x10RollbackDocument\x12).api.knowledge.v1.RollbackDocumentRequest\x1a\x16.google.protobuf.Empty\".\x82\xd3\xe4\x93\x02(:\x01*\"#/console/v1/documents/{id}/rollbackB:Z8github.com/ZTH7/RagoDesk/apps/server/api/knowledge/v1;v1b\x06proto3"
 
 var (
 	file_api_knowledge_v1_console_knowledge_proto_rawDescOnce sync.Once

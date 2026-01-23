@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	biz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
-	internaldata "github.com/ZTH7/RAGDesk/apps/server/internal/data"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
+	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -486,25 +486,25 @@ func (l *rateLimiter) Check(ctx context.Context, key biz.APIKey) error {
 	now := time.Now()
 	if key.QPSLimit > 0 {
 		window := now.Format("20060102150405")
-		if err := l.checkLimit(ctx, "ragdesk:qps:key:"+key.ID+":"+window, int64(key.QPSLimit), 2*time.Second, "API_QPS_LIMIT", "api key qps limit exceeded"); err != nil {
+		if err := l.checkLimit(ctx, "ragodesk:qps:key:"+key.ID+":"+window, int64(key.QPSLimit), 2*time.Second, "API_QPS_LIMIT", "api key qps limit exceeded"); err != nil {
 			return err
 		}
 	}
 	if l.tenantQPSLimit > 0 && key.TenantID != "" {
 		window := now.Format("20060102150405")
-		if err := l.checkLimit(ctx, "ragdesk:qps:tenant:"+key.TenantID+":"+window, int64(l.tenantQPSLimit), 2*time.Second, "API_TENANT_QPS_LIMIT", "tenant qps limit exceeded"); err != nil {
+		if err := l.checkLimit(ctx, "ragodesk:qps:tenant:"+key.TenantID+":"+window, int64(l.tenantQPSLimit), 2*time.Second, "API_TENANT_QPS_LIMIT", "tenant qps limit exceeded"); err != nil {
 			return err
 		}
 	}
 	if key.QuotaDaily > 0 {
 		day := now.Format("20060102")
-		if err := l.checkLimit(ctx, "ragdesk:quota:key:"+key.ID+":"+day, int64(key.QuotaDaily), 48*time.Hour, "API_QUOTA_LIMIT", "api key quota exceeded"); err != nil {
+		if err := l.checkLimit(ctx, "ragodesk:quota:key:"+key.ID+":"+day, int64(key.QuotaDaily), 48*time.Hour, "API_QUOTA_LIMIT", "api key quota exceeded"); err != nil {
 			return err
 		}
 	}
 	if l.tenantQuotaDaily > 0 && key.TenantID != "" {
 		day := now.Format("20060102")
-		if err := l.checkLimit(ctx, "ragdesk:quota:tenant:"+key.TenantID+":"+day, int64(l.tenantQuotaDaily), 48*time.Hour, "API_TENANT_QUOTA_LIMIT", "tenant quota exceeded"); err != nil {
+		if err := l.checkLimit(ctx, "ragodesk:quota:tenant:"+key.TenantID+":"+day, int64(l.tenantQuotaDaily), 48*time.Hour, "API_TENANT_QUOTA_LIMIT", "tenant quota exceeded"); err != nil {
 			return err
 		}
 	}

@@ -40,7 +40,7 @@ const file_api_iam_v1_console_iam_proto_rawDesc = "" +
 	"AssignRole\x12\x1d.api.iam.v1.AssignRoleRequest\x1a\x16.google.protobuf.Empty\",\x82\xd3\xe4\x93\x02&:\x01*\"!/console/v1/users/{user_id}/roles\x12{\n" +
 	"\x0fListPermissions\x12\".api.iam.v1.ListPermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/console/v1/permissions\x12\x8d\x01\n" +
 	"\x15AssignRolePermissions\x12(.api.iam.v1.AssignRolePermissionsRequest\x1a\x16.google.protobuf.Empty\"2\x82\xd3\xe4\x93\x02,:\x01*\"'/console/v1/roles/{role_id}/permissions\x12\x93\x01\n" +
-	"\x13ListRolePermissions\x12&.api.iam.v1.ListRolePermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"/\x82\xd3\xe4\x93\x02)\x12'/console/v1/roles/{role_id}/permissionsB3Z1github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1b\x06proto3"
+	"\x13ListRolePermissions\x12&.api.iam.v1.ListRolePermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"/\x82\xd3\xe4\x93\x02)\x12'/console/v1/roles/{role_id}/permissionsB4Z2github.com/ZTH7/RagoDesk/apps/server/api/iam/v1;v1b\x06proto3"
 
 var file_api_iam_v1_console_iam_proto_goTypes = []any{
 	(*CreateUserRequest)(nil),            // 0: api.iam.v1.CreateUserRequest

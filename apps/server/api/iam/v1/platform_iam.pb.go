@@ -40,7 +40,7 @@ const file_api_iam_v1_platform_iam_proto_rawDesc = "" +
 	"\x11ListPlatformRoles\x12$.api.iam.v1.ListPlatformRolesRequest\x1a%.api.iam.v1.ListPlatformRolesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/platform/v1/roles\x12\x8e\x01\n" +
 	"\x17AssignPlatformAdminRole\x12*.api.iam.v1.AssignPlatformAdminRoleRequest\x1a\x16.google.protobuf.Empty\"/\x82\xd3\xe4\x93\x02):\x01*\"$/platform/v1/admins/{admin_id}/roles\x12\x9e\x01\n" +
 	"\x1dAssignPlatformRolePermissions\x120.api.iam.v1.AssignPlatformRolePermissionsRequest\x1a\x16.google.protobuf.Empty\"3\x82\xd3\xe4\x93\x02-:\x01*\"(/platform/v1/roles/{role_id}/permissions\x12\xa4\x01\n" +
-	"\x1bListPlatformRolePermissions\x12..api.iam.v1.ListPlatformRolePermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"0\x82\xd3\xe4\x93\x02*\x12(/platform/v1/roles/{role_id}/permissionsB3Z1github.com/ZTH7/RAGDesk/apps/server/api/iam/v1;v1b\x06proto3"
+	"\x1bListPlatformRolePermissions\x12..api.iam.v1.ListPlatformRolePermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"0\x82\xd3\xe4\x93\x02*\x12(/platform/v1/roles/{role_id}/permissionsB4Z2github.com/ZTH7/RagoDesk/apps/server/api/iam/v1;v1b\x06proto3"
 
 var file_api_iam_v1_platform_iam_proto_goTypes = []any{
 	(*CreateTenantRequest)(nil),                  // 0: api.iam.v1.CreateTenantRequest

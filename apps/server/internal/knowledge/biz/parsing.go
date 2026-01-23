@@ -279,7 +279,7 @@ func parsePDFBlocks(payload []byte) ([]DocumentBlock, error) {
 	if len(payload) == 0 {
 		return nil, errors.BadRequest("PDF_CONTENT_EMPTY", "pdf content missing")
 	}
-	tmpFile, err := os.CreateTemp("", "ragdesk-*.pdf")
+	tmpFile, err := os.CreateTemp("", "ragodesk-*.pdf")
 	if err != nil {
 		return nil, err
 	}

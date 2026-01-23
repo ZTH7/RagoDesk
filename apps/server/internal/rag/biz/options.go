@@ -5,65 +5,65 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/ai/provider"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 )
 
 const (
-	defaultRagTopK           = 5
-	defaultRagScoreThreshold = 0.2
-	defaultRagTimeoutMs      = 20000
-	defaultRetrieveTimeoutMs = 8000
+	defaultRagTopK             = 5
+	defaultRagScoreThreshold   = 0.2
+	defaultRagTimeoutMs        = 20000
+	defaultRetrieveTimeoutMs   = 8000
 	defaultRetrieveConcurrency = 8
-	defaultLLMTimeoutMs      = 15000
-	defaultLLMProvider       = "fake"
-	defaultLLMModel          = "fake-llm-v1"
-	defaultLLMTemperature    = 0.2
-	defaultLLMMaxTokens      = 512
-	defaultRerankWeight      = 0.3
-	defaultEmbeddingModel    = "fake-embedding-v1"
-	defaultEmbeddingDim      = 384
-	defaultEmbeddingProvider = "fake"
-	defaultSystemPrompt      = "You are a helpful assistant. Answer using the provided context. If the context is insufficient, say you don't know."
-	defaultRefusalMessage    = "I don't have enough information to answer that based on the provided knowledge."
+	defaultLLMTimeoutMs        = 15000
+	defaultLLMProvider         = "fake"
+	defaultLLMModel            = "fake-llm-v1"
+	defaultLLMTemperature      = 0.2
+	defaultLLMMaxTokens        = 512
+	defaultRerankWeight        = 0.3
+	defaultEmbeddingModel      = "fake-embedding-v1"
+	defaultEmbeddingDim        = 384
+	defaultEmbeddingProvider   = "fake"
+	defaultSystemPrompt        = "You are a helpful assistant. Answer using the provided context. If the context is insufficient, say you don't know."
+	defaultRefusalMessage      = "I don't have enough information to answer that based on the provided knowledge."
 )
 
 type ragOptions struct {
-	topK              int
-	scoreThreshold    float32
-	ragTimeoutMs      int
-	retrieveTimeoutMs int
+	topK                int
+	scoreThreshold      float32
+	ragTimeoutMs        int
+	retrieveTimeoutMs   int
 	retrieveConcurrency int
-	llmTimeoutMs      int
-	rerankWeight      float32
-	llmProvider       string
-	llmEndpoint       string
-	llmAPIKey         string
-	llmModel          string
-	llmTemperature    float32
-	llmMaxTokens      int
-	systemPrompt      string
-	refusalMessage    string
-	embeddingConfig   provider.Config
+	llmTimeoutMs        int
+	rerankWeight        float32
+	llmProvider         string
+	llmEndpoint         string
+	llmAPIKey           string
+	llmModel            string
+	llmTemperature      float32
+	llmMaxTokens        int
+	systemPrompt        string
+	refusalMessage      string
+	embeddingConfig     provider.Config
 }
 
 func loadRAGOptions(cfg *conf.Data) ragOptions {
 	opts := ragOptions{
-		topK:              defaultRagTopK,
-		scoreThreshold:    float32(defaultRagScoreThreshold),
-		ragTimeoutMs:      defaultRagTimeoutMs,
-		retrieveTimeoutMs: defaultRetrieveTimeoutMs,
+		topK:                defaultRagTopK,
+		scoreThreshold:      float32(defaultRagScoreThreshold),
+		ragTimeoutMs:        defaultRagTimeoutMs,
+		retrieveTimeoutMs:   defaultRetrieveTimeoutMs,
 		retrieveConcurrency: defaultRetrieveConcurrency,
-		llmTimeoutMs:      defaultLLMTimeoutMs,
-		rerankWeight:      float32(defaultRerankWeight),
-		llmProvider:       defaultLLMProvider,
-		llmEndpoint:       "",
-		llmAPIKey:         "",
-		llmModel:          defaultLLMModel,
-		llmTemperature:    float32(defaultLLMTemperature),
-		llmMaxTokens:      defaultLLMMaxTokens,
-		systemPrompt:      defaultSystemPrompt,
-		refusalMessage:    defaultRefusalMessage,
+		llmTimeoutMs:        defaultLLMTimeoutMs,
+		rerankWeight:        float32(defaultRerankWeight),
+		llmProvider:         defaultLLMProvider,
+		llmEndpoint:         "",
+		llmAPIKey:           "",
+		llmModel:            defaultLLMModel,
+		llmTemperature:      float32(defaultLLMTemperature),
+		llmMaxTokens:        defaultLLMMaxTokens,
+		systemPrompt:        defaultSystemPrompt,
+		refusalMessage:      defaultRefusalMessage,
 		embeddingConfig: provider.Config{
 			Provider:  defaultEmbeddingProvider,
 			Endpoint:  "",
@@ -152,28 +152,28 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 		}
 	}
 
-	opts.topK = envInt("RAGDESK_RAG_TOP_K", opts.topK)
-	opts.scoreThreshold = envFloat32("RAGDESK_RAG_SCORE_THRESHOLD", opts.scoreThreshold)
-	opts.ragTimeoutMs = envInt("RAGDESK_RAG_TIMEOUT_MS", opts.ragTimeoutMs)
-	opts.retrieveTimeoutMs = envInt("RAGDESK_RETRIEVE_TIMEOUT_MS", opts.retrieveTimeoutMs)
-	opts.retrieveConcurrency = envInt("RAGDESK_RETRIEVE_MAX_CONCURRENCY", opts.retrieveConcurrency)
-	opts.llmProvider = envString("RAGDESK_LLM_PROVIDER", opts.llmProvider)
-	opts.llmEndpoint = envString("RAGDESK_LLM_ENDPOINT", opts.llmEndpoint)
-	opts.llmAPIKey = envString("RAGDESK_LLM_API_KEY", opts.llmAPIKey)
-	opts.llmModel = envString("RAGDESK_LLM_MODEL", opts.llmModel)
-	opts.llmTimeoutMs = envInt("RAGDESK_LLM_TIMEOUT_MS", opts.llmTimeoutMs)
-	opts.llmTemperature = envFloat32("RAGDESK_LLM_TEMPERATURE", opts.llmTemperature)
-	opts.llmMaxTokens = envInt("RAGDESK_LLM_MAX_TOKENS", opts.llmMaxTokens)
-	opts.systemPrompt = envString("RAGDESK_RAG_SYSTEM_PROMPT", opts.systemPrompt)
-	opts.refusalMessage = envString("RAGDESK_RAG_REFUSAL_MESSAGE", opts.refusalMessage)
-	opts.rerankWeight = envFloat32("RAGDESK_RAG_RERANK_WEIGHT", opts.rerankWeight)
+	opts.topK = envInt("RAGODESK_RAG_TOP_K", opts.topK)
+	opts.scoreThreshold = envFloat32("RAGODESK_RAG_SCORE_THRESHOLD", opts.scoreThreshold)
+	opts.ragTimeoutMs = envInt("RAGODESK_RAG_TIMEOUT_MS", opts.ragTimeoutMs)
+	opts.retrieveTimeoutMs = envInt("RAGODESK_RETRIEVE_TIMEOUT_MS", opts.retrieveTimeoutMs)
+	opts.retrieveConcurrency = envInt("RAGODESK_RETRIEVE_MAX_CONCURRENCY", opts.retrieveConcurrency)
+	opts.llmProvider = envString("RAGODESK_LLM_PROVIDER", opts.llmProvider)
+	opts.llmEndpoint = envString("RAGODESK_LLM_ENDPOINT", opts.llmEndpoint)
+	opts.llmAPIKey = envString("RAGODESK_LLM_API_KEY", opts.llmAPIKey)
+	opts.llmModel = envString("RAGODESK_LLM_MODEL", opts.llmModel)
+	opts.llmTimeoutMs = envInt("RAGODESK_LLM_TIMEOUT_MS", opts.llmTimeoutMs)
+	opts.llmTemperature = envFloat32("RAGODESK_LLM_TEMPERATURE", opts.llmTemperature)
+	opts.llmMaxTokens = envInt("RAGODESK_LLM_MAX_TOKENS", opts.llmMaxTokens)
+	opts.systemPrompt = envString("RAGODESK_RAG_SYSTEM_PROMPT", opts.systemPrompt)
+	opts.refusalMessage = envString("RAGODESK_RAG_REFUSAL_MESSAGE", opts.refusalMessage)
+	opts.rerankWeight = envFloat32("RAGODESK_RAG_RERANK_WEIGHT", opts.rerankWeight)
 
-	opts.embeddingConfig.Provider = envString("RAGDESK_EMBEDDING_PROVIDER", opts.embeddingConfig.Provider)
-	opts.embeddingConfig.Endpoint = envString("RAGDESK_EMBEDDING_ENDPOINT", opts.embeddingConfig.Endpoint)
-	opts.embeddingConfig.APIKey = envString("RAGDESK_EMBEDDING_API_KEY", opts.embeddingConfig.APIKey)
-	opts.embeddingConfig.Model = envString("RAGDESK_EMBEDDING_MODEL", opts.embeddingConfig.Model)
-	opts.embeddingConfig.TimeoutMs = envInt("RAGDESK_EMBEDDING_TIMEOUT_MS", opts.embeddingConfig.TimeoutMs)
-	if raw := strings.TrimSpace(os.Getenv("RAGDESK_EMBEDDING_DIM")); raw != "" {
+	opts.embeddingConfig.Provider = envString("RAGODESK_EMBEDDING_PROVIDER", opts.embeddingConfig.Provider)
+	opts.embeddingConfig.Endpoint = envString("RAGODESK_EMBEDDING_ENDPOINT", opts.embeddingConfig.Endpoint)
+	opts.embeddingConfig.APIKey = envString("RAGODESK_EMBEDDING_API_KEY", opts.embeddingConfig.APIKey)
+	opts.embeddingConfig.Model = envString("RAGODESK_EMBEDDING_MODEL", opts.embeddingConfig.Model)
+	opts.embeddingConfig.TimeoutMs = envInt("RAGODESK_EMBEDDING_TIMEOUT_MS", opts.embeddingConfig.TimeoutMs)
+	if raw := strings.TrimSpace(os.Getenv("RAGODESK_EMBEDDING_DIM")); raw != "" {
 		if parsed, err := strconv.Atoi(raw); err == nil {
 			opts.embeddingConfig.Dim = parsed
 			dimSet = true

@@ -44,7 +44,7 @@ endif
 .PHONY: build
 # build
 build:
-	mkdir -p bin/ && go build -ldflags "-X main.Name=ragdesk -X main.Version=$(VERSION)" -o ./bin/ ./...
+	mkdir -p bin/ && go build -ldflags "-X main.Name=ragodesk -X main.Version=$(VERSION)" -o ./bin/ ./...
 
 .PHONY: generate
 # generate

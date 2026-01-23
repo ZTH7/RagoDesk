@@ -1509,7 +1509,7 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"\aAPIMgmt\x124\n" +
 	"\x16rotation_grace_minutes\x18\x01 \x01(\x05R\x14rotationGraceMinutes\x12(\n" +
 	"\x10tenant_qps_limit\x18\x02 \x01(\x05R\x0etenantQpsLimit\x12,\n" +
-	"\x12tenant_quota_daily\x18\x03 \x01(\x05R\x10tenantQuotaDailyB8Z6github.com/ZTH7/RAGDesk/apps/server/internal/conf;confb\x06proto3"
+	"\x12tenant_quota_daily\x18\x03 \x01(\x05R\x10tenantQuotaDailyB9Z7github.com/ZTH7/RagoDesk/apps/server/internal/conf;confb\x06proto3"
 
 var (
 	file_internal_conf_conf_proto_rawDescOnce sync.Once

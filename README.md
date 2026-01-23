@@ -1,9 +1,9 @@
-# RAGDesk
+# RagoDesk
 A Go-based multi-tenant support platform powered by RAG.
 
 ## Monorepo Structure
 ```
-RAGDesk/
+RagoDesk/
 ├── apps/
 │   ├── server/        # Go backend (Kratos, modular monolith)
 │   └── admin-web/     # React + Vite + Ant Design admin console
@@ -68,5 +68,5 @@ npm run dev
 - [Tech Stack](docs/TechStack.md)
 
 ## Notes
-- Go module path: `github.com/ZTH7/RAGDesk/apps/server`
+- Go module path: `github.com/ZTH7/RagoDesk/apps/server`
 - Frontend uses npm + Vite + Ant Design

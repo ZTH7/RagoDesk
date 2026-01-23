@@ -11,26 +11,26 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
-	biz "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/biz"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
 	"github.com/go-kratos/kratos/v2/log"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 )
 
 const (
-	ingestionQueueName      = "ragdesk.ingestion"
-	ingestionRetryQueueName = "ragdesk.ingestion.retry"
-	ingestionDLQName        = "ragdesk.ingestion.dlq"
+	ingestionQueueName      = "ragodesk.ingestion"
+	ingestionRetryQueueName = "ragodesk.ingestion.retry"
+	ingestionDLQName        = "ragodesk.ingestion.dlq"
 )
 const (
 	ingestionRetryHeader = "x-retry"
 	defaultMaxRetries    = 3
 	defaultBackoffBaseMs = 500
 	defaultWorkerCount   = 1
-	envMaxRetries        = "RAGDESK_INGESTION_MAX_RETRIES"
-	envBackoffBaseMs     = "RAGDESK_INGESTION_BACKOFF_MS"
-	envWorkerCount       = "RAGDESK_INGESTION_WORKERS"
+	envMaxRetries        = "RAGODESK_INGESTION_MAX_RETRIES"
+	envBackoffBaseMs     = "RAGODESK_INGESTION_BACKOFF_MS"
+	envWorkerCount       = "RAGODESK_INGESTION_WORKERS"
 )
 
 type rabbitQueue struct {

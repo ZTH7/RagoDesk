@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	biz "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/biz"
-	internaldata "github.com/ZTH7/RAGDesk/apps/server/internal/data"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/biz"
+	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/google/uuid"
 	"github.com/google/wire"

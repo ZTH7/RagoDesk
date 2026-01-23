@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 
-	biz "github.com/ZTH7/RAGDesk/apps/server/internal/platform/biz"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/platform/biz"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
 )

@@ -23,7 +23,7 @@ func (uc *RAGUsecase) logStep(step string, start time.Time, err error) {
 }
 
 func (uc *RAGUsecase) startSpan(ctx context.Context, name string, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
-	tracer := otel.Tracer("ragdesk/rag")
+	tracer := otel.Tracer("ragodesk/rag")
 	ctx, span := tracer.Start(ctx, name)
 	if len(attrs) > 0 {
 		span.SetAttributes(attrs...)

@@ -1,4 +1,4 @@
-# API Specification — RAGDesk
+# API Specification — RagoDesk
 
 > 对外 API 仅提供机器人能力与会话接口；管理后台 API 仅供企业/平台内部使用。
 >

@@ -1,4 +1,4 @@
-# RAG & Ingestion Design — RAGDesk
+# RAG & Ingestion Design — RagoDesk
 
 > 目标：把 `Knowledge & Ingestion` 与 `RAG Engine` 的边界、数据契约、向量库模型、以及 Eino 编排落到可实现的细节，避免“只有概念没有落地”。
 >
@@ -68,18 +68,18 @@
 
 **当前可配置（config + env override）**
 - 配置文件路径：`data.knowledge.chunking` / `data.knowledge.embedding` / `data.knowledge.ingestion`
-- `RAGDESK_CHUNK_SIZE_TOKENS`
-- `RAGDESK_CHUNK_OVERLAP_TOKENS`
-- `RAGDESK_EMBEDDING_PROVIDER`（`fake`/`openai`）
-- `RAGDESK_EMBEDDING_ENDPOINT`
-- `RAGDESK_EMBEDDING_API_KEY`
-- `RAGDESK_EMBEDDING_MODEL`
-- `RAGDESK_EMBEDDING_DIM`
-- `RAGDESK_EMBEDDING_TIMEOUT_MS`
-- `RAGDESK_EMBEDDING_BATCH_SIZE`
-- `RAGDESK_INGESTION_MAX_RETRIES`
-- `RAGDESK_INGESTION_BACKOFF_MS`
-- `RAGDESK_INGESTION_WORKERS`
+- `RAGODESK_CHUNK_SIZE_TOKENS`
+- `RAGODESK_CHUNK_OVERLAP_TOKENS`
+- `RAGODESK_EMBEDDING_PROVIDER`（`fake`/`openai`）
+- `RAGODESK_EMBEDDING_ENDPOINT`
+- `RAGODESK_EMBEDDING_API_KEY`
+- `RAGODESK_EMBEDDING_MODEL`
+- `RAGODESK_EMBEDDING_DIM`
+- `RAGODESK_EMBEDDING_TIMEOUT_MS`
+- `RAGODESK_EMBEDDING_BATCH_SIZE`
+- `RAGODESK_INGESTION_MAX_RETRIES`
+- `RAGODESK_INGESTION_BACKOFF_MS`
+- `RAGODESK_INGESTION_WORKERS`
 
 ---
 
@@ -101,7 +101,7 @@
 
 ## 5. 向量库数据模型（仅 Qdrant）
 
-- MVP 推荐：单 collection（例如 `ragdesk_chunks`）+ payload 强制过滤 `tenant_id` + `kb_id IN (...)`。
+- MVP 推荐：单 collection（例如 `ragodesk_chunks`）+ payload 强制过滤 `tenant_id` + `kb_id IN (...)`。
 - 备选（更强隔离）：`collection per tenant` 或 `collection per kb`，优点是天然隔离，缺点是 collection 数量增多、生命周期管理更复杂。
 - payload 字段（必须）：`tenant_id`, `kb_id`, `document_id`, `document_version_id`, `chunk_id`, `chunk_index`, `token_count`, `content_hash`, `language`, `section`, `page_no`, `source_uri`, `created_at`。
 - payload 字段（可选）：`tags`, `title`, `source_type`。

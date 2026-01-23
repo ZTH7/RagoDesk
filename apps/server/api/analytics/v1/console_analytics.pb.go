@@ -830,7 +830,7 @@ const file_api_analytics_v1_console_analytics_proto_rawDesc = "" +
 	"\n" +
 	"GetLatency\x12#.api.analytics.v1.GetLatencyRequest\x1a$.api.analytics.v1.GetLatencyResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/console/v1/analytics/latency\x12\x93\x01\n" +
 	"\x0fGetTopQuestions\x12(.api.analytics.v1.GetTopQuestionsRequest\x1a).api.analytics.v1.GetTopQuestionsResponse\"+\x82\xd3\xe4\x93\x02%\x12#/console/v1/analytics/top_questions\x12{\n" +
-	"\tGetKBGaps\x12\".api.analytics.v1.GetKBGapsRequest\x1a#.api.analytics.v1.GetKBGapsResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/console/v1/analytics/kb_gapsB9Z7github.com/ZTH7/RAGDesk/apps/server/api/analytics/v1;v1b\x06proto3"
+	"\tGetKBGaps\x12\".api.analytics.v1.GetKBGapsRequest\x1a#.api.analytics.v1.GetKBGapsResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/console/v1/analytics/kb_gapsB:Z8github.com/ZTH7/RagoDesk/apps/server/api/analytics/v1;v1b\x06proto3"
 
 var (
 	file_api_analytics_v1_console_analytics_proto_rawDescOnce sync.Once

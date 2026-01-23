@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/auth"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/auth"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"

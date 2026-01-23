@@ -1493,7 +1493,7 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\fRotateAPIKey\x12#.api.apimgmt.v1.RotateAPIKeyRequest\x1a$.api.apimgmt.v1.RotateAPIKeyResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /console/v1/api_keys/{id}/rotate\x12{\n" +
 	"\rListUsageLogs\x12$.api.apimgmt.v1.ListUsageLogsRequest\x1a%.api.apimgmt.v1.ListUsageLogsResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/console/v1/api_usage\x12\x89\x01\n" +
 	"\x0fGetUsageSummary\x12&.api.apimgmt.v1.GetUsageSummaryRequest\x1a'.api.apimgmt.v1.GetUsageSummaryResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/console/v1/api_usage/summary\x12\x8b\x01\n" +
-	"\x0fExportUsageLogs\x12&.api.apimgmt.v1.ExportUsageLogsRequest\x1a'.api.apimgmt.v1.ExportUsageLogsResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/console/v1/api_usage/exportB7Z5github.com/ZTH7/RAGDesk/apps/server/api/apimgmt/v1;v1b\x06proto3"
+	"\x0fExportUsageLogs\x12&.api.apimgmt.v1.ExportUsageLogsRequest\x1a'.api.apimgmt.v1.ExportUsageLogsResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/console/v1/api_usage/exportB8Z6github.com/ZTH7/RagoDesk/apps/server/api/apimgmt/v1;v1b\x06proto3"
 
 var (
 	file_api_apimgmt_v1_console_apimgmt_proto_rawDescOnce sync.Once

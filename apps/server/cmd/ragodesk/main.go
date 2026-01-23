@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -17,10 +17,10 @@ import (
 	_ "go.uber.org/automaxprocs"
 )
 
-// go build -ldflags "-X main.Name=ragdesk -X main.Version=x.y.z"
+// go build -ldflags "-X main.Name=ragodesk -X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name = "ragdesk"
+	Name = "ragodesk"
 	// Version is the version of the compiled software.
 	Version string
 	// flagconf is the config flag.

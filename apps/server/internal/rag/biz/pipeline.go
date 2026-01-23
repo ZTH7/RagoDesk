@@ -3,7 +3,7 @@ package biz
 import (
 	"context"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/ai/provider"
 	"github.com/cloudwego/eino/compose"
 )
 

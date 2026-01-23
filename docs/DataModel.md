@@ -1,4 +1,4 @@
-# Data Model — RAGDesk
+# Data Model — RagoDesk
 
 > 目标：支持多租户、RAG 知识库、会话流转与统计分析。所有租户业务表必须带 `tenant_id`；平台管理员与全局权限表除外。
 

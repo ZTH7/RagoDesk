@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
