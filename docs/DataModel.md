@@ -307,14 +307,33 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 ---
 
 ### 2.6 统计
+**analytics_event**
+- `id` (PK)
+- `tenant_id`
+- `bot_id`
+- `event_type` (rag_query/feedback/...)
+- `session_id` (optional)
+- `message_id` (optional)
+- `query` (optional)
+- `hit` (bool)
+- `confidence`
+- `latency_ms`
+- `status_code`
+- `rating` (feedback, optional)
+- `created_at`
+
 **analytics_daily**
 - `id` (PK)
 - `tenant_id`
 - `bot_id`
 - `date`
+- `total_queries`
+- `hit_queries`
 - `hit_rate`
-- `avg_latency`
-- `p95_latency`
+- `avg_latency_ms`
+- `p95_latency_ms`
+- `created_at`
+- `updated_at`
 
 ---
 

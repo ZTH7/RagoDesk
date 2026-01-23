@@ -65,7 +65,90 @@ func ensureSchemaAndSeed(ctx context.Context, db *sql.DB) error {
 	if err := ensureConversationSchema(ctx, db); err != nil {
 		return err
 	}
+	if err := ensureAnalyticsSchema(ctx, db); err != nil {
+		return err
+	}
 	if err := seedIAMPermissions(ctx, db); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureAnalyticsSchema(ctx context.Context, db *sql.DB) error {
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS analytics_event (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			bot_id VARCHAR(36) NOT NULL,
+			event_type VARCHAR(32) NOT NULL,
+			session_id VARCHAR(36) NULL,
+			message_id VARCHAR(36) NULL,
+			query TEXT NULL,
+			hit TINYINT NOT NULL DEFAULT 0,
+			confidence DOUBLE NOT NULL DEFAULT 0,
+			latency_ms INT NOT NULL DEFAULT 0,
+			status_code INT NOT NULL DEFAULT 0,
+			rating INT NULL,
+			created_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			KEY idx_analytics_event_tenant (tenant_id),
+			KEY idx_analytics_event_bot (tenant_id, bot_id),
+			KEY idx_analytics_event_type (tenant_id, event_type, created_at),
+			KEY idx_analytics_event_created (tenant_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+		`CREATE TABLE IF NOT EXISTS analytics_daily (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			bot_id VARCHAR(36) NOT NULL,
+			date DATE NOT NULL,
+			total_queries INT NOT NULL DEFAULT 0,
+			hit_queries INT NOT NULL DEFAULT 0,
+			hit_rate DOUBLE NOT NULL DEFAULT 0,
+			avg_latency_ms DOUBLE NOT NULL DEFAULT 0,
+			p95_latency_ms DOUBLE NOT NULL DEFAULT 0,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_analytics_daily (tenant_id, bot_id, date),
+			KEY idx_analytics_daily_tenant (tenant_id, date)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	}
+	for _, stmt := range statements {
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			return err
+		}
+	}
+	if err := ensureColumn(ctx, db, "analytics_event", "query", "TEXT NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_event", "hit", "TINYINT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_event", "confidence", "DOUBLE NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_event", "latency_ms", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_event", "status_code", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_event", "rating", "INT NULL"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_daily", "total_queries", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_daily", "hit_queries", "INT NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_daily", "hit_rate", "DOUBLE NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_daily", "avg_latency_ms", "DOUBLE NOT NULL DEFAULT 0"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "analytics_daily", "p95_latency_ms", "DOUBLE NOT NULL DEFAULT 0"); err != nil {
 		return err
 	}
 	return nil

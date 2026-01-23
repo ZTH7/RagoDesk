@@ -276,6 +276,28 @@
 ### 4.6 统计看板
 - `GET /console/v1/analytics/overview`
 - `GET /console/v1/analytics/latency`
+- `GET /console/v1/analytics/top_questions`
+- `GET /console/v1/analytics/kb_gaps`
+
+**Overview**
+`GET /console/v1/analytics/overview?bot_id=...&start_time=...&end_time=...`
+返回：总请求数、命中率、平均/95 分位延迟、错误率。
+> 未指定时间范围时默认统计最近 7 天。
+
+**Latency**
+`GET /console/v1/analytics/latency?bot_id=...&start_time=...&end_time=...`
+返回：按天聚合的平均/95 分位延迟与命中数。
+> 未指定时间范围时默认统计最近 7 天。
+
+**Top Questions**
+`GET /console/v1/analytics/top_questions?bot_id=...&start_time=...&end_time=...&limit=20`
+返回：热门问题（query + count + hit_rate）。
+> 未指定时间范围时默认统计最近 7 天。
+
+**KB Gaps**
+`GET /console/v1/analytics/kb_gaps?bot_id=...&start_time=...&end_time=...&limit=20`
+返回：疑似知识缺口（低命中 query + 计数）。
+> 未指定时间范围时默认统计最近 7 天。
 
 ### 4.7 会话管理
 - `GET /console/v1/sessions`（可选 `bot_id` 过滤）

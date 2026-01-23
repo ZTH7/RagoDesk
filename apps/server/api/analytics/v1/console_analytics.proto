@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package api.analytics.v1;
+
+option go_package = "github.com/ZTH7/RAGDesk/apps/server/api/analytics/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service ConsoleAnalytics {
+  rpc GetOverview(GetOverviewRequest) returns (GetOverviewResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/analytics/overview"
+    };
+  }
+  rpc GetLatency(GetLatencyRequest) returns (GetLatencyResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/analytics/latency"
+    };
+  }
+  rpc GetTopQuestions(GetTopQuestionsRequest) returns (GetTopQuestionsResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/analytics/top_questions"
+    };
+  }
+  rpc GetKBGaps(GetKBGapsRequest) returns (GetKBGapsResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/analytics/kb_gaps"
+    };
+  }
+}
+
+message GetOverviewRequest {
+  string bot_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+}
+
+message Overview {
+  int64 total_queries = 1;
+  int64 hit_queries = 2;
+  double hit_rate = 3;
+  double avg_latency_ms = 4;
+  double p95_latency_ms = 5;
+  int64 error_count = 6;
+  double error_rate = 7;
+}
+
+message GetOverviewResponse {
+  Overview overview = 1;
+}
+
+message GetLatencyRequest {
+  string bot_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+}
+
+message LatencyPoint {
+  google.protobuf.Timestamp date = 1;
+  double avg_latency_ms = 2;
+  double p95_latency_ms = 3;
+  int64 total_queries = 4;
+  int64 hit_queries = 5;
+}
+
+message GetLatencyResponse {
+  repeated LatencyPoint points = 1;
+}
+
+message GetTopQuestionsRequest {
+  string bot_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  int32 limit = 4;
+}
+
+message QuestionStat {
+  string query = 1;
+  int64 count = 2;
+  double hit_rate = 3;
+  google.protobuf.Timestamp last_seen_at = 4;
+}
+
+message GetTopQuestionsResponse {
+  repeated QuestionStat items = 1;
+}
+
+message GetKBGapsRequest {
+  string bot_id = 1;
+  google.protobuf.Timestamp start_time = 2;
+  google.protobuf.Timestamp end_time = 3;
+  int32 limit = 4;
+}
+
+message GapStat {
+  string query = 1;
+  int64 miss_count = 2;
+  double avg_confidence = 3;
+  google.protobuf.Timestamp last_seen_at = 4;
+}
+
+message GetKBGapsResponse {
+  repeated GapStat items = 1;
+}

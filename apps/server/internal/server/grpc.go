@@ -1,13 +1,15 @@
 package server
 
 import (
+	analyticsv1 "github.com/ZTH7/RAGDesk/apps/server/api/analytics/v1"
 	apimgmtv1 "github.com/ZTH7/RAGDesk/apps/server/api/apimgmt/v1"
 	conversationv1 "github.com/ZTH7/RAGDesk/apps/server/api/conversation/v1"
 	iamv1 "github.com/ZTH7/RAGDesk/apps/server/api/iam/v1"
 	knowledgev1 "github.com/ZTH7/RAGDesk/apps/server/api/knowledge/v1"
 	ragv1 "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1"
-	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
+	analyticsservice "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/service"
 	apimgmtservice "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/service"
+	"github.com/ZTH7/RAGDesk/apps/server/internal/conf"
 	conversationservice "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/service"
 	iamservice "github.com/ZTH7/RAGDesk/apps/server/internal/iam/service"
 	knowledgeservice "github.com/ZTH7/RAGDesk/apps/server/internal/knowledge/service"
@@ -19,7 +21,7 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService) *grpc.Server {
+func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService, analyticsSvc *analyticsservice.AnalyticsService) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
@@ -43,6 +45,7 @@ func NewGRPCServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 	iamv1.RegisterConsoleIAMServer(srv, iamSvc)
 	knowledgev1.RegisterConsoleKnowledgeServer(srv, knowledgeSvc)
 	apimgmtv1.RegisterConsoleAPIMgmtServer(srv, apimgmtSvc)
+	analyticsv1.RegisterConsoleAnalyticsServer(srv, analyticsSvc)
 	ragv1.RegisterRAGServer(srv, ragSvc)
 	conversationv1.RegisterConversationServer(srv, conversationSvc)
 	conversationv1.RegisterConsoleConversationServer(srv, conversationSvc)

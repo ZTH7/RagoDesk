@@ -7,6 +7,7 @@ import (
 
 	ragv1 "github.com/ZTH7/RAGDesk/apps/server/api/rag/v1"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
+	analyticsbiz "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/biz"
 	apimgmtbiz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
 	convbiz "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/rag/biz"
@@ -24,12 +25,13 @@ type RAGService struct {
 	uc   *biz.RAGUsecase
 	conv *convbiz.ConversationUsecase
 	api  *apimgmtbiz.APIMgmtUsecase
+	ana  *analyticsbiz.AnalyticsUsecase
 	log  *log.Helper
 }
 
 // NewRAGService creates a new RAGService.
-func NewRAGService(uc *biz.RAGUsecase, conv *convbiz.ConversationUsecase, api *apimgmtbiz.APIMgmtUsecase, logger log.Logger) *RAGService {
-	return &RAGService{uc: uc, conv: conv, api: api, log: log.NewHelper(logger)}
+func NewRAGService(uc *biz.RAGUsecase, conv *convbiz.ConversationUsecase, api *apimgmtbiz.APIMgmtUsecase, ana *analyticsbiz.AnalyticsUsecase, logger log.Logger) *RAGService {
+	return &RAGService{uc: uc, conv: conv, api: api, ana: ana, log: log.NewHelper(logger)}
 }
 
 // SendMessage handles RAG message requests.
@@ -49,6 +51,9 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 	var callErr error
 	var respModel string
 	var respUsage provider.LLMUsage
+	var respConfidence float32
+	var respRefused bool
+	var respRefs biz.References
 	defer func() {
 		model := ""
 		var usage provider.LLMUsage
@@ -57,6 +62,7 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 			usage = respUsage
 		}
 		s.recordUsage(ctx, key, operation, apiVersion, model, usage, callErr, start, clientIP, userAgent)
+		s.recordAnalytics(ctx, key, req, respConfidence, respRefused, respRefs, callErr, start)
 	}()
 	resp, callErr := s.uc.SendMessage(ctx, biz.MessageRequest{
 		SessionID: req.SessionId,
@@ -70,6 +76,9 @@ func (s *RAGService) SendMessage(ctx context.Context, req *ragv1.SendMessageRequ
 	}
 	respModel = resp.Model
 	respUsage = resp.Usage
+	respConfidence = resp.Confidence
+	respRefused = resp.Refused
+	respRefs = resp.References
 	if s.conv != nil && strings.TrimSpace(req.SessionId) != "" {
 		if callErr = s.conv.RecordRAGExchange(
 			ctx,
@@ -155,6 +164,25 @@ func (s *RAGService) recordUsage(ctx context.Context, key apimgmtbiz.APIKey, ope
 	}
 	status := apimgmtbiz.StatusCodeFromError(err)
 	s.api.RecordUsage(ctx, key, operation, apiVersion, model, usage, status, time.Since(start), clientIP, userAgent)
+}
+
+func (s *RAGService) recordAnalytics(ctx context.Context, key apimgmtbiz.APIKey, req *ragv1.SendMessageRequest, confidence float32, refused bool, refs biz.References, err error, start time.Time) {
+	if s == nil || s.ana == nil || req == nil {
+		return
+	}
+	hit := len(refs) > 0 && !refused
+	status := apimgmtbiz.StatusCodeFromError(err)
+	s.ana.RecordRAGEvent(ctx, analyticsbiz.AnalyticsEvent{
+		TenantID:   key.TenantID,
+		BotID:      key.BotID,
+		SessionID:  strings.TrimSpace(req.GetSessionId()),
+		Query:      req.GetMessage(),
+		Hit:        hit,
+		Confidence: float64(confidence),
+		LatencyMs:  int32(time.Since(start).Milliseconds()),
+		StatusCode: status,
+		CreatedAt:  time.Now(),
+	})
 }
 
 func operationFromContext(ctx context.Context) string {

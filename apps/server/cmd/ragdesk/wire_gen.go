@@ -7,6 +7,9 @@
 package main
 
 import (
+	biz6 "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/biz"
+	data7 "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/data"
+	service6 "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/service"
 	biz5 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
 	data6 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/data"
 	service5 "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/service"
@@ -48,11 +51,14 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, usageExporter, rateLimiter, usageSink, confData, logger)
 	conversationRepo := data2.NewConversationRepo(dataData)
 	conversationUsecase := biz4.NewConversationUsecase(conversationRepo, confData)
-	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase)
+	analyticsRepo := data7.NewAnalyticsRepo(dataData, confData, logger)
+	analyticsUsecase := biz6.NewAnalyticsUsecase(analyticsRepo, logger)
+	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase, analyticsUsecase)
 	iamRepo := data3.NewIAMRepo(dataData, logger)
 	iamUsecase := biz.NewIAMUsecase(iamRepo, logger)
 	iamService := service.NewIAMService(iamUsecase, logger)
 	apimgmtService := service5.NewAPIMgmtService(apimgmtUsecase, iamUsecase, logger)
+	analyticsService := service6.NewAnalyticsService(analyticsUsecase, iamUsecase, logger)
 	knowledgeRepo := data4.NewKnowledgeRepo(dataData, confData, logger)
 	ingestionQueue := data4.NewIngestionQueue(confData, logger)
 	knowledgeUsecase := biz2.NewKnowledgeUsecase(knowledgeRepo, ingestionQueue, confData, logger)
@@ -64,9 +70,9 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	ragService := service3.NewRAGService(ragUsecase, conversationUsecase, apimgmtUsecase, logger)
-	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService)
-	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService)
+	ragService := service3.NewRAGService(ragUsecase, conversationUsecase, apimgmtUsecase, analyticsUsecase, logger)
+	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService)
+	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

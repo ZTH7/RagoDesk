@@ -8,6 +8,7 @@ import (
 
 	v1 "github.com/ZTH7/RAGDesk/apps/server/api/conversation/v1"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/ai/provider"
+	analyticsbiz "github.com/ZTH7/RAGDesk/apps/server/internal/analytics/biz"
 	apimgmtbiz "github.com/ZTH7/RAGDesk/apps/server/internal/apimgmt/biz"
 	biz "github.com/ZTH7/RAGDesk/apps/server/internal/conversation/biz"
 	"github.com/ZTH7/RAGDesk/apps/server/internal/tenant"
@@ -26,11 +27,12 @@ type ConversationService struct {
 
 	uc  *biz.ConversationUsecase
 	api *apimgmtbiz.APIMgmtUsecase
+	ana *analyticsbiz.AnalyticsUsecase
 }
 
 // NewConversationService creates a new ConversationService
-func NewConversationService(uc *biz.ConversationUsecase, api *apimgmtbiz.APIMgmtUsecase) *ConversationService {
-	return &ConversationService{uc: uc, api: api}
+func NewConversationService(uc *biz.ConversationUsecase, api *apimgmtbiz.APIMgmtUsecase, ana *analyticsbiz.AnalyticsUsecase) *ConversationService {
+	return &ConversationService{uc: uc, api: api, ana: ana}
 }
 
 func (s *ConversationService) CreateSession(ctx context.Context, req *v1.CreateSessionRequest) (*v1.CreateSessionResponse, error) {
@@ -148,6 +150,16 @@ func (s *ConversationService) CreateFeedback(ctx context.Context, req *v1.Create
 	}
 	if callErr = s.uc.CreateFeedback(ctx, req.SessionId, req.MessageId, req.Rating, req.Comment, req.Correction); callErr != nil {
 		return nil, callErr
+	}
+	if s.ana != nil {
+		s.ana.RecordFeedback(ctx, analyticsbiz.AnalyticsEvent{
+			TenantID:  key.TenantID,
+			BotID:     key.BotID,
+			SessionID: strings.TrimSpace(req.GetSessionId()),
+			MessageID: strings.TrimSpace(req.GetMessageId()),
+			Rating:    req.GetRating(),
+			CreatedAt: time.Now(),
+		})
 	}
 	return &emptypb.Empty{}, nil
 }
