@@ -93,6 +93,30 @@ func verifySignature(secret string, header string, payload string, signature str
 	return hmac.Equal(signatureBytes, expected)
 }
 
+// SignHS256 signs claims into a HS256 JWT string.
+func SignHS256(claims Claims, secret string) (string, error) {
+	if secret == "" {
+		return "", ErrInvalidToken
+	}
+	headerBytes, err := json.Marshal(header{Alg: "HS256", Typ: "JWT"})
+	if err != nil {
+		return "", ErrInvalidToken
+	}
+	payloadBytes, err := json.Marshal(claims)
+	if err != nil {
+		return "", ErrInvalidToken
+	}
+	headerEnc := base64.RawURLEncoding.EncodeToString(headerBytes)
+	payloadEnc := base64.RawURLEncoding.EncodeToString(payloadBytes)
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write([]byte(headerEnc))
+	_, _ = mac.Write([]byte("."))
+	_, _ = mac.Write([]byte(payloadEnc))
+	signature := mac.Sum(nil)
+	signatureEnc := base64.RawURLEncoding.EncodeToString(signature)
+	return headerEnc + "." + payloadEnc + "." + signatureEnc, nil
+}
+
 func audienceMatch(aud any, expected string) bool {
 	switch value := aud.(type) {
 	case string:

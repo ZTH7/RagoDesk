@@ -12,7 +12,7 @@
 - Header: `X-API-Key: <key>`（API Key 绑定 bot，用于定位租户与机器人配置）
 - 可选签名：`X-Timestamp`, `X-Nonce`, `X-Signature` (HMAC-SHA256)
 - 服务端校验时间窗口与 nonce 防重放
-- 管理后台使用 `Authorization: Bearer <JWT>`
+- 管理后台使用 `Authorization: Bearer <JWT>`（通过登录接口获取）
 
 ### 1.2 统一响应结构
 ```json
@@ -142,6 +142,34 @@
 
 ## 3. 平台 API（Platform）
 
+### 3.0 平台登录
+- `POST /platform/v1/login`
+
+**Request**
+```json
+{
+  "account": "admin@ragodesk.ai",
+  "password": "******"
+}
+```
+
+**Response**
+```json
+{
+  "code": 0,
+  "data": {
+    "token": "jwt_xxx",
+    "expires_at": "2026-02-22T00:00:00Z",
+    "profile": {
+      "subject_id": "admin_123",
+      "account": "admin@ragodesk.ai",
+      "name": "Platform Admin",
+      "roles": ["platform_admin"]
+    }
+  }
+}
+```
+
 ### 3.1 租户管理
 - `POST /platform/v1/tenants`
   - body: `name`, `plan`, `status`, `type`（`personal|enterprise`，默认 `enterprise`）
@@ -167,6 +195,49 @@
 
 ## 4. 管理后台 API（Console）
 
+### 4.0 注册 / 登录
+- `POST /console/v1/register`
+- `POST /console/v1/login`
+
+**Register**
+```json
+{
+  "tenant_name": "Acme Inc",
+  "tenant_type": "enterprise",
+  "admin_name": "Alice",
+  "email": "alice@acme.com",
+  "password": "******"
+}
+```
+
+**Login**
+```json
+{
+  "account": "alice@acme.com",
+  "password": "******",
+  "tenant_id": "tenant_123"
+}
+```
+> 若同一账号存在多租户，需指定 `tenant_id`。
+
+**Response**
+```json
+{
+  "code": 0,
+  "data": {
+    "token": "jwt_xxx",
+    "expires_at": "2026-02-22T00:00:00Z",
+    "profile": {
+      "subject_id": "user_123",
+      "tenant_id": "tenant_123",
+      "account": "alice@acme.com",
+      "name": "Alice",
+      "roles": ["tenant_admin"]
+    }
+  }
+}
+```
+
 ### 4.1 成员与角色
 - `POST /console/v1/tenants/{id}/users`（邀请成员）
 - `GET /console/v1/tenants/{id}/users`
@@ -182,6 +253,7 @@
 ### 4.3 机器人管理
 - `POST /console/v1/bots`
 - `GET /console/v1/bots`
+- `GET /console/v1/bots/{id}`
 - `PATCH /console/v1/bots/{id}`
 - `DELETE /console/v1/bots/{id}`
 - `GET /console/v1/bots/{id}/knowledge_bases`

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package api.bot.v1;
+
+option go_package = "github.com/ZTH7/RagoDesk/apps/server/api/bot/v1;v1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service ConsoleBot {
+  rpc CreateBot(CreateBotRequest) returns (BotResponse) {
+    option (google.api.http) = {
+      post: "/console/v1/bots"
+      body: "*"
+    };
+  }
+  rpc GetBot(GetBotRequest) returns (BotResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/bots/{id}"
+    };
+  }
+  rpc UpdateBot(UpdateBotRequest) returns (BotResponse) {
+    option (google.api.http) = {
+      patch: "/console/v1/bots/{id}"
+      body: "*"
+    };
+  }
+  rpc DeleteBot(DeleteBotRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/console/v1/bots/{id}"
+    };
+  }
+  rpc ListBots(ListBotsRequest) returns (ListBotsResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/bots"
+    };
+  }
+}
+
+message Bot {
+  string id = 1;
+  string tenant_id = 2;
+  string name = 3;
+  string description = 4;
+  string status = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message CreateBotRequest {
+  string name = 1;
+  string description = 2;
+  string status = 3;
+}
+
+message GetBotRequest {
+  string id = 1;
+}
+
+message UpdateBotRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string status = 4;
+}
+
+message DeleteBotRequest {
+  string id = 1;
+}
+
+message ListBotsRequest {
+  int32 limit = 1;
+  int32 offset = 2;
+}
+
+message ListBotsResponse {
+  repeated Bot items = 1;
+}
+
+message BotResponse {
+  Bot bot = 1;
+}

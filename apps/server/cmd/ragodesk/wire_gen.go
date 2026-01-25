@@ -7,26 +7,32 @@
 package main
 
 import (
-	biz6 "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/biz"
-	data7 "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/data"
-	service6 "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/service"
-	biz5 "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
-	data6 "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/data"
-	service5 "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/service"
+	analyticsbiz "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/biz"
+	analyticsdata "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/data"
+	analyticsservice "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/service"
+	apimgmtbiz "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
+	apimgmtdata "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/data"
+	apimgmtservice "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/service"
+	authnbiz "github.com/ZTH7/RagoDesk/apps/server/internal/authn/biz"
+	authndata "github.com/ZTH7/RagoDesk/apps/server/internal/authn/data"
+	authnservice "github.com/ZTH7/RagoDesk/apps/server/internal/authn/service"
+	botbiz "github.com/ZTH7/RagoDesk/apps/server/internal/bot/biz"
+	botdata "github.com/ZTH7/RagoDesk/apps/server/internal/bot/data"
+	botservice "github.com/ZTH7/RagoDesk/apps/server/internal/bot/service"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
-	biz4 "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/biz"
-	data2 "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/data"
-	service4 "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/service"
+	conversationbiz "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/biz"
+	conversationdata "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/data"
+	conversationservice "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/service"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/data"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/iam/biz"
-	data3 "github.com/ZTH7/RagoDesk/apps/server/internal/iam/data"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/iam/service"
-	biz2 "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
-	data4 "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/data"
-	service2 "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/service"
-	biz3 "github.com/ZTH7/RagoDesk/apps/server/internal/rag/biz"
-	data5 "github.com/ZTH7/RagoDesk/apps/server/internal/rag/data"
-	service3 "github.com/ZTH7/RagoDesk/apps/server/internal/rag/service"
+	iambiz "github.com/ZTH7/RagoDesk/apps/server/internal/iam/biz"
+	iamdata "github.com/ZTH7/RagoDesk/apps/server/internal/iam/data"
+	iamservice "github.com/ZTH7/RagoDesk/apps/server/internal/iam/service"
+	knowledgebiz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
+	knowledgedata "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/data"
+	knowledgeservice "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/service"
+	ragbiz "github.com/ZTH7/RagoDesk/apps/server/internal/rag/biz"
+	ragdata "github.com/ZTH7/RagoDesk/apps/server/internal/rag/data"
+	ragservice "github.com/ZTH7/RagoDesk/apps/server/internal/rag/service"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/server"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
@@ -44,35 +50,42 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	apimgmtRepo := data6.NewAPIMgmtRepo(dataData, logger)
-	usageExporter := data6.NewUsageExporter(confData, logger)
-	rateLimiter := data6.NewRateLimiter(confData, logger)
-	usageSink := biz5.NewUsageSink()
-	apimgmtUsecase := biz5.NewAPIMgmtUsecase(apimgmtRepo, usageExporter, rateLimiter, usageSink, confData, logger)
-	conversationRepo := data2.NewConversationRepo(dataData)
-	conversationUsecase := biz4.NewConversationUsecase(conversationRepo, confData)
-	analyticsRepo := data7.NewAnalyticsRepo(dataData)
-	analyticsUsecase := biz6.NewAnalyticsUsecase(analyticsRepo, logger)
-	conversationService := service4.NewConversationService(conversationUsecase, apimgmtUsecase, analyticsUsecase)
-	iamRepo := data3.NewIAMRepo(dataData, logger)
-	iamUsecase := biz.NewIAMUsecase(iamRepo, logger)
-	iamService := service.NewIAMService(iamUsecase, logger)
-	apimgmtService := service5.NewAPIMgmtService(apimgmtUsecase, iamUsecase, logger)
-	analyticsService := service6.NewAnalyticsService(analyticsUsecase, iamUsecase, logger)
-	knowledgeRepo := data4.NewKnowledgeRepo(dataData, confData, logger)
-	ingestionQueue := data4.NewIngestionQueue(confData, logger)
-	knowledgeUsecase := biz2.NewKnowledgeUsecase(knowledgeRepo, ingestionQueue, confData, logger)
-	knowledgeService := service2.NewKnowledgeService(knowledgeUsecase, iamUsecase, logger)
-	ragKBRepo := data5.NewKBRepo(dataData)
-	ragVectorRepo := data5.NewVectorRepo(confData)
-	ragChunkRepo := data5.NewChunkRepo(dataData)
-	ragUsecase, err := biz3.NewRAGUsecase(ragKBRepo, ragVectorRepo, ragChunkRepo, confData, logger)
+	apimgmtRepo := apimgmtdata.NewAPIMgmtRepo(dataData, logger)
+	usageExporter := apimgmtdata.NewUsageExporter(confData, logger)
+	rateLimiter := apimgmtdata.NewRateLimiter(confData, logger)
+	usageSink := apimgmtbiz.NewUsageSink()
+	apimgmtUsecase := apimgmtbiz.NewAPIMgmtUsecase(apimgmtRepo, usageExporter, rateLimiter, usageSink, confData, logger)
+	conversationRepo := conversationdata.NewConversationRepo(dataData)
+	conversationUsecase := conversationbiz.NewConversationUsecase(conversationRepo, confData)
+	analyticsRepo := analyticsdata.NewAnalyticsRepo(dataData)
+	analyticsUsecase := analyticsbiz.NewAnalyticsUsecase(analyticsRepo, logger)
+	conversationService := conversationservice.NewConversationService(conversationUsecase, apimgmtUsecase, analyticsUsecase)
+	iamRepo := iamdata.NewIAMRepo(dataData, logger)
+	iamUsecase := iambiz.NewIAMUsecase(iamRepo, logger)
+	iamService := iamservice.NewIAMService(iamUsecase, logger)
+	authRepo := authndata.NewAuthRepo(dataData, logger)
+	authUsecase := authnbiz.NewAuthUsecase(authRepo, confServer, logger)
+	consoleAuthService := authnservice.NewConsoleAuthService(authUsecase)
+	platformAuthService := authnservice.NewPlatformAuthService(authUsecase)
+	botRepo := botdata.NewBotRepo(dataData, logger)
+	botUsecase := botbiz.NewBotUsecase(botRepo, logger)
+	botService := botservice.NewBotService(botUsecase, iamUsecase)
+	apimgmtService := apimgmtservice.NewAPIMgmtService(apimgmtUsecase, iamUsecase, logger)
+	analyticsService := analyticsservice.NewAnalyticsService(analyticsUsecase, iamUsecase, logger)
+	knowledgeRepo := knowledgedata.NewKnowledgeRepo(dataData, confData, logger)
+	ingestionQueue := knowledgedata.NewIngestionQueue(confData, logger)
+	knowledgeUsecase := knowledgebiz.NewKnowledgeUsecase(knowledgeRepo, ingestionQueue, confData, logger)
+	knowledgeService := knowledgeservice.NewKnowledgeService(knowledgeUsecase, iamUsecase, logger)
+	ragKBRepo := ragdata.NewKBRepo(dataData)
+	ragVectorRepo := ragdata.NewVectorRepo(confData)
+	ragChunkRepo := ragdata.NewChunkRepo(dataData)
+	ragUsecase, err := ragbiz.NewRAGUsecase(ragKBRepo, ragVectorRepo, ragChunkRepo, confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	ragService := service3.NewRAGService(ragUsecase, conversationUsecase, apimgmtUsecase, analyticsUsecase, logger)
-	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService)
-	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService)
+	ragService := ragservice.NewRAGService(ragUsecase, conversationUsecase, apimgmtUsecase, analyticsUsecase, logger)
+	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService, botService, consoleAuthService, platformAuthService)
+	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService, botService, consoleAuthService, platformAuthService)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

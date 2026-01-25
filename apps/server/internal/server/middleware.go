@@ -79,9 +79,13 @@ func ErrorMiddleware() middleware.Middleware {
 }
 
 func isAdminOperation(operation string) bool {
+	if strings.Contains(operation, "ConsoleAuth") || strings.Contains(operation, "PlatformAuth") {
+		return false
+	}
 	return strings.Contains(operation, "PlatformIAM") ||
 		strings.Contains(operation, "ConsoleIAM") ||
 		strings.Contains(operation, "ConsoleKnowledge") ||
+		strings.Contains(operation, "ConsoleBot") ||
 		strings.Contains(operation, "ConsoleConversation") ||
 		strings.Contains(operation, "ConsoleAPIMgmt")
 }

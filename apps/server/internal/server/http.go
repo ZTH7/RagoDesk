@@ -3,12 +3,16 @@ package server
 import (
 	analyticsv1 "github.com/ZTH7/RagoDesk/apps/server/api/analytics/v1"
 	apimgmtv1 "github.com/ZTH7/RagoDesk/apps/server/api/apimgmt/v1"
+	authv1 "github.com/ZTH7/RagoDesk/apps/server/api/auth/v1"
+	botv1 "github.com/ZTH7/RagoDesk/apps/server/api/bot/v1"
 	conversationv1 "github.com/ZTH7/RagoDesk/apps/server/api/conversation/v1"
 	iamv1 "github.com/ZTH7/RagoDesk/apps/server/api/iam/v1"
 	knowledgev1 "github.com/ZTH7/RagoDesk/apps/server/api/knowledge/v1"
 	ragv1 "github.com/ZTH7/RagoDesk/apps/server/api/rag/v1"
 	analyticsservice "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/service"
 	apimgmtservice "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/service"
+	authnservice "github.com/ZTH7/RagoDesk/apps/server/internal/authn/service"
+	botservice "github.com/ZTH7/RagoDesk/apps/server/internal/bot/service"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	conversationservice "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/service"
 	iamservice "github.com/ZTH7/RagoDesk/apps/server/internal/iam/service"
@@ -21,7 +25,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService, analyticsSvc *analyticsservice.AnalyticsService) *http.Server {
+func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService, analyticsSvc *analyticsservice.AnalyticsService, botSvc *botservice.BotService, consoleAuthSvc *authnservice.ConsoleAuthService, platformAuthSvc *authnservice.PlatformAuthService) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -44,6 +48,9 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 	iamv1.RegisterPlatformIAMHTTPServer(srv, iamSvc)
 	iamv1.RegisterConsoleIAMHTTPServer(srv, iamSvc)
 	knowledgev1.RegisterConsoleKnowledgeHTTPServer(srv, knowledgeSvc)
+	botv1.RegisterConsoleBotHTTPServer(srv, botSvc)
+	authv1.RegisterConsoleAuthHTTPServer(srv, consoleAuthSvc)
+	authv1.RegisterPlatformAuthHTTPServer(srv, platformAuthSvc)
 	apimgmtv1.RegisterConsoleAPIMgmtHTTPServer(srv, apimgmtSvc)
 	analyticsv1.RegisterConsoleAnalyticsHTTPServer(srv, analyticsSvc)
 	ragv1.RegisterRAGHTTPServer(srv, ragSvc)

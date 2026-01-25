@@ -57,6 +57,9 @@ func ensureSchemaAndSeed(ctx context.Context, db *sql.DB) error {
 	if err := ensureIAMSchema(ctx, db); err != nil {
 		return err
 	}
+	if err := ensureBotSchema(ctx, db); err != nil {
+		return err
+	}
 	if err := ensureAPIMgmtSchema(ctx, db); err != nil {
 		return err
 	}
@@ -370,6 +373,9 @@ func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
 	if err := ensureColumn(ctx, db, "tenant", "type", "VARCHAR(32) NOT NULL DEFAULT 'enterprise'"); err != nil {
 		return err
 	}
+	if err := ensureColumn(ctx, db, "user", "password_hash", "VARCHAR(255) NULL"); err != nil {
+		return err
+	}
 	if _, err := db.ExecContext(ctx, "UPDATE tenant SET `type` = 'enterprise' WHERE `type` IS NULL OR `type` = ''"); err != nil {
 		return err
 	}
@@ -379,6 +385,31 @@ func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
 	}
 	if _, err := db.ExecContext(ctx, "UPDATE permission SET scope = 'platform' WHERE scope IS NULL OR scope = ''"); err != nil {
 		return err
+	}
+	return nil
+}
+
+func ensureBotSchema(ctx context.Context, db *sql.DB) error {
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS bot (
+			id VARCHAR(36) NOT NULL,
+			tenant_id VARCHAR(36) NOT NULL,
+			name VARCHAR(255) NOT NULL,
+			description TEXT NULL,
+			status VARCHAR(32) NOT NULL DEFAULT 'active',
+			config_json TEXT NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			PRIMARY KEY (id),
+			UNIQUE KEY uniq_bot_tenant_name (tenant_id, name),
+			KEY idx_bot_tenant (tenant_id),
+			KEY idx_bot_created_at (tenant_id, created_at)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	}
+	for _, stmt := range statements {
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			return err
+		}
 	}
 	return nil
 }

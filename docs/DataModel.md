@@ -60,6 +60,7 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `email` / `phone`
 - `name`
 - `status` (active/disabled)
+- `password_hash` (可为空，邀请成员可后置设置)
 - `created_at`
 
 **role**
@@ -158,6 +159,8 @@ API_KEY ||--o{ API_USAGE_LOG : logs
 - `description`
 - `status` (active/disabled)
 - `config_json` (prompt/阈值/策略)
+- `created_at`
+- `updated_at`
 
 **bot_kb**
 - `id` (PK)
