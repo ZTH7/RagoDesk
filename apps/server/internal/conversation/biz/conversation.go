@@ -85,7 +85,7 @@ type MessageFeedback struct {
 type ConversationRepo interface {
 	CreateSession(ctx context.Context, session Session) (Session, error)
 	GetSession(ctx context.Context, sessionID string) (Session, error)
-	ListSessions(ctx context.Context, botID string, limit int, offset int) ([]Session, error)
+	ListSessions(ctx context.Context, limit int, offset int) ([]Session, error)
 	CloseSession(ctx context.Context, sessionID string, closeReason string, closedAt time.Time) error
 	PurgeExpired(ctx context.Context, cutoff time.Time) error
 
@@ -210,10 +210,10 @@ func (uc *ConversationUsecase) CloseSession(ctx context.Context, sessionID strin
 	return nil
 }
 
-func (uc *ConversationUsecase) ListSessions(ctx context.Context, botID string, limit int, offset int) ([]Session, error) {
+func (uc *ConversationUsecase) ListSessions(ctx context.Context, limit int, offset int) ([]Session, error) {
 	uc.maybePurge(ctx)
 	limit, offset = paging.Normalize(limit, offset)
-	return uc.repo.ListSessions(ctx, botID, limit, offset)
+	return uc.repo.ListSessions(ctx, limit, offset)
 }
 
 func (uc *ConversationUsecase) ListMessages(ctx context.Context, sessionID string, limit int, offset int) ([]Message, error) {

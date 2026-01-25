@@ -3,7 +3,6 @@ package data
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 
 	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
@@ -167,20 +166,14 @@ func (r *conversationRepo) PurgeExpired(ctx context.Context, cutoff time.Time) e
 	return err
 }
 
-func (r *conversationRepo) ListSessions(ctx context.Context, botID string, limit int, offset int) ([]biz.Session, error) {
+func (r *conversationRepo) ListSessions(ctx context.Context, limit int, offset int) ([]biz.Session, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
 		return nil, err
 	}
 	query := `SELECT id, tenant_id, bot_id, status, close_reason, user_external_id, metadata, created_at, updated_at, closed_at
-		FROM chat_session WHERE tenant_id = ?`
-	args := []any{tenantID}
-	if strings.TrimSpace(botID) != "" {
-		query += " AND bot_id = ?"
-		args = append(args, strings.TrimSpace(botID))
-	}
-	query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
-	args = append(args, limit, offset)
+		FROM chat_session WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	args := []any{tenantID, limit, offset}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {

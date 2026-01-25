@@ -372,7 +372,7 @@
 > 未指定时间范围时默认统计最近 7 天。
 
 ### 4.7 会话管理
-- `GET /console/v1/sessions`（可选 `bot_id` 过滤）
+- `GET /console/v1/sessions`（返回租户下所有会话，API Key 绑定 bot 无需显式传递 bot_id）
 - `GET /console/v1/sessions/{id}/messages`
 
 ---

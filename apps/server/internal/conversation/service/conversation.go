@@ -184,7 +184,7 @@ func (s *ConversationService) ListSessions(ctx context.Context, req *v1.ListSess
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
 	}
-	sessions, err := s.uc.ListSessions(ctx, req.BotId, int(req.Limit), int(req.Offset))
+	sessions, err := s.uc.ListSessions(ctx, int(req.Limit), int(req.Offset))
 	if err != nil {
 		return nil, err
 	}
