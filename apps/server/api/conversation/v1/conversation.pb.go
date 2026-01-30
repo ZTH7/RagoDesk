@@ -663,9 +663,8 @@ func (x *CreateFeedbackRequest) GetCorrection() string {
 
 type ListSessionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
-	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	Offset        int32                  `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
+	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -698,13 +697,6 @@ func (x *ListSessionsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ListSessionsRequest.ProtoReflect.Descriptor instead.
 func (*ListSessionsRequest) Descriptor() ([]byte, []int) {
 	return file_api_conversation_v1_conversation_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *ListSessionsRequest) GetBotId() string {
-	if x != nil {
-		return x.BotId
-	}
-	return ""
 }
 
 func (x *ListSessionsRequest) GetLimit() int32 {
@@ -937,11 +929,10 @@ const file_api_conversation_v1_conversation_proto_rawDesc = "" +
 	"\acomment\x18\x04 \x01(\tR\acomment\x12\x1e\n" +
 	"\n" +
 	"correction\x18\x05 \x01(\tR\n" +
-	"correction\"Z\n" +
-	"\x13ListSessionsRequest\x12\x15\n" +
-	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x16\n" +
-	"\x06offset\x18\x03 \x01(\x05R\x06offset\"P\n" +
+	"correction\"C\n" +
+	"\x13ListSessionsRequest\x12\x14\n" +
+	"\x05limit\x18\x01 \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\x02 \x01(\x05R\x06offset\"P\n" +
 	"\x14ListSessionsResponse\x128\n" +
 	"\bsessions\x18\x01 \x03(\v2\x1c.api.conversation.v1.SessionR\bsessions\"b\n" +
 	"\x13ListMessagesRequest\x12\x1d\n" +

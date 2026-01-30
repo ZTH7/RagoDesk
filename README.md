@@ -43,13 +43,13 @@ docker compose up -d
 ### Backend (Kratos)
 ```bash
 cd apps/server
-kratos run
+go run ./cmd/ragodesk -conf ./configs
 ```
 
 ### Ingestion Worker (optional)
 ```bash
 cd apps/server
-go run ./cmd/ingester
+go run ./cmd/ingester -conf ./configs
 ```
 
 ### Dashboard (React + Vite)
@@ -57,6 +57,10 @@ go run ./cmd/ingester
 cd apps/dashboard
 npm run dev
 ```
+
+### Default Ports
+- HTTP: `0.0.0.0:8000`
+- gRPC: `0.0.0.0:9100`
 
 ## Documentation
 - [PRD](docs/PRD.md)
