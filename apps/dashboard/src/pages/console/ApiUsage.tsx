@@ -1,4 +1,5 @@
-﻿import { Input, Select, Tag, Button, Space } from 'antd'
+import { Button, DatePicker, Input, Select, Tag, Space, message } from 'antd'
+import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -12,8 +13,25 @@ import { consoleApi } from '../../services/console'
 export function ApiUsage() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
+  const [botId, setBotId] = useState('all')
+  const [apiKeyId, setApiKeyId] = useState('all')
+  const [apiVersion, setApiVersion] = useState('')
+  const [model, setModel] = useState('')
+  const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null)
+  const [query, setQuery] = useState<{
+    bot_id?: string
+    api_key_id?: string
+    api_version?: string
+    model?: string
+    start_time?: string
+    end_time?: string
+  }>({})
   const navigate = useNavigate()
-  const { data, loading, source, error } = useRequest(() => consoleApi.listUsageLogs(), { items: [] })
+
+  const { data: botsData } = useRequest(() => consoleApi.listBots(), { items: [] })
+  const { data: apiKeysData } = useRequest(() => consoleApi.listApiKeys({ limit: 200 }), { items: [] })
+
+  const { data, loading, source, error } = useRequest(() => consoleApi.listUsageLogs(query), { items: [] })
 
   const filtered = useMemo(() => {
     return data.items.filter((item) => {
@@ -22,6 +40,62 @@ export function ApiUsage() {
       return true
     })
   }, [data.items, keyword, status])
+
+  const applyFilters = () => {
+    const next: typeof query = {}
+    if (botId && botId !== 'all') next.bot_id = botId
+    if (apiKeyId && apiKeyId !== 'all') next.api_key_id = apiKeyId
+    if (apiVersion) next.api_version = apiVersion
+    if (model) next.model = model
+    if (range) {
+      next.start_time = range[0].toISOString()
+      next.end_time = range[1].toISOString()
+    }
+    setQuery(next)
+  }
+
+  const resetFilters = () => {
+    setBotId('all')
+    setApiKeyId('all')
+    setApiVersion('')
+    setModel('')
+    setRange(null)
+    setQuery({})
+  }
+
+  const handleExport = async () => {
+    try {
+      const res = await consoleApi.exportUsageLogs({
+        api_key_id: query.api_key_id,
+        bot_id: query.bot_id,
+        api_version: query.api_version,
+        model: query.model,
+        start_time: query.start_time,
+        end_time: query.end_time,
+        format: 'csv',
+      })
+
+      if (res.download_url) {
+        window.open(res.download_url, '_blank')
+        return
+      }
+
+      if (res.content) {
+        const blob = new Blob([res.content], { type: res.content_type || 'text/csv' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = res.filename || 'api-usage.csv'
+        link.click()
+        URL.revokeObjectURL(url)
+        return
+      }
+
+      message.info('暂无可下载内容')
+    } catch (err) {
+      if (err instanceof Error) message.error(err.message)
+    }
+  }
 
   return (
     <div className="page">
@@ -39,19 +113,68 @@ export function ApiUsage() {
       />
       <RequestBanner error={error} />
       <FilterBar
-        left={<Input.Search placeholder="搜索路径" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
+        left={
+          <Space wrap>
+            <Select
+              value={botId}
+              style={{ width: 200 }}
+              onChange={setBotId}
+              options={[{ label: '全部 Bot', value: 'all' }].concat(
+                botsData.items.map((bot) => ({ label: `${bot.name} (${bot.id})`, value: bot.id })),
+              )}
+              showSearch
+              optionFilterProp="label"
+            />
+            <Select
+              value={apiKeyId}
+              style={{ width: 220 }}
+              onChange={setApiKeyId}
+              options={[{ label: '全部 API Key', value: 'all' }].concat(
+                apiKeysData.items.map((key) => ({ label: `${key.name} (${key.id})`, value: key.id })),
+              )}
+              showSearch
+              optionFilterProp="label"
+            />
+            <Input
+              placeholder="API Version"
+              value={apiVersion}
+              onChange={(e) => setApiVersion(e.target.value)}
+              style={{ width: 140 }}
+            />
+            <Input
+              placeholder="Model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              style={{ width: 140 }}
+            />
+            <DatePicker.RangePicker value={range} onChange={(value) => setRange(value)} />
+            <Input.Search
+              placeholder="搜索路径"
+              onSearch={setKeyword}
+              allowClear
+              style={{ width: 200 }}
+            />
+          </Space>
+        }
         right={
-          <Select
-            value={status}
-            style={{ width: 160 }}
-            onChange={setStatus}
-            options={[
-              { value: 'all', label: '全部状态' },
-              { value: '200', label: '200' },
-              { value: '429', label: '429' },
-              { value: '500', label: '500' },
-            ]}
-          />
+          <Space>
+            <Select
+              value={status}
+              style={{ width: 160 }}
+              onChange={setStatus}
+              options={[
+                { value: 'all', label: '全部状态' },
+                { value: '200', label: '200' },
+                { value: '429', label: '429' },
+                { value: '500', label: '500' },
+              ]}
+            />
+            <Button onClick={applyFilters}>应用筛选</Button>
+            <Button onClick={resetFilters}>重置</Button>
+            <Button type="primary" onClick={handleExport}>
+              导出
+            </Button>
+          </Space>
         }
       />
       <TableCard
@@ -69,6 +192,8 @@ export function ApiUsage() {
             },
             { title: 'Latency (ms)', dataIndex: 'latency_ms' },
             { title: 'Total Tokens', dataIndex: 'total_tokens' },
+            { title: 'API Version', dataIndex: 'api_version' },
+            { title: 'Model', dataIndex: 'model' },
             { title: 'Client IP', dataIndex: 'client_ip' },
             { title: 'Created At', dataIndex: 'created_at' },
           ],

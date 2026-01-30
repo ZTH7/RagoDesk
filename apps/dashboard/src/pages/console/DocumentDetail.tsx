@@ -1,4 +1,17 @@
-import { Button, Card, Descriptions, Form, Modal, Select, Space, Table, Tag, Popconfirm, message, Skeleton } from 'antd'
+import {
+  Button,
+  Card,
+  Descriptions,
+  Form,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tag,
+  Popconfirm,
+  message,
+  Skeleton,
+} from 'antd'
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -28,22 +41,37 @@ export function DocumentDetail() {
     { enabled: Boolean(docId) },
   )
 
-  const stageStatus = useMemo(() => {
+  const timeline = useMemo(() => {
+    const stages = ['uploaded', 'parsing', 'chunking', 'embedding', 'indexed']
     const status = data.document.status
-    if (status === 'ready') return 'done'
-    if (status === 'failed') return 'failed'
-    if (status === 'processing') return 'processing'
-    return 'unknown'
+    return stages.map((stage, idx) => {
+      if (status === 'ready') {
+        return { stage, status: 'done' }
+      }
+      if (status === 'failed') {
+        return { stage, status: idx === 0 ? 'done' : 'failed' }
+      }
+      if (status === 'processing') {
+        return { stage, status: idx === 0 ? 'done' : 'processing' }
+      }
+      if (status === 'uploaded') {
+        return { stage, status: idx === 0 ? 'done' : 'pending' }
+      }
+      return { stage, status: idx === 0 ? 'done' : 'pending' }
+    })
   }, [data.document.status])
 
-  const timeline = useMemo(
-    () =>
-      ['uploaded', 'parsing', 'chunking', 'embedding', 'indexed'].map((stage) => ({
-        stage,
-        status: stageStatus,
-      })),
-    [stageStatus],
-  )
+  const renderStageStatus = (value: string) => {
+    const color =
+      value === 'done'
+        ? 'green'
+        : value === 'failed'
+          ? 'red'
+          : value === 'processing'
+            ? 'gold'
+            : 'default'
+    return <Tag color={color}>{value}</Tag>
+  }
 
   const handleReindex = async () => {
     try {
@@ -95,6 +123,8 @@ export function DocumentDetail() {
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="当前版本">v{data.document.current_version || '-'}</Descriptions.Item>
+            <Descriptions.Item label="来源类型">{data.document.source_type || '-'}</Descriptions.Item>
+            <Descriptions.Item label="最近更新">{data.document.updated_at || '-'}</Descriptions.Item>
           </Descriptions>
         )}
       </Card>
@@ -117,7 +147,7 @@ export function DocumentDetail() {
           dataSource={timeline}
           columns={[
             { title: 'Stage', dataIndex: 'stage' },
-            { title: 'Status', dataIndex: 'status' },
+            { title: 'Status', dataIndex: 'status', render: renderStageStatus },
           ]}
         />
       </Card>

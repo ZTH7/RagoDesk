@@ -63,7 +63,7 @@ export function Profile() {
             <Input.Password placeholder="可在登录页或此处手动设置" />
           </Form.Item>
           <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
-            没有登录接口时，可在此设置本地 Token 与 Tenant ID 以便调用 API。
+            可在此覆盖本地 Token 与 Tenant ID，便于调试或切换账号。
           </Typography.Paragraph>
           <Space>
             <Button type="primary" onClick={handleSave}>

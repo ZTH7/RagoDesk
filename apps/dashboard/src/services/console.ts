@@ -70,8 +70,17 @@ export type MessageItem = {
   role: string
   content: string
   confidence?: number
-  references_json?: string
+  references?: ReferenceItem[]
   created_at: string
+}
+
+export type ReferenceItem = {
+  document_id: string
+  document_version_id: string
+  chunk_id: string
+  score: number
+  rank: number
+  snippet?: string
 }
 
 export type UsageSummary = {
@@ -83,11 +92,21 @@ export type UsageSummary = {
   total_tokens: number
 }
 
+export type UsageExportResult = {
+  content?: string
+  content_type?: string
+  filename?: string
+  download_url?: string
+  object_uri?: string
+}
+
 export type BotItem = {
   id: string
   name: string
+  description?: string
   status: string
   created_at: string
+  updated_at?: string
 }
 
 export type BotKnowledgeBase = {
@@ -225,6 +244,26 @@ export const consoleApi = {
   listBots() {
     return request<{ items: BotItem[] }>('/console/v1/bots')
   },
+  getBot(id: string) {
+    return request<{ bot: BotItem }>(`/console/v1/bots/${id}`)
+  },
+  createBot(payload: { name: string; description?: string; status?: string }) {
+    return request<{ bot: BotItem }>('/console/v1/bots', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  },
+  updateBot(id: string, payload: { name?: string; description?: string; status?: string }) {
+    return request<{ bot: BotItem }>(`/console/v1/bots/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ id, ...payload }),
+    })
+  },
+  deleteBot(id: string) {
+    return request<void>(`/console/v1/bots/${id}`, {
+      method: 'DELETE',
+    })
+  },
   listBotKnowledgeBases(botId: string) {
     return request<{ items: BotKnowledgeBase[] }>(`/console/v1/bots/${botId}/knowledge_bases`)
   },
@@ -278,36 +317,77 @@ export const consoleApi = {
       body: JSON.stringify({ id }),
     })
   },
-  getUsageSummary(params?: { bot_id?: string; api_key_id?: string; api_version?: string; model?: string }) {
+  getUsageSummary(params?: {
+    bot_id?: string
+    api_key_id?: string
+    api_version?: string
+    model?: string
+    start_time?: string
+    end_time?: string
+  }) {
     const query = new URLSearchParams()
     if (params?.bot_id) query.set('bot_id', params.bot_id)
     if (params?.api_key_id) query.set('api_key_id', params.api_key_id)
     if (params?.api_version) query.set('api_version', params.api_version)
     if (params?.model) query.set('model', params.model)
+    if (params?.start_time) query.set('start_time', params.start_time)
+    if (params?.end_time) query.set('end_time', params.end_time)
     const suffix = query.toString() ? `?${query.toString()}` : ''
     return request<{ summary: UsageSummary }>(`/console/v1/api_usage/summary${suffix}`)
   },
-  listUsageLogs(params?: ListParams & { bot_id?: string; api_key_id?: string; api_version?: string; model?: string }) {
+  listUsageLogs(
+    params?: ListParams & {
+      bot_id?: string
+      api_key_id?: string
+      api_version?: string
+      model?: string
+      start_time?: string
+      end_time?: string
+    },
+  ) {
     const query = new URLSearchParams()
     if (params?.bot_id) query.set('bot_id', params.bot_id)
     if (params?.api_key_id) query.set('api_key_id', params.api_key_id)
     if (params?.api_version) query.set('api_version', params.api_version)
     if (params?.model) query.set('model', params.model)
+    if (params?.start_time) query.set('start_time', params.start_time)
+    if (params?.end_time) query.set('end_time', params.end_time)
     if (params?.limit) query.set('limit', String(params.limit))
     if (params?.offset) query.set('offset', String(params.offset))
     const suffix = query.toString() ? `?${query.toString()}` : ''
     return request<{ items: UsageLogItem[] }>(`/console/v1/api_usage${suffix}`)
   },
-  listSessions(params?: ListParams & { bot_id?: string }) {
+  exportUsageLogs(payload: {
+    api_key_id?: string
+    bot_id?: string
+    api_version?: string
+    model?: string
+    start_time?: string
+    end_time?: string
+    format?: string
+    limit?: number
+    offset?: number
+  }) {
+    return request<UsageExportResult>('/console/v1/api_usage/export', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  },
+  listSessions(params?: ListParams) {
     const query = new URLSearchParams()
-    if (params?.bot_id) query.set('bot_id', params.bot_id)
     if (params?.limit) query.set('limit', String(params.limit))
     if (params?.offset) query.set('offset', String(params.offset))
     const suffix = query.toString() ? `?${query.toString()}` : ''
-    return request<{ items: SessionItem[] }>(`/console/v1/sessions${suffix}`)
+    return request<{ sessions: SessionItem[] }>(`/console/v1/sessions${suffix}`).then((res) => ({
+      items: res.sessions ?? [],
+    }))
   },
   listMessages(sessionId: string) {
-    return request<{ items: MessageItem[] }>(`/console/v1/sessions/${sessionId}/messages`)
+    return request<{ messages: MessageItem[] }>(`/console/v1/sessions/${sessionId}/messages`).then(
+      (res) => ({
+        items: res.messages ?? [],
+      }),
+    )
   },
   createUser(tenantId: string, payload: CreateUserInput) {
     return request<{ user: UserItem }>(`/console/v1/tenants/${tenantId}/users`, {

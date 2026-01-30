@@ -5,6 +5,7 @@ import { consoleRoutes, consoleDefaultPath } from './routes/console'
 import { platformRoutes, platformDefaultPath } from './routes/platform'
 import { NotFound } from './pages/NotFound'
 import { ConsoleLogin } from './pages/auth/ConsoleLogin'
+import { ConsoleRegister } from './pages/auth/ConsoleRegister'
 import { PlatformLogin } from './pages/auth/PlatformLogin'
 import { RequirePermission } from './components/RequirePermission'
 import { PermissionProvider } from './auth/PermissionContext'
@@ -14,6 +15,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Navigate to={consoleDefaultPath} replace />} />
       <Route path="/console/login" element={<ConsoleLogin />} />
+      <Route path="/console/register" element={<ConsoleRegister />} />
       <Route path="/platform/login" element={<PlatformLogin />} />
 
       <Route

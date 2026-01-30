@@ -3,6 +3,7 @@ import {
   Card,
   Descriptions,
   Form,
+  Input,
   InputNumber,
   Modal,
   Popconfirm,
@@ -24,13 +25,17 @@ export function BotDetail() {
   const { id } = useParams()
   const botId = id ?? ''
   const [bindOpen, setBindOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [bindForm] = Form.useForm()
+  const [editForm] = Form.useForm()
 
-  const { data: botsData, loading: botsLoading, error: botsError } = useRequest(
-    () => consoleApi.listBots(),
-    { items: [] },
-  )
-  const bot = botsData.items.find((item) => item.id === botId)
+  const {
+    data: botData,
+    loading: botLoading,
+    error: botError,
+    reload: reloadBot,
+  } = useRequest(() => consoleApi.getBot(botId), { bot: undefined }, { enabled: Boolean(botId) })
+  const bot = botData.bot
 
   const { data: kbData, reload: reloadBindings } = useRequest(
     () => consoleApi.listBotKnowledgeBases(botId),
@@ -63,6 +68,28 @@ export function BotDetail() {
     }
   }
 
+  const openEdit = () => {
+    if (!bot) return
+    editForm.setFieldsValue({
+      name: bot.name,
+      description: bot.description,
+      status: bot.status,
+    })
+    setEditOpen(true)
+  }
+
+  const handleEdit = async () => {
+    try {
+      const values = await editForm.validateFields()
+      await consoleApi.updateBot(botId, values)
+      message.success('已更新机器人')
+      setEditOpen(false)
+      reloadBot()
+    } catch (err) {
+      if (err instanceof Error) message.error(err.message)
+    }
+  }
+
   return (
     <div className="page">
       <PageHeader
@@ -70,15 +97,16 @@ export function BotDetail() {
         description="查看机器人配置与关联资源"
         extra={
           <Space>
+            <Button onClick={openEdit}>编辑</Button>
             <Button type="primary" onClick={() => setBindOpen(true)}>
               绑定知识库
             </Button>
           </Space>
         }
       />
-      <RequestBanner error={botsError} />
+      <RequestBanner error={botError} />
       <Card>
-        {botsLoading ? (
+        {botLoading ? (
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : (
           <Descriptions column={1} bordered size="middle">
@@ -87,6 +115,7 @@ export function BotDetail() {
               <Tag color={bot?.status === 'active' ? 'green' : 'red'}>{bot?.status || 'unknown'}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="名称">{bot?.name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="描述">{bot?.description || '-'}</Descriptions.Item>
             <Descriptions.Item label="RAG Pipeline">标准工作流 + rerank</Descriptions.Item>
           </Descriptions>
         )}
@@ -143,6 +172,31 @@ export function BotDetail() {
           </Form.Item>
           <Form.Item label="权重" name="weight">
             <InputNumber min={0} max={1} step={0.1} style={{ width: '100%' }} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="编辑机器人"
+        open={editOpen}
+        onCancel={() => setEditOpen(false)}
+        onOk={handleEdit}
+        okText="保存"
+      >
+        <Form form={editForm} layout="vertical">
+          <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
+            <Input placeholder="例如：产品客服 Bot" />
+          </Form.Item>
+          <Form.Item label="描述" name="description">
+            <Input.TextArea placeholder="描述 Bot 用途" rows={3} />
+          </Form.Item>
+          <Form.Item label="状态" name="status" rules={[{ required: true }]}>
+            <Select
+              options={[
+                { value: 'active', label: 'Active' },
+                { value: 'disabled', label: 'Disabled' },
+              ]}
+            />
           </Form.Item>
         </Form>
       </Modal>

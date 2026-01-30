@@ -39,7 +39,7 @@
 
 ## A1. 登录页（Platform）
 - 登录字段：账号（email/phone）、密码。
-- 登录成功后换取 JWT（后端暂无接口，UI 预留）。
+- 登录成功后换取 JWT（`POST /platform/v1/login`）。
 - 错误态：账号不存在、密码错误、账号禁用。
 
 ## A2. 平台导航
@@ -92,8 +92,8 @@
 # PART B — Tenant Console 区
 
 ## B1. 注册 / 登录
-- 注册：自助入驻入口（后端未实现，UI 预留）。
-- 登录：租户管理员登录换取 JWT（后端未实现，UI 预留）。
+- 注册：自助入驻入口（`POST /console/v1/register`）。
+- 登录：租户管理员登录换取 JWT（`POST /console/v1/login`）。
 
 ## B2. Console 侧边栏（按权限展示）
 - 仪表盘
@@ -158,14 +158,14 @@
 
 ## B5. 机器人（Bots）
 **页面：列表 / 新建 / 详情**
-- 列表列：id、name、status、created_at、kb_count、api_key_count。
+- 列表列：id、name、status、created_at（kb_count / api_key_count 可选扩展）。
 - 操作：创建、编辑、删除。
 - 详情页分区：
   - Overview：名称、状态、创建时间。
   - 绑定知识库：查看/新增/移除 KB。
   - API Keys：关联的 Key 列表（只读或跳转）。
   - RAG Pipeline：显示默认流水线与关键参数（只读）。
-- API（规划）：
+- API：
   - `POST /console/v1/bots`
   - `GET /console/v1/bots`
   - `PATCH /console/v1/bots/{id}`
@@ -236,7 +236,7 @@
 ## B8. 会话管理
 ### 会话列表
 - 列表列：session_id、bot_id、status、close_reason、user_external_id、created_at。
-- 筛选：bot_id、status、时间范围。
+- 筛选：status、时间范围。
 - 路由：`/console/sessions`。
 - API：`GET /console/v1/sessions`
 
@@ -272,8 +272,6 @@
 ---
 
 # 5. 待实现/前端预留
-- 平台/租户登录注册接口。
-- Bot CRUD 实际后端接口落地。
 - 平台审计日志高级检索。
 
 ---
@@ -281,7 +279,7 @@
 # 6. 路由与页面细化（建议实现清单）
 
 ## 6.1 Platform 区路由
-- `/platform/login`：平台登录页（预留）。
+- `/platform/login`：平台登录页。
 - `/platform/tenants`：租户列表与筛选。
 - `/platform/tenants/:id`：租户详情（基础信息 + 关联资源概览）。
 - `/platform/admins`：平台管理员列表与创建。
@@ -291,7 +289,8 @@
 - `/platform/permissions`：权限目录（scope 过滤）。
 
 ## 6.2 Console 区路由
-- `/console/login`：租户登录页（预留）。
+- `/console/login`：租户登录页。
+- `/console/register`：租户注册页。
 - `/console/analytics/overview`：统计总览。
 - `/console/analytics/latency`：延迟趋势。
 - `/console/analytics/top-questions`：热门问题。

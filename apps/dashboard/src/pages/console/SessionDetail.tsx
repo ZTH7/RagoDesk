@@ -1,4 +1,4 @@
-import { Card, List, Tag, Typography, Skeleton } from 'antd'
+import { Card, Collapse, List, Tag, Typography, Skeleton, Table } from 'antd'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { RequestBanner } from '../../components/RequestBanner'
@@ -34,6 +34,11 @@ export function SessionDetail() {
                     <span>
                       <Tag color={item.role === 'assistant' ? 'blue' : 'default'}>{item.role}</Tag>
                       {item.id}
+                      {typeof item.confidence === 'number' && (
+                        <Tag color="geekblue" style={{ marginLeft: 8 }}>
+                          confidence: {(item.confidence * 100).toFixed(1)}%
+                        </Tag>
+                      )}
                     </span>
                   }
                   description={
@@ -42,6 +47,38 @@ export function SessionDetail() {
                       <div>
                         <Typography.Text type="secondary">{item.created_at}</Typography.Text>
                       </div>
+                      {item.references && item.references.length > 0 && (
+                        <Collapse
+                          ghost
+                          style={{ marginTop: 8 }}
+                          items={[
+                            {
+                              key: 'refs',
+                              label: `引用来源 (${item.references.length})`,
+                              children: (
+                                <Table
+                                  size="small"
+                                  pagination={false}
+                                  rowKey={(ref) => `${ref.document_id}-${ref.chunk_id}-${ref.rank}`}
+                                  dataSource={item.references}
+                                  columns={[
+                                    { title: 'Doc', dataIndex: 'document_id' },
+                                    { title: 'Version', dataIndex: 'document_version_id' },
+                                    { title: 'Chunk', dataIndex: 'chunk_id' },
+                                    { title: 'Score', dataIndex: 'score', render: (v) => v.toFixed(3) },
+                                    { title: 'Rank', dataIndex: 'rank' },
+                                    {
+                                      title: 'Snippet',
+                                      dataIndex: 'snippet',
+                                      render: (v) => v || '-',
+                                    },
+                                  ]}
+                                />
+                              ),
+                            },
+                          ]}
+                        />
+                      )}
                     </div>
                   }
                 />
