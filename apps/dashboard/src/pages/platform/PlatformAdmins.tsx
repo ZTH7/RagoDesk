@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Space, Tag, message } from 'antd'
+import { Button, Form, Input, Modal, Radio, Select, Space, Tag, Typography, message } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -20,6 +20,9 @@ export function PlatformAdmins() {
   const [createOpen, setCreateOpen] = useState(false)
   const [assignOpen, setAssignOpen] = useState(false)
   const [activeAdminId, setActiveAdminId] = useState('')
+  const [createMode, setCreateMode] = useState<'password' | 'invite'>('password')
+  const [inviteLink, setInviteLink] = useState('')
+  const [inviteOpen, setInviteOpen] = useState(false)
   const [createForm] = Form.useForm()
   const [assignForm] = Form.useForm()
 
@@ -37,10 +40,26 @@ export function PlatformAdmins() {
   const handleCreate = async () => {
     try {
       const values = await createForm.validateFields()
-      await platformApi.createAdmin(values)
+      const payload: any = {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        status: values.status,
+      }
+      if (createMode === 'password') {
+        payload.password = values.password
+      } else {
+        payload.send_invite = true
+        payload.invite_base_url = window.location.origin
+      }
+      const res = await platformApi.createAdmin(payload)
       message.success('已创建管理员')
       setCreateOpen(false)
       createForm.resetFields()
+      if (res.invite_link) {
+        setInviteLink(res.invite_link)
+        setInviteOpen(true)
+      }
       reload()
     } catch (err) {
       if (err instanceof Error) message.error(err.message)
@@ -135,7 +154,16 @@ export function PlatformAdmins() {
         onOk={handleCreate}
         okText="创建"
       >
-        <Form form={createForm} layout="vertical" initialValues={{ status: 'active' }}>
+        <Form
+          form={createForm}
+          layout="vertical"
+          initialValues={{ status: 'active' }}
+          onValuesChange={(changed) => {
+            if (changed.createMode) {
+              setCreateMode(changed.createMode)
+            }
+          }}
+        >
           <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
             <Input placeholder="管理员姓名" />
           </Form.Item>
@@ -148,14 +176,34 @@ export function PlatformAdmins() {
           <Form.Item label="状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
             <Select options={[{ value: 'active', label: 'Active' }, { value: 'disabled', label: 'Disabled' }]} />
           </Form.Item>
-          <Form.Item
-            label="Password Hash"
-            name="password_hash"
-            rules={[{ required: true, message: '请输入密码哈希' }]}
-          >
-            <Input.Password placeholder="后端要求 password_hash" />
+          <Form.Item label="创建方式" name="createMode" initialValue="password">
+            <Radio.Group>
+              <Radio value="password">设置初始密码</Radio>
+              <Radio value="invite">发送邀请链接</Radio>
+            </Radio.Group>
           </Form.Item>
+          {createMode === 'password' ? (
+            <Form.Item label="初始密码" name="password" rules={[{ required: true, message: '请输入初始密码' }]}>
+              <Input.Password placeholder="设置初始密码" />
+            </Form.Item>
+          ) : (
+            <Typography.Text className="muted">
+              系统会生成临时密码并返回邀请链接，请复制后发送给管理员。
+            </Typography.Text>
+          )}
         </Form>
+      </Modal>
+
+      <Modal
+        title="邀请链接"
+        open={inviteOpen}
+        onCancel={() => setInviteOpen(false)}
+        footer={<Button onClick={() => setInviteOpen(false)}>关闭</Button>}
+      >
+        <Typography.Paragraph className="muted">
+          复制以下链接发送给管理员完成登录。
+        </Typography.Paragraph>
+        <Input.TextArea value={inviteLink} readOnly rows={3} />
       </Modal>
 
       <Modal

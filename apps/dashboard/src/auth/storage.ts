@@ -1,5 +1,14 @@
 const TOKEN_KEY = 'ragodesk_token'
 const TENANT_KEY = 'ragodesk_tenant_id'
+const PROFILE_KEY = 'ragodesk_profile'
+const SCOPE_KEY = 'ragodesk_scope'
+
+export type StoredProfile = {
+  name?: string
+  account?: string
+  roles?: string[]
+  scope?: 'console' | 'platform'
+}
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY)
@@ -23,4 +32,38 @@ export function setTenantId(tenantId: string) {
 
 export function clearTenantId() {
   localStorage.removeItem(TENANT_KEY)
+}
+
+export function setProfile(profile: StoredProfile) {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
+}
+
+export function getProfile(): StoredProfile | null {
+  const raw = localStorage.getItem(PROFILE_KEY)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as StoredProfile
+  } catch {
+    return null
+  }
+}
+
+export function clearProfile() {
+  localStorage.removeItem(PROFILE_KEY)
+}
+
+export function setScope(scope: 'console' | 'platform') {
+  localStorage.setItem(SCOPE_KEY, scope)
+}
+
+export function getScope() {
+  const raw = localStorage.getItem(SCOPE_KEY)
+  if (raw === 'console' || raw === 'platform') {
+    return raw
+  }
+  return null
+}
+
+export function clearScope() {
+  localStorage.removeItem(SCOPE_KEY)
 }

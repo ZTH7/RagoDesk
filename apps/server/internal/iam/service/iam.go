@@ -2,6 +2,10 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base32"
+	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -13,6 +17,7 @@ import (
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport"
 	"github.com/google/wire"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -84,18 +89,56 @@ func (s *IAMService) CreatePlatformAdmin(ctx context.Context, req *v1.CreatePlat
 	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformAdminCreate); err != nil {
 		return nil, err
 	}
+	email := strings.TrimSpace(req.GetEmail())
+	phone := strings.TrimSpace(req.GetPhone())
+	if email == "" && phone == "" {
+		return nil, errors.BadRequest("ADMIN_ACCOUNT_REQUIRED", "email or phone required")
+	}
+	password := strings.TrimSpace(req.GetPassword())
+	sendInvite := req.GetSendInvite()
+	if sendInvite && password == "" {
+		password = generateTempPassword()
+	}
+	if password == "" {
+		return nil, errors.BadRequest("ADMIN_PASSWORD_REQUIRED", "password required")
+	}
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.InternalServer("PASSWORD_HASH_FAILED", "password hash failed")
+	}
+	status := strings.TrimSpace(req.GetStatus())
+	if status == "" {
+		status = "active"
+	}
 	admin := biz.PlatformAdmin{
-		Email:        req.GetEmail(),
-		Phone:        req.GetPhone(),
+		Email:        email,
+		Phone:        phone,
 		Name:         req.GetName(),
-		Status:       req.GetStatus(),
-		PasswordHash: req.GetPasswordHash(),
+		Status:       status,
+		PasswordHash: string(passwordHash),
 	}
 	created, err := s.uc.CreatePlatformAdmin(ctx, admin)
 	if err != nil {
 		return nil, err
 	}
-	return &v1.PlatformAdminResponse{Admin: toPlatformAdmin(created)}, nil
+	inviteLink := ""
+	if sendInvite {
+		base := strings.TrimSpace(req.GetInviteBaseUrl())
+		if base == "" {
+			base = "http://localhost:5173"
+		}
+		account := email
+		if account == "" {
+			account = phone
+		}
+		inviteLink = fmt.Sprintf(
+			"%s/platform/login?account=%s&temp_password=%s",
+			strings.TrimRight(base, "/"),
+			url.QueryEscape(account),
+			url.QueryEscape(password),
+		)
+	}
+	return &v1.PlatformAdminResponse{Admin: toPlatformAdmin(created), InviteLink: inviteLink}, nil
 }
 
 func (s *IAMService) ListPlatformAdmins(ctx context.Context, req *v1.ListPlatformAdminsRequest) (*v1.ListPlatformAdminsResponse, error) {
@@ -462,6 +505,18 @@ func toPlatformRole(value biz.PlatformRole) *v1.PlatformRole {
 		Id:   value.ID,
 		Name: value.Name,
 	}
+}
+
+func generateTempPassword() string {
+	buf := make([]byte, 10)
+	if _, err := rand.Read(buf); err != nil {
+		return "TempPass123!"
+	}
+	encoded := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(buf)
+	if len(encoded) > 12 {
+		return encoded[:12]
+	}
+	return encoded
 }
 
 // ProviderSet is iam service providers.

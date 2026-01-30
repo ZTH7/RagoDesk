@@ -131,3 +131,27 @@ a {
   margin-top: 20px;
 }
 
+.home-shell {
+  padding: 32px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.home-hero {
+  padding: 32px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(27, 75, 102, 0.12), rgba(43, 179, 177, 0.08));
+  border: 1px solid rgba(27, 75, 102, 0.12);
+}
+
+.home-cards {
+  margin-bottom: 8px;
+}
+
+.home-list {
+  padding-left: 20px;
+  margin: 0;
+  color: #0f172a;
+}
+

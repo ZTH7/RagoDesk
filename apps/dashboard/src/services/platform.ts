@@ -43,7 +43,9 @@ export type CreatePlatformAdminInput = {
   email: string
   phone?: string
   status: string
-  password_hash: string
+  password?: string
+  send_invite?: boolean
+  invite_base_url?: string
 }
 
 export type CreatePlatformRoleInput = {
@@ -81,7 +83,7 @@ export const platformApi = {
     return request<{ items: PlatformAdminItem[] }>(`/platform/v1/admins${suffix}`)
   },
   createAdmin(payload: CreatePlatformAdminInput) {
-    return request<{ admin: PlatformAdminItem }>('/platform/v1/admins', {
+    return request<{ admin: PlatformAdminItem; invite_link?: string }>('/platform/v1/admins', {
       method: 'POST',
       body: JSON.stringify(payload),
     })

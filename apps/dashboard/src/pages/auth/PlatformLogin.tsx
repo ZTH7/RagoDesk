@@ -1,7 +1,7 @@
 import { Button, Form, Input, Space, Typography, message } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
-import { setToken } from '../../auth/storage'
+import { setProfile, setScope, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
 
 export function PlatformLogin() {
@@ -12,6 +12,8 @@ export function PlatformLogin() {
     try {
       if (values.token) {
         setToken(values.token)
+        setScope('platform')
+        setProfile({ scope: 'platform' })
         message.success('Token 已保存')
         navigate('/platform/tenants', { replace: true })
         return
@@ -21,6 +23,13 @@ export function PlatformLogin() {
         password: values.password,
       })
       setToken(res.token)
+      setScope('platform')
+      setProfile({
+        name: res.profile?.name,
+        account: res.profile?.account,
+        roles: res.profile?.roles,
+        scope: 'platform',
+      })
       message.success('登录成功')
       navigate('/platform/tenants', { replace: true })
     } catch (err) {

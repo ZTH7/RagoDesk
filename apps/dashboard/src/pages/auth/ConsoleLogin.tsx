@@ -1,7 +1,7 @@
 import { Button, Form, Input, Space, Typography, message } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
-import { clearTenantId, setTenantId, setToken } from '../../auth/storage'
+import { clearTenantId, setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
 
 export function ConsoleLogin() {
@@ -17,6 +17,8 @@ export function ConsoleLogin() {
     try {
       if (values.token) {
         setToken(values.token)
+        setScope('console')
+        setProfile({ scope: 'console' })
         if (values.tenant_id) {
           setTenantId(values.tenant_id)
         } else {
@@ -32,6 +34,13 @@ export function ConsoleLogin() {
         tenant_id: values.tenant_id || undefined,
       })
       setToken(res.token)
+      setScope('console')
+      setProfile({
+        name: res.profile?.name,
+        account: res.profile?.account,
+        roles: res.profile?.roles,
+        scope: 'console',
+      })
       if (res.profile?.tenant_id) {
         setTenantId(res.profile.tenant_id)
       }

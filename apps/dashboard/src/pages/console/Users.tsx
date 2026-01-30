@@ -1,4 +1,4 @@
-import { Alert, Button, Form, Input, Modal, Select, Space, Tag, message } from 'antd'
+import { Button, Form, Input, Modal, Select, Space, Tag, message } from 'antd'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { FilterBar } from '../../components/FilterBar'
@@ -67,15 +67,6 @@ export function Users() {
     <div className="page">
       <PageHeader title="成员管理" description="邀请与管理租户成员" extra={<DataSourceTag source={source} />} />
       <RequestBanner error={error} />
-      {!tenantId && (
-        <Alert
-          type="warning"
-          message="当前未设置 Tenant ID"
-          description="请先在个人中心填写 Tenant ID，才能拉取与创建成员。"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-      )}
       <FilterBar
         left={<Input.Search placeholder="搜索成员" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={

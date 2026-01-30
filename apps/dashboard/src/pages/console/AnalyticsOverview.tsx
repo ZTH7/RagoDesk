@@ -1,4 +1,4 @@
-import { Button, Card, Col, DatePicker, Row, Select, Space, Statistic, Table, Typography } from 'antd'
+import { Button, Card, Col, DatePicker, Row, Select, Space, Statistic, Table, Tag } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
@@ -8,6 +8,7 @@ import { FilterBar } from '../../components/FilterBar'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 import { analyticsApi } from '../../services/analytics'
+import { TrendLine } from '../../components/TrendLine'
 
 export function AnalyticsOverview() {
   const [botId, setBotId] = useState<string>('all')
@@ -27,6 +28,7 @@ export function AnalyticsOverview() {
       error_rate: 0,
     },
   })
+  const { data: latencyData } = useRequest(() => analyticsApi.getLatency(query), { points: [] })
   const { data: topData } = useRequest(() => analyticsApi.getTopQuestions(query), { items: [] })
   const { data: gapData } = useRequest(() => analyticsApi.getKBGaps(query), { items: [] })
 
@@ -98,6 +100,49 @@ export function AnalyticsOverview() {
 
       <Row gutter={16}>
         <Col xs={24} lg={12}>
+          <Card title="延迟趋势">
+            <Space align="center" style={{ marginBottom: 12 }}>
+              <Tag color="blue">Avg Latency</Tag>
+              <Tag color="purple">P95 Latency</Tag>
+            </Space>
+            <TrendLine
+              series={[
+                {
+                  name: 'avg',
+                  values: latencyData.points.map((item) => item.avg_latency_ms),
+                  color: '#1B4B66',
+                },
+                {
+                  name: 'p95',
+                  values: latencyData.points.map((item) => item.p95_latency_ms),
+                  color: '#6D28D9',
+                },
+              ]}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card title="命中率趋势">
+            <Space align="center" style={{ marginBottom: 12 }}>
+              <Tag color="green">Hit Rate</Tag>
+            </Space>
+            <TrendLine
+              series={[
+                {
+                  name: 'hit_rate',
+                  values: latencyData.points.map((item) =>
+                    item.total_queries ? item.hit_queries / item.total_queries : 0,
+                  ),
+                  color: '#16A34A',
+                },
+              ]}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={16}>
+        <Col xs={24} lg={12}>
           <Card title="热门问题">
             <Table
               size="small"
@@ -130,10 +175,6 @@ export function AnalyticsOverview() {
           </Card>
         </Col>
       </Row>
-
-      <Card>
-        <Typography.Text className="muted">图表与趋势分析将在对接统计 API 后展示。</Typography.Text>
-      </Card>
     </div>
   )
 }

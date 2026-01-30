@@ -1236,7 +1236,9 @@ type CreatePlatformAdminRequest struct {
 	Phone         string                 `protobuf:"bytes,2,opt,name=phone,proto3" json:"phone,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	PasswordHash  string                 `protobuf:"bytes,5,opt,name=password_hash,json=passwordHash,proto3" json:"password_hash,omitempty"`
+	Password      string                 `protobuf:"bytes,5,opt,name=password,proto3" json:"password,omitempty"`
+	SendInvite    bool                   `protobuf:"varint,6,opt,name=send_invite,json=sendInvite,proto3" json:"send_invite,omitempty"`
+	InviteBaseUrl string                 `protobuf:"bytes,7,opt,name=invite_base_url,json=inviteBaseUrl,proto3" json:"invite_base_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1299,9 +1301,23 @@ func (x *CreatePlatformAdminRequest) GetStatus() string {
 	return ""
 }
 
-func (x *CreatePlatformAdminRequest) GetPasswordHash() string {
+func (x *CreatePlatformAdminRequest) GetPassword() string {
 	if x != nil {
-		return x.PasswordHash
+		return x.Password
+	}
+	return ""
+}
+
+func (x *CreatePlatformAdminRequest) GetSendInvite() bool {
+	if x != nil {
+		return x.SendInvite
+	}
+	return false
+}
+
+func (x *CreatePlatformAdminRequest) GetInviteBaseUrl() string {
+	if x != nil {
+		return x.InviteBaseUrl
 	}
 	return ""
 }
@@ -1837,6 +1853,7 @@ func (x *PermissionResponse) GetPermission() *Permission {
 type PlatformAdminResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Admin         *PlatformAdmin         `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	InviteLink    string                 `protobuf:"bytes,2,opt,name=invite_link,json=inviteLink,proto3" json:"invite_link,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1876,6 +1893,13 @@ func (x *PlatformAdminResponse) GetAdmin() *PlatformAdmin {
 		return x.Admin
 	}
 	return nil
+}
+
+func (x *PlatformAdminResponse) GetInviteLink() string {
+	if x != nil {
+		return x.InviteLink
+	}
+	return ""
 }
 
 type PlatformRoleResponse struct {
@@ -2005,13 +2029,16 @@ const file_api_iam_v1_iam_proto_rawDesc = "" +
 	"\arole_id\x18\x01 \x01(\tR\x06roleId\x12)\n" +
 	"\x10permission_codes\x18\x02 \x03(\tR\x0fpermissionCodes\"5\n" +
 	"\x1aListRolePermissionsRequest\x12\x17\n" +
-	"\arole_id\x18\x01 \x01(\tR\x06roleId\"\x99\x01\n" +
+	"\arole_id\x18\x01 \x01(\tR\x06roleId\"\xd9\x01\n" +
 	"\x1aCreatePlatformAdminRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x14\n" +
 	"\x05phone\x18\x02 \x01(\tR\x05phone\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status\x12#\n" +
-	"\rpassword_hash\x18\x05 \x01(\tR\fpasswordHash\"\x1b\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1a\n" +
+	"\bpassword\x18\x05 \x01(\tR\bpassword\x12\x1f\n" +
+	"\vsend_invite\x18\x06 \x01(\bR\n" +
+	"sendInvite\x12&\n" +
+	"\x0finvite_base_url\x18\a \x01(\tR\rinviteBaseUrl\"\x1b\n" +
 	"\x19ListPlatformAdminsRequest\"M\n" +
 	"\x1aListPlatformAdminsResponse\x12/\n" +
 	"\x05items\x18\x01 \x03(\v2\x19.api.iam.v1.PlatformAdminR\x05items\"/\n" +
@@ -2037,9 +2064,11 @@ const file_api_iam_v1_iam_proto_rawDesc = "" +
 	"\x12PermissionResponse\x126\n" +
 	"\n" +
 	"permission\x18\x01 \x01(\v2\x16.api.iam.v1.PermissionR\n" +
-	"permission\"H\n" +
+	"permission\"i\n" +
 	"\x15PlatformAdminResponse\x12/\n" +
-	"\x05admin\x18\x01 \x01(\v2\x19.api.iam.v1.PlatformAdminR\x05admin\"D\n" +
+	"\x05admin\x18\x01 \x01(\v2\x19.api.iam.v1.PlatformAdminR\x05admin\x12\x1f\n" +
+	"\vinvite_link\x18\x02 \x01(\tR\n" +
+	"inviteLink\"D\n" +
 	"\x14PlatformRoleResponse\x12,\n" +
 	"\x04role\x18\x01 \x01(\v2\x18.api.iam.v1.PlatformRoleR\x04roleB4Z2github.com/ZTH7/RagoDesk/apps/server/api/iam/v1;v1b\x06proto3"
 

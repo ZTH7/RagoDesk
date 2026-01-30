@@ -1,4 +1,4 @@
-import { Button, Card, Col, DatePicker, Row, Select, Space, Statistic, Table } from 'antd'
+import { Button, Card, Col, DatePicker, Row, Select, Space, Statistic, Table, Tag } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
@@ -8,6 +8,7 @@ import { FilterBar } from '../../components/FilterBar'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 import { analyticsApi } from '../../services/analytics'
+import { TrendLine } from '../../components/TrendLine'
 
 export function AnalyticsLatency() {
   const [botId, setBotId] = useState<string>('all')
@@ -107,6 +108,26 @@ export function AnalyticsLatency() {
           </Card>
         </Col>
       </Row>
+      <Card title="趋势图">
+        <Space align="center" style={{ marginBottom: 12 }}>
+          <Tag color="blue">Avg Latency</Tag>
+          <Tag color="purple">P95 Latency</Tag>
+        </Space>
+        <TrendLine
+          series={[
+            {
+              name: 'avg',
+              values: data.points.map((item) => item.avg_latency_ms),
+              color: '#1B4B66',
+            },
+            {
+              name: 'p95',
+              values: data.points.map((item) => item.p95_latency_ms),
+              color: '#6D28D9',
+            },
+          ]}
+        />
+      </Card>
       <Card title="明细">
         <Table
           rowKey="date"

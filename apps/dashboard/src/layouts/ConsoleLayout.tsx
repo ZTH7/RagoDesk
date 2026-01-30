@@ -5,7 +5,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { consoleNavItems, consoleMenuKeys } from '../routes/console'
 import { buildMenuItems, resolveSelectedKey } from '../routes/utils'
 import { usePermissions } from '../auth/PermissionContext'
-import { getTenantId, getToken } from '../auth/storage'
+import { clearProfile, clearScope, clearTenantId, clearToken, getProfile, getTenantId, getToken } from '../auth/storage'
 
 const { Sider, Header, Content } = Layout
 
@@ -17,6 +17,8 @@ export function ConsoleLayout() {
   const [openKeys, setOpenKeys] = useState<string[]>([])
   const tenantId = getTenantId()
   const token = getToken()
+  const profile = getProfile()
+  const displayName = profile?.name || profile?.account || (token ? '已登录' : '未登录')
 
   useEffect(() => {
     if (selectedKey.startsWith('/console/analytics')) {
@@ -64,13 +66,21 @@ export function ConsoleLayout() {
                 onClick: ({ key }) => {
                   if (key === 'profile') {
                     navigate('/console/profile')
+                    return
+                  }
+                  if (key === 'logout') {
+                    clearToken()
+                    clearTenantId()
+                    clearProfile()
+                    clearScope()
+                    navigate('/')
                   }
                 },
               }}
             >
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar icon={<UserOutlined />} />
-                <Typography.Text>{token ? '已登录' : '未登录'}</Typography.Text>
+                <Typography.Text>{displayName}</Typography.Text>
               </Space>
             </Dropdown>
           </Space>

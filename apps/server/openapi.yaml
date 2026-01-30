@@ -3,70 +3,8 @@
 
 openapi: 3.0.3
 info:
-    title: RAG API
+    title: ""
     version: 0.0.1
-paths:
-    /api/v1/message:
-        post:
-            tags:
-                - RAG
-            operationId: RAG_SendMessage
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/api.rag.v1.SendMessageRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/api.rag.v1.SendMessageResponse'
+paths: {}
 components:
-    schemas:
-        api.rag.v1.Reference:
-            type: object
-            properties:
-                documentId:
-                    type: string
-                documentVersionId:
-                    type: string
-                chunkId:
-                    type: string
-                score:
-                    type: number
-                    format: float
-                rank:
-                    type: integer
-                    format: int32
-                snippet:
-                    type: string
-        api.rag.v1.SendMessageRequest:
-            type: object
-            properties:
-                sessionId:
-                    type: string
-                message:
-                    type: string
-                topK:
-                    type: integer
-                    format: int32
-                threshold:
-                    type: number
-                    format: float
-        api.rag.v1.SendMessageResponse:
-            type: object
-            properties:
-                reply:
-                    type: string
-                confidence:
-                    type: number
-                    format: float
-                references:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/api.rag.v1.Reference'
-tags:
-    - name: RAG
+    schemas: {}

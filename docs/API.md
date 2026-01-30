@@ -185,6 +185,28 @@
 - `GET /platform/v1/admins`
 - `POST /platform/v1/admins/{id}/roles`
 
+**Create**
+`POST /platform/v1/admins`
+```json
+{
+  "name": "Platform Admin",
+  "email": "admin@company.com",
+  "status": "active",
+  "password": "******"
+}
+```
+
+**Invite Link**
+```json
+{
+  "name": "Platform Admin",
+  "email": "admin@company.com",
+  "status": "active",
+  "send_invite": true,
+  "invite_base_url": "http://localhost:5173"
+}
+```
+
 ### 3.4 平台角色
 - `POST /platform/v1/roles`
 - `GET /platform/v1/roles`

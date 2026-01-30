@@ -5,7 +5,7 @@ import { platformNavItems, platformMenuKeys } from '../routes/platform'
 import { buildMenuItems, resolveSelectedKey } from '../routes/utils'
 import { usePermissions } from '../auth/PermissionContext'
 import { useMemo } from 'react'
-import { getToken } from '../auth/storage'
+import { clearProfile, clearScope, clearToken, getProfile, getToken } from '../auth/storage'
 
 const { Sider, Header, Content } = Layout
 
@@ -16,6 +16,8 @@ export function PlatformLayout() {
   const selectedKey = resolveSelectedKey(location.pathname, platformMenuKeys)
   const menuItems = useMemo(() => buildMenuItems(platformNavItems, permissions), [permissions])
   const token = getToken()
+  const profile = getProfile()
+  const displayName = profile?.name || profile?.account || (token ? '已登录' : '未登录')
 
   return (
     <Layout className="app-shell">
@@ -44,11 +46,19 @@ export function PlatformLayout() {
                 { key: 'profile', label: '个人中心' },
                 { key: 'logout', label: '退出登录', icon: <LogoutOutlined /> },
               ],
+              onClick: ({ key }) => {
+                if (key === 'logout') {
+                  clearToken()
+                  clearProfile()
+                  clearScope()
+                  navigate('/')
+                }
+              },
             }}
           >
             <Space style={{ cursor: 'pointer' }}>
               <Avatar icon={<UserOutlined />} />
-              <Typography.Text>{token ? '已登录' : '未登录'}</Typography.Text>
+              <Typography.Text>{displayName}</Typography.Text>
             </Space>
           </Dropdown>
         </Header>

@@ -1,7 +1,7 @@
 import { Button, Form, Input, Select, Space, Typography, message } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
-import { setTenantId, setToken } from '../../auth/storage'
+import { setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
 
 export function ConsoleRegister() {
@@ -19,6 +19,13 @@ export function ConsoleRegister() {
     try {
       const res = await authApi.consoleRegister(values)
       setToken(res.token)
+      setScope('console')
+      setProfile({
+        name: res.profile?.name,
+        account: res.profile?.account,
+        roles: res.profile?.roles,
+        scope: 'console',
+      })
       if (res.profile?.tenant_id) {
         setTenantId(res.profile.tenant_id)
       }

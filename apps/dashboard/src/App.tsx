@@ -1,7 +1,7 @@
 ﻿import { Navigate, Route, Routes } from 'react-router-dom'
 import { ConsoleLayout } from './layouts/ConsoleLayout'
 import { PlatformLayout } from './layouts/PlatformLayout'
-import { consoleRoutes, consoleDefaultPath } from './routes/console'
+import { consoleRoutes } from './routes/console'
 import { platformRoutes, platformDefaultPath } from './routes/platform'
 import { NotFound } from './pages/NotFound'
 import { ConsoleLogin } from './pages/auth/ConsoleLogin'
@@ -9,11 +9,13 @@ import { ConsoleRegister } from './pages/auth/ConsoleRegister'
 import { PlatformLogin } from './pages/auth/PlatformLogin'
 import { RequirePermission } from './components/RequirePermission'
 import { PermissionProvider } from './auth/PermissionContext'
+import { RequireAuth } from './components/RequireAuth'
+import { Home } from './pages/Home'
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={consoleDefaultPath} replace />} />
+      <Route path="/" element={<Home />} />
       <Route path="/console/login" element={<ConsoleLogin />} />
       <Route path="/console/register" element={<ConsoleRegister />} />
       <Route path="/platform/login" element={<PlatformLogin />} />
@@ -21,9 +23,11 @@ function App() {
       <Route
         path="/console"
         element={
-          <PermissionProvider scope="console">
-            <ConsoleLayout />
-          </PermissionProvider>
+          <RequireAuth scope="console">
+            <PermissionProvider scope="console">
+              <ConsoleLayout />
+            </PermissionProvider>
+          </RequireAuth>
         }
       >
         <Route index element={<Navigate to="analytics/overview" replace />} />
@@ -41,9 +45,11 @@ function App() {
       <Route
         path="/platform"
         element={
-          <PermissionProvider scope="platform">
-            <PlatformLayout />
-          </PermissionProvider>
+          <RequireAuth scope="platform">
+            <PermissionProvider scope="platform">
+              <PlatformLayout />
+            </PermissionProvider>
+          </RequireAuth>
         }
       >
         <Route index element={<Navigate to={platformDefaultPath.replace('/platform/', '')} replace />} />
