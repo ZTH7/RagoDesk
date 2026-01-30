@@ -22,7 +22,7 @@ export function Users() {
   const { data, loading, source, error, reload } = useRequest(
     () => consoleApi.listUsers(tenantId),
     { items: [] },
-    { enabled: Boolean(tenantId) },
+    { enabled: Boolean(tenantId), deps: [tenantId] },
   )
   const { data: roleData } = useRequest(() => consoleApi.listRoles(), { items: [] })
 

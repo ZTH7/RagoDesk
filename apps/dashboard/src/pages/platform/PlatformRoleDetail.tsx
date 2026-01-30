@@ -18,7 +18,11 @@ export function PlatformRoleDetail() {
   )
   const role = roleData.items.find((item) => item.id === roleId)
 
-  const permRequest = useRequest(() => platformApi.listRolePermissions(roleId), { items: [] }, { enabled: Boolean(roleId) })
+  const permRequest = useRequest(
+    () => platformApi.listRolePermissions(roleId),
+    { items: [] },
+    { enabled: Boolean(roleId), deps: [roleId] },
+  )
   const { data: permData } = permRequest
   const { data: allPerms } = useRequest(() => platformApi.listPermissions(), { items: [] })
 

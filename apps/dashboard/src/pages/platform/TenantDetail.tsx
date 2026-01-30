@@ -20,7 +20,7 @@ export function TenantDetail() {
         created_at: '',
       },
     },
-    { enabled: Boolean(tenantId) },
+    { enabled: Boolean(tenantId), deps: [tenantId] },
   )
 
   return (

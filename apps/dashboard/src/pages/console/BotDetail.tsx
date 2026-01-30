@@ -34,15 +34,19 @@ export function BotDetail() {
     loading: botLoading,
     error: botError,
     reload: reloadBot,
-  } = useRequest(() => consoleApi.getBot(botId), { bot: undefined }, { enabled: Boolean(botId) })
+  } = useRequest(() => consoleApi.getBot(botId), { bot: undefined }, { enabled: Boolean(botId), deps: [botId] })
   const bot = botData.bot
 
   const { data: kbData, reload: reloadBindings } = useRequest(
     () => consoleApi.listBotKnowledgeBases(botId),
     { items: [] },
-    { enabled: Boolean(botId) },
+    { enabled: Boolean(botId), deps: [botId] },
   )
-  const { data: keyData } = useRequest(() => consoleApi.listApiKeys({ bot_id: botId }), { items: [] })
+  const { data: keyData } = useRequest(
+    () => consoleApi.listApiKeys({ bot_id: botId }),
+    { items: [] },
+    { enabled: Boolean(botId), deps: [botId] },
+  )
   const { data: allKBs } = useRequest(() => consoleApi.listKnowledgeBases(), { items: [] })
 
   const handleBind = async () => {

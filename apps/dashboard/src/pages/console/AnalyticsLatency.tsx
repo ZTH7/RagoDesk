@@ -16,7 +16,7 @@ export function AnalyticsLatency() {
   const [query, setQuery] = useState<{ bot_id?: string; start_time?: string; end_time?: string }>({})
 
   const { data: botsData } = useRequest(() => consoleApi.listBots(), { items: [] })
-  const { data, loading, source, error } = useRequest(() => analyticsApi.getLatency(query), { points: [] })
+  const { data, loading, source, error } = useRequest(() => analyticsApi.getLatency(query), { points: [] }, { deps: [query] })
 
   const applyFilters = () => {
     const next: { bot_id?: string; start_time?: string; end_time?: string } = {}

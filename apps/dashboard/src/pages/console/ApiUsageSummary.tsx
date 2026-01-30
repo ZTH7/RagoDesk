@@ -44,6 +44,7 @@ export function ApiUsageSummary() {
         total_tokens: 0,
       },
     },
+    { deps: [query] },
   )
 
   const applyFilters = () => {

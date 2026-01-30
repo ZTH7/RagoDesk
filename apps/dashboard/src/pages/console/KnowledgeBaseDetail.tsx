@@ -23,13 +23,13 @@ export function KnowledgeBaseDetail() {
         created_at: '',
       },
     },
-    { enabled: Boolean(kbId) },
+    { enabled: Boolean(kbId), deps: [kbId] },
   )
 
   const { data: docData, loading: docLoading } = useRequest(
     () => consoleApi.listDocuments({ kb_id: kbId }),
     { items: [] },
-    { enabled: Boolean(kbId) },
+    { enabled: Boolean(kbId), deps: [kbId] },
   )
 
   const handleEdit = () => {

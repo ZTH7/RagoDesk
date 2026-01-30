@@ -11,7 +11,7 @@ export function SessionDetail() {
   const { data, loading, error } = useRequest(
     () => consoleApi.listMessages(sessionId),
     { items: [] },
-    { enabled: Boolean(sessionId) },
+    { enabled: Boolean(sessionId), deps: [sessionId] },
   )
 
   return (

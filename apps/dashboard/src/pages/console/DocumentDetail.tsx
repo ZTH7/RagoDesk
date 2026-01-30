@@ -38,7 +38,7 @@ export function DocumentDetail() {
       },
       versions: [],
     },
-    { enabled: Boolean(docId) },
+    { enabled: Boolean(docId), deps: [docId] },
   )
 
   const timeline = useMemo(() => {

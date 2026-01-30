@@ -31,7 +31,11 @@ export function ApiUsage() {
   const { data: botsData } = useRequest(() => consoleApi.listBots(), { items: [] })
   const { data: apiKeysData } = useRequest(() => consoleApi.listApiKeys({ limit: 200 }), { items: [] })
 
-  const { data, loading, source, error } = useRequest(() => consoleApi.listUsageLogs(query), { items: [] })
+  const { data, loading, source, error } = useRequest(
+    () => consoleApi.listUsageLogs(query),
+    { items: [] },
+    { deps: [query] },
+  )
 
   const filtered = useMemo(() => {
     return data.items.filter((item) => {

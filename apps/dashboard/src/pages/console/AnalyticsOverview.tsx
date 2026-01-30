@@ -17,20 +17,24 @@ export function AnalyticsOverview() {
 
   const { data: botsData } = useRequest(() => consoleApi.listBots(), { items: [] })
 
-  const { data, source, error } = useRequest(() => analyticsApi.getOverview(query), {
-    overview: {
-      total_queries: 0,
-      hit_queries: 0,
-      hit_rate: 0,
-      avg_latency_ms: 0,
-      p95_latency_ms: 0,
-      error_count: 0,
-      error_rate: 0,
+  const { data, source, error } = useRequest(
+    () => analyticsApi.getOverview(query),
+    {
+      overview: {
+        total_queries: 0,
+        hit_queries: 0,
+        hit_rate: 0,
+        avg_latency_ms: 0,
+        p95_latency_ms: 0,
+        error_count: 0,
+        error_rate: 0,
+      },
     },
-  })
-  const { data: latencyData } = useRequest(() => analyticsApi.getLatency(query), { points: [] })
-  const { data: topData } = useRequest(() => analyticsApi.getTopQuestions(query), { items: [] })
-  const { data: gapData } = useRequest(() => analyticsApi.getKBGaps(query), { items: [] })
+    { deps: [query] },
+  )
+  const { data: latencyData } = useRequest(() => analyticsApi.getLatency(query), { points: [] }, { deps: [query] })
+  const { data: topData } = useRequest(() => analyticsApi.getTopQuestions(query), { items: [] }, { deps: [query] })
+  const { data: gapData } = useRequest(() => analyticsApi.getKBGaps(query), { items: [] }, { deps: [query] })
 
   const applyFilters = () => {
     const next: { bot_id?: string; start_time?: string; end_time?: string } = {}

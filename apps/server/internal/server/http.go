@@ -27,6 +27,7 @@ import (
 // NewHTTPServer new an HTTP server.
 func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService, analyticsSvc *analyticsservice.AnalyticsService, botSvc *botservice.BotService, consoleAuthSvc *authnservice.ConsoleAuthService, platformAuthSvc *authnservice.PlatformAuthService) *http.Server {
 	var opts = []http.ServerOption{
+		http.Filter(CORSFilter()),
 		http.Middleware(
 			recovery.Recovery(),
 			ErrorMiddleware(),

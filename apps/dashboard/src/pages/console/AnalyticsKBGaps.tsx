@@ -15,7 +15,7 @@ export function AnalyticsKBGaps() {
   const [query, setQuery] = useState<{ bot_id?: string; start_time?: string; end_time?: string }>({})
 
   const { data: botsData } = useRequest(() => consoleApi.listBots(), { items: [] })
-  const { data, loading, source, error } = useRequest(() => analyticsApi.getKBGaps(query), { items: [] })
+  const { data, loading, source, error } = useRequest(() => analyticsApi.getKBGaps(query), { items: [] }, { deps: [query] })
 
   const applyFilters = () => {
     const next: { bot_id?: string; start_time?: string; end_time?: string } = {}

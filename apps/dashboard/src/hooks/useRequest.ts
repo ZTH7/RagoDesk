@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 type Source = 'api' | 'fallback' | 'empty'
 
@@ -13,6 +13,7 @@ type RequestState<T> = {
 type RequestOptions = {
   allowFallback?: boolean
   enabled?: boolean
+  deps?: ReadonlyArray<unknown>
 }
 
 export function useRequest<T>(
@@ -25,13 +26,25 @@ export function useRequest<T>(
   const [error, setError] = useState<string | null>(null)
   const [source, setSource] = useState<Source>('empty')
   const enabled = options.enabled !== false
+  const allowFallback = options.allowFallback ?? false
+  const deps = options.deps ?? []
+  const fetcherRef = useRef(fetcher)
+  const fallbackRef = useRef(fallback)
+
+  useEffect(() => {
+    fetcherRef.current = fetcher
+  }, [fetcher])
+
+  useEffect(() => {
+    fallbackRef.current = fallback
+  }, [fallback])
 
   const run = useCallback(() => {
     if (!enabled) {
       setLoading(false)
       setError(null)
       setSource('empty')
-      setData(fallback)
+      setData(fallbackRef.current)
       return
     }
 
@@ -39,7 +52,7 @@ export function useRequest<T>(
     setLoading(true)
     setError(null)
 
-    fetcher()
+    fetcherRef.current()
       .then((res) => {
         if (!alive) return
         setData(res)
@@ -47,8 +60,8 @@ export function useRequest<T>(
       })
       .catch((err: Error) => {
         if (!alive) return
-        setData(fallback)
-        setSource(options.allowFallback ? 'fallback' : 'empty')
+        setData(fallbackRef.current)
+        setSource(allowFallback ? 'fallback' : 'empty')
         setError(err.message)
       })
       .finally(() => {
@@ -59,7 +72,7 @@ export function useRequest<T>(
     return () => {
       alive = false
     }
-  }, [enabled, fetcher, fallback, options.allowFallback])
+  }, [allowFallback, enabled])
 
   useEffect(() => {
     const cancel = run()
@@ -68,7 +81,7 @@ export function useRequest<T>(
         cancel()
       }
     }
-  }, [run])
+  }, [run, ...deps])
 
   return {
     data,
