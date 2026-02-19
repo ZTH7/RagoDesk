@@ -8,7 +8,7 @@ package main
 import (
 	analyticsdata "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/data"
 	apimgmtdata "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/data"
-	authndata "github.com/ZTH7/RagoDesk/apps/server/internal/authn/data"
+	authdata "github.com/ZTH7/RagoDesk/apps/server/internal/auth/data"
 	botdata "github.com/ZTH7/RagoDesk/apps/server/internal/bot/data"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/biz"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
@@ -32,7 +32,7 @@ func wireApp(*conf.Server, *conf.Data, log.Logger) (*kratos.App, func(), error) 
 		data.NewData,
 		analyticsdata.ProviderSet,
 		apimgmtdata.ProviderSet,
-		authndata.ProviderSet,
+	authdata.ProviderSet,
 		botdata.ProviderSet,
 		conversationdata.ProviderSet,
 		iamdata.ProviderSet,

@@ -16,7 +16,7 @@ import (
 
 	"github.com/ZTH7/RagoDesk/apps/server/internal/ai/provider"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/paging"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/paging"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"

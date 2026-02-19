@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ZTH7/RagoDesk/apps/server/internal/auth"
+	jwt "github.com/ZTH7/RagoDesk/apps/server/internal/kit/jwt"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -228,7 +228,7 @@ func (uc *AuthUsecase) buildSession(profile AuthProfile) (AuthSession, error) {
 	}
 	now := time.Now()
 	expires := now.Add(uc.tokenTTL)
-	claims := auth.Claims{
+	claims := jwt.Claims{
 		TenantID:  profile.TenantID,
 		Subject:   profile.SubjectID,
 		Issuer:    uc.issuer,
@@ -240,7 +240,7 @@ func (uc *AuthUsecase) buildSession(profile AuthProfile) (AuthSession, error) {
 	if uc.audience != "" {
 		claims.Audience = uc.audience
 	}
-	token, err := auth.SignHS256(claims, uc.secret)
+	token, err := jwt.SignHS256(claims, uc.secret)
 	if err != nil {
 		return AuthSession{}, errors.InternalServer("JWT_SIGN_FAILED", "sign token failed")
 	}
@@ -262,5 +262,5 @@ func isActiveStatus(status string) bool {
 	return strings.TrimSpace(strings.ToLower(status)) == "active"
 }
 
-// ProviderSet is authn biz providers.
+// ProviderSet is auth biz providers.
 var ProviderSet = wire.NewSet(NewAuthUsecase)

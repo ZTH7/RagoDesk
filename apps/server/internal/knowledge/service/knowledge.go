@@ -7,7 +7,7 @@ import (
 	v1 "github.com/ZTH7/RagoDesk/apps/server/api/knowledge/v1"
 	iambiz "github.com/ZTH7/RagoDesk/apps/server/internal/iam/biz"
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"

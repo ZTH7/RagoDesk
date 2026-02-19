@@ -10,7 +10,7 @@ import (
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"

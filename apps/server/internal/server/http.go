@@ -11,12 +11,13 @@ import (
 	ragv1 "github.com/ZTH7/RagoDesk/apps/server/api/rag/v1"
 	analyticsservice "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/service"
 	apimgmtservice "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/service"
-	authnservice "github.com/ZTH7/RagoDesk/apps/server/internal/authn/service"
+	authservice "github.com/ZTH7/RagoDesk/apps/server/internal/auth/service"
 	botservice "github.com/ZTH7/RagoDesk/apps/server/internal/bot/service"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	conversationservice "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/service"
 	iamservice "github.com/ZTH7/RagoDesk/apps/server/internal/iam/service"
 	knowledgeservice "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/service"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/middleware"
 	ragservice "github.com/ZTH7/RagoDesk/apps/server/internal/rag/service"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -25,15 +26,15 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService, analyticsSvc *analyticsservice.AnalyticsService, botSvc *botservice.BotService, consoleAuthSvc *authnservice.ConsoleAuthService, platformAuthSvc *authnservice.PlatformAuthService) *http.Server {
+func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMService, knowledgeSvc *knowledgeservice.KnowledgeService, ragSvc *ragservice.RAGService, conversationSvc *conversationservice.ConversationService, apimgmtSvc *apimgmtservice.APIMgmtService, analyticsSvc *analyticsservice.AnalyticsService, botSvc *botservice.BotService, consoleAuthSvc *authservice.ConsoleAuthService, platformAuthSvc *authservice.PlatformAuthService) *http.Server {
 	var opts = []http.ServerOption{
-		http.Filter(CORSFilter()),
+		http.Filter(middleware.CORSFilter()),
 		http.Middleware(
 			recovery.Recovery(),
-			ErrorMiddleware(),
-			TracingMiddleware(),
-			LoggingMiddleware(),
-			AuthMiddleware(c.Auth),
+			middleware.ErrorMiddleware(),
+			middleware.TracingMiddleware(),
+			middleware.LoggingMiddleware(),
+			middleware.AuthMiddleware(c.Auth),
 		),
 	}
 	if c.Http.Network != "" {

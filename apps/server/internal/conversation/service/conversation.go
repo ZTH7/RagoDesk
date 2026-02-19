@@ -11,7 +11,7 @@ import (
 	analyticsbiz "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/biz"
 	apimgmtbiz "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/biz"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/transport"
 	"github.com/google/wire"

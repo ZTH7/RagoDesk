@@ -6,7 +6,7 @@ import (
 	"time"
 
 	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/biz"
 	"github.com/go-kratos/kratos/v2/errors"

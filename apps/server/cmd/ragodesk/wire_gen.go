@@ -13,9 +13,9 @@ import (
 	apimgmtbiz "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
 	apimgmtdata "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/data"
 	apimgmtservice "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/service"
-	authnbiz "github.com/ZTH7/RagoDesk/apps/server/internal/authn/biz"
-	authndata "github.com/ZTH7/RagoDesk/apps/server/internal/authn/data"
-	authnservice "github.com/ZTH7/RagoDesk/apps/server/internal/authn/service"
+	authbiz "github.com/ZTH7/RagoDesk/apps/server/internal/auth/biz"
+	authdata "github.com/ZTH7/RagoDesk/apps/server/internal/auth/data"
+	authservice "github.com/ZTH7/RagoDesk/apps/server/internal/auth/service"
 	botbiz "github.com/ZTH7/RagoDesk/apps/server/internal/bot/biz"
 	botdata "github.com/ZTH7/RagoDesk/apps/server/internal/bot/data"
 	botservice "github.com/ZTH7/RagoDesk/apps/server/internal/bot/service"
@@ -63,10 +63,10 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	iamRepo := iamdata.NewIAMRepo(dataData, logger)
 	iamUsecase := iambiz.NewIAMUsecase(iamRepo, logger)
 	iamService := iamservice.NewIAMService(iamUsecase, logger)
-	authRepo := authndata.NewAuthRepo(dataData, logger)
-	authUsecase := authnbiz.NewAuthUsecase(authRepo, confServer, logger)
-	consoleAuthService := authnservice.NewConsoleAuthService(authUsecase)
-	platformAuthService := authnservice.NewPlatformAuthService(authUsecase)
+	authRepo := authdata.NewAuthRepo(dataData, logger)
+	authUsecase := authbiz.NewAuthUsecase(authRepo, confServer, logger)
+	consoleAuthService := authservice.NewConsoleAuthService(authUsecase)
+	platformAuthService := authservice.NewPlatformAuthService(authUsecase)
 	botRepo := botdata.NewBotRepo(dataData, logger)
 	botUsecase := botbiz.NewBotUsecase(botRepo, logger)
 	botService := botservice.NewBotService(botUsecase, iamUsecase)

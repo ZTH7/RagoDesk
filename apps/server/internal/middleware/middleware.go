@@ -1,21 +1,21 @@
-package server
+package middleware
 
 import (
 	"context"
 	"strings"
 	"time"
 
-	"github.com/ZTH7/RagoDesk/apps/server/internal/auth"
+	jwt "github.com/ZTH7/RagoDesk/apps/server/internal/kit/jwt"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
-	"github.com/go-kratos/kratos/v2/middleware"
+	kmmiddleware "github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
 )
 
-// AuthMiddleware is a placeholder for auth (API Key / JWT) enforcement.
-func AuthMiddleware(cfg *conf.Server_Auth) middleware.Middleware {
-	return func(next middleware.Handler) middleware.Handler {
+// AuthMiddleware enforces JWT auth for protected console/platform operations.
+func AuthMiddleware(cfg *conf.Server_Auth) kmmiddleware.Middleware {
+	return func(next kmmiddleware.Handler) kmmiddleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			tr, ok := transport.FromServerContext(ctx)
 			if !ok {
@@ -35,11 +35,11 @@ func AuthMiddleware(cfg *conf.Server_Auth) middleware.Middleware {
 			if token == "" {
 				return nil, errors.Unauthorized("ADMIN_UNAUTHORIZED", "missing authorization")
 			}
-			claims, err := auth.ParseHS256(token, cfg.JwtSecret, cfg.Issuer, cfg.Audience, time.Now())
+			claims, err := jwt.ParseHS256(token, cfg.JwtSecret, cfg.Issuer, cfg.Audience, time.Now())
 			if err != nil {
 				return nil, errors.Unauthorized("ADMIN_UNAUTHORIZED", err.Error())
 			}
-			ctx = auth.WithClaims(ctx, claims)
+			ctx = jwt.WithClaims(ctx, claims)
 			if claims.TenantID != "" {
 				ctx = tenant.WithTenantID(ctx, claims.TenantID)
 			}
@@ -49,8 +49,8 @@ func AuthMiddleware(cfg *conf.Server_Auth) middleware.Middleware {
 }
 
 // LoggingMiddleware is a placeholder for structured request logging.
-func LoggingMiddleware() middleware.Middleware {
-	return func(next middleware.Handler) middleware.Handler {
+func LoggingMiddleware() kmmiddleware.Middleware {
+	return func(next kmmiddleware.Handler) kmmiddleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			// TODO: add structured logging with request/response metadata.
 			return next(ctx, req)
@@ -59,8 +59,8 @@ func LoggingMiddleware() middleware.Middleware {
 }
 
 // TracingMiddleware is a placeholder for distributed tracing.
-func TracingMiddleware() middleware.Middleware {
-	return func(next middleware.Handler) middleware.Handler {
+func TracingMiddleware() kmmiddleware.Middleware {
+	return func(next kmmiddleware.Handler) kmmiddleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			// TODO: propagate trace/span context.
 			return next(ctx, req)
@@ -69,8 +69,8 @@ func TracingMiddleware() middleware.Middleware {
 }
 
 // ErrorMiddleware is a placeholder for standardized error mapping.
-func ErrorMiddleware() middleware.Middleware {
-	return func(next middleware.Handler) middleware.Handler {
+func ErrorMiddleware() kmmiddleware.Middleware {
+	return func(next kmmiddleware.Handler) kmmiddleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			// TODO: map domain errors to API error codes.
 			return next(ctx, req)

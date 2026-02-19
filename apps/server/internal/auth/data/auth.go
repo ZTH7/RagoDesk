@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	biz "github.com/ZTH7/RagoDesk/apps/server/internal/authn/biz"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/auth/biz"
 	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -229,5 +229,5 @@ func emptyToNull(value string) any {
 	return value
 }
 
-// ProviderSet is authn data providers.
+// ProviderSet is auth data providers.
 var ProviderSet = wire.NewSet(NewAuthRepo)

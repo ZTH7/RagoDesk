@@ -1,8 +1,6 @@
-package server
+package middleware
 
-import (
-	"net/http"
-)
+import "net/http"
 
 // CORSFilter handles basic CORS headers and preflight requests.
 // It reflects the Origin header to allow credentialed requests from the dashboard.

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ZTH7/RagoDesk/apps/server/internal/auth"
+	jwt "github.com/ZTH7/RagoDesk/apps/server/internal/kit/jwt"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -256,7 +256,7 @@ func (uc *IAMUsecase) RequirePermission(ctx context.Context, permission string) 
 	if permission == "" {
 		return nil
 	}
-	claims, ok := auth.ClaimsFromContext(ctx)
+	claims, ok := jwt.ClaimsFromContext(ctx)
 	if !ok || claims.Subject == "" {
 		return errors.Forbidden("RBAC_FORBIDDEN", "missing subject")
 	}

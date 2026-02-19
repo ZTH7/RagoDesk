@@ -10,7 +10,7 @@ import (
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-sql-driver/mysql"

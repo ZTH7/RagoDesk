@@ -4,7 +4,7 @@ import (
 	"context"
 
 	v1 "github.com/ZTH7/RagoDesk/apps/server/api/auth/v1"
-	biz "github.com/ZTH7/RagoDesk/apps/server/internal/authn/biz"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/auth/biz"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/google/wire"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -91,5 +91,5 @@ func toAuthResponse(session biz.AuthSession) *v1.AuthResponse {
 	}
 }
 
-// ProviderSet is authn service providers.
+// ProviderSet is auth service providers.
 var ProviderSet = wire.NewSet(NewConsoleAuthService, NewPlatformAuthService)

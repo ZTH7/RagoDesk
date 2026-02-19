@@ -10,9 +10,9 @@ import (
 	"time"
 
 	v1 "github.com/ZTH7/RagoDesk/apps/server/api/iam/v1"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/auth"
+	jwt "github.com/ZTH7/RagoDesk/apps/server/internal/kit/jwt"
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/iam/biz"
-	"github.com/ZTH7/RagoDesk/apps/server/internal/tenant"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport"
@@ -398,7 +398,7 @@ func ensureTenantScope(ctx context.Context, tenantID string) (context.Context, e
 	if tenantID == "" {
 		return ctx, nil
 	}
-	claims, _ := auth.ClaimsFromContext(ctx)
+	claims, _ := jwt.ClaimsFromContext(ctx)
 	if claims != nil && isPlatformRole(claims.Roles) {
 		return tenant.WithTenantID(ctx, tenantID), nil
 	}
