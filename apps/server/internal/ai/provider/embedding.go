@@ -36,16 +36,16 @@ func RegisterProvider(name string, factory Factory) {
 	registry[key] = factory
 }
 
-// NewProvider returns a provider based on config. Falls back to fake.
+// NewProvider returns a provider based on config. Falls back to template.
 func NewProvider(cfg Config) Provider {
 	name := strings.ToLower(strings.TrimSpace(cfg.Provider))
 	if name == "" {
-		name = "fake"
+		name = "openai"
 	}
 	if factory, ok := registry[name]; ok {
 		return factory(cfg)
 	}
-	return newFakeProvider(cfg)
+	return newTemplateProvider(cfg)
 }
 
 // LLMProvider generates text responses from prompts.
@@ -98,14 +98,14 @@ func RegisterLLMProvider(name string, factory LLMFactory) {
 	llmRegistry[key] = factory
 }
 
-// NewLLMProvider returns an LLM provider based on config. Falls back to fake.
+// NewLLMProvider returns an LLM provider based on config. Falls back to template.
 func NewLLMProvider(cfg LLMConfig) LLMProvider {
 	name := strings.ToLower(strings.TrimSpace(cfg.Provider))
 	if name == "" {
-		name = "fake"
+		name = "openai"
 	}
 	if factory, ok := llmRegistry[name]; ok {
 		return factory(cfg)
 	}
-	return newFakeLLMProvider(cfg)
+	return newTemplateLLMProvider(cfg)
 }

@@ -14,9 +14,9 @@ import (
 const (
 	defaultChunkSizeTokens    = 800
 	defaultChunkOverlapTokens = 100
-	defaultEmbeddingModel     = "fake-embedding-v1"
-	defaultEmbeddingDim       = 384
-	defaultEmbeddingProvider  = "fake"
+	defaultEmbeddingModel     = "text-embedding-3-small"
+	defaultEmbeddingDim       = 0
+	defaultEmbeddingProvider  = "openai"
 )
 
 type ingestionOptions struct {

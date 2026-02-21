@@ -74,7 +74,7 @@ func (uc *RAGUsecase) crossEncoderRerank(ctx context.Context, rc *ragContext) er
 		return nil
 	}
 	model := strings.ToLower(strings.TrimSpace(uc.llm.Model()))
-	if strings.Contains(model, "fake") {
+	if strings.Contains(model, "template") {
 		return nil
 	}
 	ctx, span := uc.startSpan(ctx, "rag.rerank_cross", attribute.String("rag.llm_model", uc.llm.Model()))

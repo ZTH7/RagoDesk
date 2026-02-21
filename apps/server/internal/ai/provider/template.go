@@ -9,19 +9,19 @@ import (
 	"strings"
 )
 
-type fakeProvider struct {
+type templateProvider struct {
 	model string
 	dim   int
 }
 
-func newFakeProvider(cfg Config) Provider {
-	return fakeProvider{
+func newTemplateProvider(cfg Config) Provider {
+	return templateProvider{
 		model: cfg.Model,
 		dim:   cfg.Dim,
 	}
 }
 
-func (p fakeProvider) Embed(ctx context.Context, inputs []string) ([][]float32, error) {
+func (p templateProvider) Embed(ctx context.Context, inputs []string) ([][]float32, error) {
 	out := make([][]float32, 0, len(inputs))
 	for _, text := range inputs {
 		out = append(out, deterministicEmbedding(text, p.dim))
@@ -29,11 +29,11 @@ func (p fakeProvider) Embed(ctx context.Context, inputs []string) ([][]float32, 
 	return out, nil
 }
 
-func (p fakeProvider) Model() string {
+func (p templateProvider) Model() string {
 	return p.model
 }
 
-func (p fakeProvider) Dim() int {
+func (p templateProvider) Dim() int {
 	return p.dim
 }
 
@@ -52,35 +52,35 @@ func deterministicEmbedding(s string, dim int) []float32 {
 	return out
 }
 
-type fakeLLMProvider struct {
+type templateLLMProvider struct {
 	model string
 }
 
 func init() {
-	RegisterProvider("fake", newFakeProvider)
-	RegisterLLMProvider("fake", newFakeLLMProvider)
+	RegisterProvider("template", newTemplateProvider)
+	RegisterLLMProvider("template", newTemplateLLMProvider)
 }
 
-func newFakeLLMProvider(cfg LLMConfig) LLMProvider {
-	return fakeLLMProvider{
+func newTemplateLLMProvider(cfg LLMConfig) LLMProvider {
+	return templateLLMProvider{
 		model: strings.TrimSpace(cfg.Model),
 	}
 }
 
-func (p fakeLLMProvider) Generate(ctx context.Context, req LLMRequest) (LLMResponse, error) {
+func (p templateLLMProvider) Generate(ctx context.Context, req LLMRequest) (LLMResponse, error) {
 	text := strings.TrimSpace(req.Prompt)
 	if text == "" {
 		text = "No input provided."
 	}
 	return LLMResponse{
-		Text:  fmt.Sprintf("RAG response (fake): %s", truncateText(text, 180)),
+		Text:  fmt.Sprintf("RAG response (template): %s", truncateText(text, 180)),
 		Usage: LLMUsage{},
 	}, nil
 }
 
-func (p fakeLLMProvider) Model() string {
+func (p templateLLMProvider) Model() string {
 	if p.model == "" {
-		return "fake-llm-v1"
+		return "template-llm-v1"
 	}
 	return p.model
 }

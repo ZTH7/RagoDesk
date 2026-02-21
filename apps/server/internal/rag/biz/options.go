@@ -16,14 +16,14 @@ const (
 	defaultRetrieveTimeoutMs   = 8000
 	defaultRetrieveConcurrency = 8
 	defaultLLMTimeoutMs        = 15000
-	defaultLLMProvider         = "fake"
-	defaultLLMModel            = "fake-llm-v1"
+	defaultLLMProvider         = "openai"
+	defaultLLMModel            = "gpt-4o-mini"
 	defaultLLMTemperature      = 0.2
 	defaultLLMMaxTokens        = 512
 	defaultRerankWeight        = 0.3
-	defaultEmbeddingModel      = "fake-embedding-v1"
-	defaultEmbeddingDim        = 384
-	defaultEmbeddingProvider   = "fake"
+	defaultEmbeddingModel      = "text-embedding-3-small"
+	defaultEmbeddingDim        = 0
+	defaultEmbeddingProvider   = "openai"
 	defaultSystemPrompt        = "You are a helpful assistant. Answer using the provided context. If the context is insufficient, say you don't know."
 	defaultRefusalMessage      = "I don't have enough information to answer that based on the provided knowledge."
 )

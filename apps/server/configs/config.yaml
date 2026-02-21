@@ -39,11 +39,11 @@ data:
       max_tokens: 800
       overlap_tokens: 100
     embedding:
-      provider: fake
-      endpoint: ""
+      provider: openai
+      endpoint: "https://api.openai.com/v1"
       api_key: ""
-      model: fake-embedding-v1
-      dim: 384
+      model: text-embedding-3-small
+      dim: 0
       timeout_ms: 15000
       batch_size: 64
     ingestion:
@@ -60,10 +60,10 @@ data:
       rerank_weight: 0.3
       max_concurrency: 8
     llm:
-      provider: fake
-      endpoint: ""
+      provider: openai
+      endpoint: "https://api.openai.com/v1"
       api_key: ""
-      model: fake-llm-v1
+      model: gpt-4o-mini
       timeout_ms: 15000
       temperature: 0.2
       max_tokens: 512

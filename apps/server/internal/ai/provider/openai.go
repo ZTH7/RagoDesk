@@ -40,7 +40,7 @@ func init() {
 func newOpenAIProvider(cfg Config) Provider {
 	endpoint := strings.TrimSpace(cfg.Endpoint)
 	if endpoint == "" {
-		return newFakeProvider(cfg)
+		return newTemplateProvider(cfg)
 	}
 	timeout := time.Duration(cfg.TimeoutMs) * time.Millisecond
 	if timeout <= 0 {
@@ -151,7 +151,7 @@ type openAIChatResponse struct {
 func newOpenAIChatProvider(cfg LLMConfig) LLMProvider {
 	endpoint := strings.TrimSpace(cfg.Endpoint)
 	if endpoint == "" {
-		return newFakeLLMProvider(cfg)
+		return newTemplateLLMProvider(cfg)
 	}
 	timeout := time.Duration(cfg.TimeoutMs) * time.Millisecond
 	if timeout <= 0 {
