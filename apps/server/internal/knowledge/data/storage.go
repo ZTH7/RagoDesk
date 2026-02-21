@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 type objectStorage interface {
 	Delete(ctx context.Context, uri string) error
 	Get(ctx context.Context, uri string) ([]byte, error)
+	Put(ctx context.Context, object string, payload []byte, contentType string) (string, error)
 }
 
 type s3Storage struct {
@@ -66,6 +68,22 @@ func (s s3Storage) Get(ctx context.Context, uri string) ([]byte, error) {
 	}
 	defer obj.Close()
 	return io.ReadAll(obj)
+}
+
+func (s s3Storage) Put(ctx context.Context, object string, payload []byte, contentType string) (string, error) {
+	if s.client == nil || object == "" {
+		return "", fmt.Errorf("object storage not initialized")
+	}
+	reader := bytes.NewReader(payload)
+	opts := minio.PutObjectOptions{}
+	if strings.TrimSpace(contentType) != "" {
+		opts.ContentType = contentType
+	}
+	_, err := s.client.PutObject(ctx, s.bucket, object, reader, int64(len(payload)), opts)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("s3://%s/%s", s.bucket, object), nil
 }
 
 func newObjectStorage(cfg *conf.Data, logger *log.Helper) objectStorage {

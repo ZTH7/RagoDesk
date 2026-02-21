@@ -18,13 +18,19 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || ''
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken()
+  const rawHeaders =
+    init?.headers instanceof Headers ? Object.fromEntries(init.headers.entries()) : init?.headers || {}
+  const isForm = typeof FormData !== 'undefined' && init?.body instanceof FormData
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(rawHeaders as Record<string, string>),
+  }
+  if (!isForm && !('Content-Type' in headers)) {
+    headers['Content-Type'] = 'application/json'
+  }
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers || {}),
-    },
+    headers,
     ...init,
   })
 

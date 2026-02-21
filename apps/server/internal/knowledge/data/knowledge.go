@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	stderrors "errors"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	internaldata "github.com/ZTH7/RagoDesk/apps/server/internal/data"
-	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
 	kerrors "github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-sql-driver/mysql"
@@ -447,6 +448,22 @@ func (r *knowledgeRepo) LoadDocumentContent(ctx context.Context, v biz.DocumentV
 	return payload, nil
 }
 
+func (r *knowledgeRepo) PutDocumentObject(ctx context.Context, kbID string, filename string, payload []byte, contentType string) (string, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return "", err
+	}
+	if r.storage == nil {
+		return "", kerrors.InternalServer("OBJECT_STORAGE_MISSING", "object storage not configured")
+	}
+	name := sanitizeFilename(filename)
+	if name == "" {
+		name = "document"
+	}
+	object := buildObjectKey(tenantID, kbID, name)
+	return r.storage.Put(ctx, object, payload, contentType)
+}
+
 func (r *knowledgeRepo) ListDocumentVersions(ctx context.Context, documentID string) ([]biz.DocumentVersion, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
@@ -881,4 +898,31 @@ var ProviderSet = wire.NewSet(NewKnowledgeRepo, NewIngestionQueue)
 func deterministicEmbeddingID(chunkID string, model string) string {
 	// Deterministic IDs make ingestion idempotent.
 	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(chunkID+"|"+model)).String()
+}
+
+func sanitizeFilename(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ""
+	}
+	name = strings.ReplaceAll(name, "\\", "/")
+	if idx := strings.LastIndex(name, "/"); idx >= 0 {
+		name = name[idx+1:]
+	}
+	name = strings.ReplaceAll(name, "..", "")
+	name = strings.ReplaceAll(name, "/", "_")
+	name = strings.ReplaceAll(name, " ", "_")
+	return name
+}
+
+func buildObjectKey(tenantID string, kbID string, filename string) string {
+	prefix := strings.TrimSpace(tenantID)
+	if prefix == "" {
+		prefix = "tenant"
+	}
+	if kbID == "" {
+		kbID = "kb"
+	}
+	ts := time.Now().UnixNano()
+	return "tenants/" + prefix + "/knowledge/" + kbID + "/" + strconv.FormatInt(ts, 10) + "_" + filename
 }

@@ -219,6 +219,15 @@ export const consoleApi = {
       },
     )
   },
+  uploadDocumentFile(payload: FormData) {
+    return request<{ items: { document: DocumentItem; version: DocumentVersion }[] }>(
+      '/console/v1/documents/upload_file',
+      {
+        method: 'POST',
+        body: payload,
+      },
+    )
+  },
   getDocument(id: string) {
     return request<{ document: DocumentItem; versions: DocumentVersion[] }>(
       `/console/v1/documents/${id}`,

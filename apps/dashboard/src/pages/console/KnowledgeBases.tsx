@@ -1,4 +1,5 @@
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, message } from 'antd'
+import { Button, Form, Input, Modal, Popconfirm, Select, Space, Upload, message } from 'antd'
+import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -13,6 +14,7 @@ export function KnowledgeBases() {
   const [keyword, setKeyword] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
   const [form] = Form.useForm()
   const { data, loading, source, error, reload } = useRequest(() => consoleApi.listKnowledgeBases(), { items: [] })
 
@@ -24,6 +26,7 @@ export function KnowledgeBases() {
   const openCreate = () => {
     setEditingId(null)
     form.resetFields()
+    setUploadFiles([])
     setModalOpen(true)
   }
 
@@ -40,11 +43,24 @@ export function KnowledgeBases() {
         await consoleApi.updateKnowledgeBase(editingId, values)
         message.success('已更新知识库')
       } else {
-        await consoleApi.createKnowledgeBase(values)
+        const created = await consoleApi.createKnowledgeBase(values)
+        const kbId = created.knowledge_base?.id
+        if (kbId && uploadFiles.length > 0) {
+          const formData = new FormData()
+          formData.append('kb_id', kbId)
+          uploadFiles.forEach((file) => {
+            if (file.originFileObj) {
+              formData.append('files', file.originFileObj)
+            }
+          })
+          await consoleApi.uploadDocumentFile(formData)
+          message.success('已上传文档')
+        }
         message.success('已创建知识库')
       }
       setModalOpen(false)
       form.resetFields()
+      setUploadFiles([])
       reload()
     } catch (err) {
       if (err instanceof Error) message.error(err.message)
@@ -130,6 +146,20 @@ export function KnowledgeBases() {
           <Form.Item label="描述" name="description">
             <Input.TextArea placeholder="简要说明知识库用途" rows={3} />
           </Form.Item>
+          {!editingId && (
+            <Form.Item label="上传文档">
+              <Upload.Dragger
+                multiple
+                fileList={uploadFiles}
+                beforeUpload={() => false}
+                onChange={(info) => setUploadFiles(info.fileList)}
+              >
+                <p className="ant-upload-drag-icon">文件</p>
+                <p className="ant-upload-text">点击或拖拽上传多个文件</p>
+                <p className="ant-upload-hint">支持 PDF / DOCX / Markdown / HTML / 文本</p>
+              </Upload.Dragger>
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </div>

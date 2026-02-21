@@ -1,4 +1,18 @@
-import { Button, Card, Descriptions, Form, Input, Modal, Space, Table, Tag, Popconfirm, message } from 'antd'
+import {
+  Button,
+  Card,
+  Descriptions,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Space,
+  Table,
+  Tag,
+  Upload,
+  message,
+} from 'antd'
+import type { UploadFile } from 'antd/es/upload/interface'
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -11,9 +25,10 @@ export function KnowledgeBaseDetail() {
   const navigate = useNavigate()
   const kbId = id ?? ''
   const [editOpen, setEditOpen] = useState(false)
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
   const [form] = Form.useForm()
 
-  const { data: kbData, loading: kbLoading, error: kbError, reload } = useRequest(
+  const { data: kbData, loading: kbLoading, error: kbError, reload: reloadKB } = useRequest(
     () => consoleApi.getKnowledgeBase(kbId),
     {
       knowledge_base: {
@@ -26,7 +41,7 @@ export function KnowledgeBaseDetail() {
     { enabled: Boolean(kbId), deps: [kbId] },
   )
 
-  const { data: docData, loading: docLoading } = useRequest(
+  const { data: docData, loading: docLoading, reload: reloadDocs } = useRequest(
     () => consoleApi.listDocuments({ kb_id: kbId }),
     { items: [] },
     { enabled: Boolean(kbId), deps: [kbId] },
@@ -46,7 +61,7 @@ export function KnowledgeBaseDetail() {
       await consoleApi.updateKnowledgeBase(kbId, values)
       message.success('已更新知识库')
       setEditOpen(false)
-      reload()
+      reloadKB()
     } catch (err) {
       if (err instanceof Error) message.error(err.message)
     }
@@ -57,6 +72,30 @@ export function KnowledgeBaseDetail() {
       await consoleApi.deleteKnowledgeBase(kbId)
       message.success('已删除知识库')
       navigate('/console/knowledge-bases')
+    } catch (err) {
+      if (err instanceof Error) message.error(err.message)
+    }
+  }
+
+  const handleUpload = async () => {
+    if (!kbId) return
+    if (uploadFiles.length === 0) {
+      message.warning('请先选择文件')
+      return
+    }
+    try {
+      const formData = new FormData()
+      formData.append('kb_id', kbId)
+      uploadFiles.forEach((file) => {
+        if (file.originFileObj) {
+          formData.append('files', file.originFileObj)
+        }
+      })
+      await consoleApi.uploadDocumentFile(formData)
+      message.success('已提交文档上传')
+      setUploadFiles([])
+      reloadKB()
+      reloadDocs()
     } catch (err) {
       if (err instanceof Error) message.error(err.message)
     }
@@ -105,6 +144,23 @@ export function KnowledgeBaseDetail() {
             { title: '更新时间', dataIndex: 'updated_at' },
           ]}
         />
+      </Card>
+      <Card title="上传文档" style={{ marginTop: 16 }}>
+        <Upload.Dragger
+          multiple
+          fileList={uploadFiles}
+          beforeUpload={() => false}
+          onChange={(info) => setUploadFiles(info.fileList)}
+        >
+          <p className="ant-upload-drag-icon">文件</p>
+          <p className="ant-upload-text">点击或拖拽上传多个文件</p>
+          <p className="ant-upload-hint">支持 PDF / DOCX / Markdown / HTML / 文本</p>
+        </Upload.Dragger>
+        <div style={{ marginTop: 12 }}>
+          <Button type="primary" onClick={handleUpload} disabled={!kbId}>
+            开始上传
+          </Button>
+        </div>
       </Card>
 
       <Modal

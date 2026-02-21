@@ -58,5 +58,6 @@ func NewHTTPServer(c *conf.Server, logger log.Logger, iamSvc *iamservice.IAMServ
 	ragv1.RegisterRAGHTTPServer(srv, ragSvc)
 	conversationv1.RegisterConversationHTTPServer(srv, conversationSvc)
 	conversationv1.RegisterConsoleConversationHTTPServer(srv, conversationSvc)
+	srv.Route("/console/v1").POST("/documents/upload_file", knowledgeSvc.UploadDocumentFile)
 	return srv
 }

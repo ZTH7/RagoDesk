@@ -150,6 +150,7 @@ type KnowledgeRepo interface {
 	ListDocumentVersions(ctx context.Context, documentID string) ([]DocumentVersion, error)
 	UpdateDocumentVersionStatus(ctx context.Context, versionID string, status string, errorReason string) error
 	LoadDocumentContent(ctx context.Context, version DocumentVersion) ([]byte, error)
+	PutDocumentObject(ctx context.Context, kbID string, filename string, payload []byte, contentType string) (string, error)
 
 	IndexDocumentVersion(ctx context.Context, req IndexDocumentVersionRequest) error
 	DeleteDocumentVersionIndex(ctx context.Context, documentID string, versionID string) error
@@ -294,9 +295,9 @@ func (uc *KnowledgeUsecase) BindBotKnowledgeBase(ctx context.Context, botID, kbI
 		return BotKnowledgeBase{}, err
 	}
 	return uc.repo.BindBotKnowledgeBase(ctx, BotKnowledgeBase{
-		BotID:    botID,
-		KBID:     kbID,
-		Weight:   weight,
+		BotID:  botID,
+		KBID:   kbID,
+		Weight: weight,
 	})
 }
 
@@ -373,6 +374,42 @@ func (uc *KnowledgeUsecase) UploadDocument(ctx context.Context, kbID, title, sou
 	doc.CurrentVersion = 1
 	ver.Status = DocumentVersionStatusReady
 	return doc, ver, nil
+}
+
+func (uc *KnowledgeUsecase) UploadDocumentFile(ctx context.Context, kbID, title, sourceType, filename string, payload []byte, contentType string) (Document, DocumentVersion, error) {
+	if uc == nil || uc.repo == nil {
+		return Document{}, DocumentVersion{}, errors.InternalServer("KB_REPO_MISSING", "knowledge repo missing")
+	}
+	kbID = strings.TrimSpace(kbID)
+	if kbID == "" {
+		return Document{}, DocumentVersion{}, errors.BadRequest("KB_ID_MISSING", "kb_id missing")
+	}
+	if len(payload) == 0 {
+		return Document{}, DocumentVersion{}, errors.BadRequest("DOC_CONTENT_MISSING", "document content missing")
+	}
+	rawURI, err := uc.repo.PutDocumentObject(ctx, kbID, filename, payload, contentType)
+	if err != nil {
+		return Document{}, DocumentVersion{}, err
+	}
+	if strings.TrimSpace(title) == "" {
+		title = inferTitleFromFilename(filename)
+	}
+	return uc.UploadDocument(ctx, kbID, title, sourceType, rawURI)
+}
+
+func inferTitleFromFilename(filename string) string {
+	name := strings.TrimSpace(filename)
+	if name == "" {
+		return ""
+	}
+	name = strings.ReplaceAll(name, "\\", "/")
+	if idx := strings.LastIndex(name, "/"); idx >= 0 {
+		name = name[idx+1:]
+	}
+	if dot := strings.LastIndex(name, "."); dot > 0 {
+		name = name[:dot]
+	}
+	return strings.TrimSpace(name)
 }
 
 func (uc *KnowledgeUsecase) GetDocument(ctx context.Context, id string) (Document, []DocumentVersion, error) {
