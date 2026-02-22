@@ -5,9 +5,10 @@ import (
 	"time"
 
 	v1 "github.com/ZTH7/RagoDesk/apps/server/api/knowledge/v1"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
 	iambiz "github.com/ZTH7/RagoDesk/apps/server/internal/iam/biz"
-	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
@@ -22,11 +23,16 @@ type KnowledgeService struct {
 	uc    *biz.KnowledgeUsecase
 	iamUC *iambiz.IAMUsecase
 	log   *log.Helper
+	auth  *conf.Server_Auth
 }
 
 // NewKnowledgeService creates a new KnowledgeService
-func NewKnowledgeService(uc *biz.KnowledgeUsecase, iamUC *iambiz.IAMUsecase, logger log.Logger) *KnowledgeService {
-	return &KnowledgeService{uc: uc, iamUC: iamUC, log: log.NewHelper(logger)}
+func NewKnowledgeService(uc *biz.KnowledgeUsecase, iamUC *iambiz.IAMUsecase, cfg *conf.Server, logger log.Logger) *KnowledgeService {
+	var auth *conf.Server_Auth
+	if cfg != nil {
+		auth = cfg.Auth
+	}
+	return &KnowledgeService{uc: uc, iamUC: iamUC, log: log.NewHelper(logger), auth: auth}
 }
 
 func (s *KnowledgeService) CreateKnowledgeBase(ctx context.Context, req *v1.CreateKnowledgeBaseRequest) (*v1.KnowledgeBaseResponse, error) {

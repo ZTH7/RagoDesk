@@ -275,7 +275,12 @@ func parseDocxBytes(payload []byte) (string, error) {
 	return builder.String(), nil
 }
 
-func parsePDFBlocks(payload []byte) ([]DocumentBlock, error) {
+func parsePDFBlocks(payload []byte) (blocks []DocumentBlock, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.BadRequest("PDF_PARSE_FAILED", "pdf content parse failed")
+		}
+	}()
 	if len(payload) == 0 {
 		return nil, errors.BadRequest("PDF_CONTENT_EMPTY", "pdf content missing")
 	}
@@ -297,7 +302,7 @@ func parsePDFBlocks(payload []byte) ([]DocumentBlock, error) {
 	if err != nil {
 		return nil, err
 	}
-	blocks := make([]DocumentBlock, 0, reader.NumPage())
+	blocks = make([]DocumentBlock, 0, reader.NumPage())
 	for i := 1; i <= reader.NumPage(); i++ {
 		page := reader.Page(i)
 		if page.V.IsNull() {

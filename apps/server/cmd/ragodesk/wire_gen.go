@@ -75,7 +75,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	knowledgeRepo := knowledgedata.NewKnowledgeRepo(dataData, confData, logger)
 	ingestionQueue := knowledgedata.NewIngestionQueue(confData, logger)
 	knowledgeUsecase := knowledgebiz.NewKnowledgeUsecase(knowledgeRepo, ingestionQueue, confData, logger)
-	knowledgeService := knowledgeservice.NewKnowledgeService(knowledgeUsecase, iamUsecase, logger)
+	knowledgeService := knowledgeservice.NewKnowledgeService(knowledgeUsecase, iamUsecase, confServer, logger)
 	ragKBRepo := ragdata.NewKBRepo(dataData)
 	ragVectorRepo := ragdata.NewVectorRepo(confData)
 	ragChunkRepo := ragdata.NewChunkRepo(dataData)

@@ -1,13 +1,17 @@
 package service
 
 import (
+	"context"
 	"io"
 	"mime"
 	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
 	v1 "github.com/ZTH7/RagoDesk/apps/server/api/knowledge/v1"
+	jwt "github.com/ZTH7/RagoDesk/apps/server/internal/kit/jwt"
+	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
 	"github.com/go-kratos/kratos/v2/errors"
 	khttp "github.com/go-kratos/kratos/v2/transport/http"
@@ -25,8 +29,8 @@ type uploadDocumentFileResponse struct {
 }
 
 func (s *KnowledgeService) UploadDocumentFile(ctx khttp.Context) error {
-	reqCtx := ctx.Request().Context()
-	if err := requireTenantContext(reqCtx); err != nil {
+	reqCtx, err := s.ensureConsoleTenant(ctx)
+	if err != nil {
 		return err
 	}
 	if err := s.iamUC.RequirePermission(reqCtx, biz.PermissionDocumentUpload); err != nil {
@@ -117,4 +121,34 @@ func detectContentType(filename string, payload []byte) string {
 		}
 	}
 	return http.DetectContentType(payload)
+}
+
+func (s *KnowledgeService) ensureConsoleTenant(ctx khttp.Context) (context.Context, error) {
+	reqCtx := ctx.Request().Context()
+	if _, err := tenant.RequireTenantID(reqCtx); err == nil {
+		return reqCtx, nil
+	}
+	if s == nil || s.auth == nil || strings.TrimSpace(s.auth.JwtSecret) == "" {
+		return reqCtx, errors.Unauthorized("ADMIN_UNAUTHORIZED", "jwt config missing")
+	}
+	header := strings.TrimSpace(ctx.Request().Header.Get("Authorization"))
+	token := header
+	if strings.HasPrefix(strings.ToLower(header), "bearer ") {
+		token = strings.TrimSpace(header[len("bearer "):])
+	}
+	if token == "" {
+		return reqCtx, errors.Unauthorized("ADMIN_UNAUTHORIZED", "missing authorization")
+	}
+	claims, err := jwt.ParseHS256(token, s.auth.JwtSecret, s.auth.Issuer, s.auth.Audience, time.Now())
+	if err != nil {
+		return reqCtx, errors.Unauthorized("ADMIN_UNAUTHORIZED", err.Error())
+	}
+	reqCtx = jwt.WithClaims(reqCtx, claims)
+	if claims.TenantID != "" {
+		reqCtx = tenant.WithTenantID(reqCtx, claims.TenantID)
+	}
+	if _, err := tenant.RequireTenantID(reqCtx); err != nil {
+		return reqCtx, errors.Forbidden("TENANT_MISSING", "tenant missing")
+	}
+	return reqCtx, nil
 }

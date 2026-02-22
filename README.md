@@ -40,6 +40,13 @@ cd deploy
 docker compose up -d
 ```
 
+### Service Initialization (Required)
+- **MinIO**: create bucket `ragodesk` (or the name in `apps/server/configs/config.yaml` -> `data.object_storage.bucket`).
+- **MySQL**: no manual setup required; backend auto-creates schema and seeds permissions on startup.
+- **Qdrant**: no manual setup required; collection is created on first indexing.  
+  If you see `Collection ... doesn't exist`, it means no document has been indexed yet—upload a document to trigger auto-create.
+- **Redis/RabbitMQ**: no manual setup required.
+
 ### Backend (Kratos)
 ```bash
 cd apps/server

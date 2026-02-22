@@ -154,8 +154,16 @@ export function ApiKeys() {
               dataIndex: 'status',
               render: (value: string) => <Tag color={statusColors[value] || 'default'}>{value}</Tag>,
             },
-            { title: 'Scopes', dataIndex: 'scopes', render: (scopes: string[]) => scopes.join(', ') },
-            { title: 'API Versions', dataIndex: 'api_versions', render: (v: string[]) => v.join(', ') },
+            {
+              title: 'Scopes',
+              dataIndex: 'scopes',
+              render: (scopes: string[]) => (Array.isArray(scopes) ? scopes.join(', ') : '-'),
+            },
+            {
+              title: 'API Versions',
+              dataIndex: 'api_versions',
+              render: (v: string[]) => (Array.isArray(v) ? v.join(', ') : '-'),
+            },
             { title: 'Quota', dataIndex: 'quota_daily' },
             { title: 'QPS', dataIndex: 'qps_limit' },
             { title: 'Last Used', dataIndex: 'last_used_at' },

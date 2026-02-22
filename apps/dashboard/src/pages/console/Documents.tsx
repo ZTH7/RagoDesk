@@ -1,4 +1,5 @@
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Tag, message } from 'antd'
+import { Button, Form, Input, Modal, Popconfirm, Select, Space, Tag, Upload, message } from 'antd'
+import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -15,19 +16,11 @@ const statusColors: Record<string, string> = {
   failed: 'red',
 }
 
-const sourceOptions = [
-  { value: 'pdf', label: 'PDF' },
-  { value: 'docx', label: 'DOCX' },
-  { value: 'markdown', label: 'Markdown' },
-  { value: 'html', label: 'HTML' },
-  { value: 'text', label: 'Text' },
-  { value: 'url', label: 'URL' },
-]
-
 export function Documents() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
   const [uploadOpen, setUploadOpen] = useState(false)
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
   const [form] = Form.useForm()
   const { data, loading, source, error, reload } = useRequest(() => consoleApi.listDocuments(), { items: [] })
   const { data: kbData } = useRequest(() => consoleApi.listKnowledgeBases(), { items: [] })
@@ -43,9 +36,21 @@ export function Documents() {
   const handleUpload = async () => {
     try {
       const values = await form.validateFields()
-      await consoleApi.uploadDocument(values)
+      const formData = new FormData()
+      formData.append('kb_id', values.kb_id)
+      uploadFiles.forEach((file) => {
+        if (file.originFileObj) {
+          formData.append('files', file.originFileObj)
+        }
+      })
+      if (uploadFiles.length === 0) {
+        message.warning('请先选择文件')
+        return
+      }
+      await consoleApi.uploadDocumentFile(formData)
       message.success('已提交文档上传')
       form.resetFields()
+      setUploadFiles([])
       setUploadOpen(false)
       reload()
     } catch (err) {
@@ -149,14 +154,17 @@ export function Documents() {
               notFoundContent="暂无知识库，请先创建"
             />
           </Form.Item>
-          <Form.Item label="标题" name="title" rules={[{ required: true, message: '请输入文档标题' }]}>
-            <Input placeholder="例如：产品手册" />
-          </Form.Item>
-          <Form.Item label="来源类型" name="source_type" rules={[{ required: true, message: '请选择来源类型' }]}>
-            <Select options={sourceOptions} />
-          </Form.Item>
-          <Form.Item label="Raw URI" name="raw_uri" rules={[{ required: true, message: '请输入对象存储地址' }]}>
-            <Input placeholder="例如：oss://bucket/path/to/file.pdf" />
+          <Form.Item label="上传文件">
+            <Upload.Dragger
+              multiple
+              fileList={uploadFiles}
+              beforeUpload={() => false}
+              onChange={(info) => setUploadFiles(info.fileList)}
+            >
+              <p className="ant-upload-drag-icon">文件</p>
+              <p className="ant-upload-text">点击或拖拽上传多个文件</p>
+              <p className="ant-upload-hint">支持 PDF / DOCX / Markdown / HTML / 文本</p>
+            </Upload.Dragger>
           </Form.Item>
         </Form>
       </Modal>
