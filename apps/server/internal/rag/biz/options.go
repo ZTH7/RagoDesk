@@ -24,6 +24,7 @@ const (
 	defaultEmbeddingModel      = "text-embedding-3-small"
 	defaultEmbeddingDim        = 0
 	defaultEmbeddingProvider   = "openai"
+	defaultOutboundProxy       = "http://127.0.0.1:10808"
 	defaultSystemPrompt        = "You are a helpful assistant. Answer using the provided context. If the context is insufficient, say you don't know."
 	defaultRefusalMessage      = "I don't have enough information to answer that based on the provided knowledge."
 )
@@ -45,6 +46,7 @@ type ragOptions struct {
 	systemPrompt        string
 	refusalMessage      string
 	embeddingConfig     provider.Config
+	proxy               string
 }
 
 func loadRAGOptions(cfg *conf.Data) ragOptions {
@@ -72,10 +74,14 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 			Dim:       defaultEmbeddingDim,
 			TimeoutMs: defaultLLMTimeoutMs,
 		},
+		proxy: defaultOutboundProxy,
 	}
 	dimSet := false
 
 	if cfg != nil {
+		if proxy := strings.TrimSpace(cfg.Proxy); proxy != "" {
+			opts.proxy = proxy
+		}
 		if rag := cfg.Rag; rag != nil {
 			if rag.TimeoutMs > 0 {
 				opts.ragTimeoutMs = int(rag.TimeoutMs)
@@ -215,6 +221,7 @@ func loadRAGOptions(cfg *conf.Data) ragOptions {
 	if !dimSet && (strings.EqualFold(opts.embeddingConfig.Provider, "openai") || strings.EqualFold(opts.embeddingConfig.Provider, "http")) {
 		opts.embeddingConfig.Dim = 0
 	}
+	opts.embeddingConfig.Proxy = opts.proxy
 	return opts
 }
 

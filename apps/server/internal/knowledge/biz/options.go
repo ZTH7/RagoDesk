@@ -17,6 +17,7 @@ const (
 	defaultEmbeddingModel     = "text-embedding-3-small"
 	defaultEmbeddingDim       = 0
 	defaultEmbeddingProvider  = "openai"
+	defaultOutboundProxy      = "http://127.0.0.1:10808"
 )
 
 type ingestionOptions struct {
@@ -31,6 +32,7 @@ type ingestionOptions struct {
 	embeddingBatchSize int
 	asyncEnabled       bool
 	indexConfigHash    string
+	proxy              string
 }
 
 func loadIngestionOptions(cfg *conf.Data) ingestionOptions {
@@ -45,6 +47,7 @@ func loadIngestionOptions(cfg *conf.Data) ingestionOptions {
 		embeddingTimeoutMs: 15000,
 		embeddingBatchSize: 64,
 		asyncEnabled:       false,
+		proxy:              defaultOutboundProxy,
 	}
 	dimSet := false
 	if cfg != nil && cfg.Knowledge != nil {
@@ -82,6 +85,21 @@ func loadIngestionOptions(cfg *conf.Data) ingestionOptions {
 		}
 		if ingestion := cfg.Knowledge.Ingestion; ingestion != nil {
 			opts.asyncEnabled = ingestion.AsyncEnabled
+		}
+	}
+	if cfg != nil {
+		if rag := cfg.Rag; rag != nil && rag.Llm != nil {
+			if strings.TrimSpace(opts.embeddingEndpoint) == "" && strings.TrimSpace(rag.Llm.Endpoint) != "" {
+				opts.embeddingEndpoint = rag.Llm.Endpoint
+			}
+			if strings.TrimSpace(opts.embeddingAPIKey) == "" && strings.TrimSpace(rag.Llm.ApiKey) != "" {
+				opts.embeddingAPIKey = rag.Llm.ApiKey
+			}
+		}
+	}
+	if cfg != nil {
+		if proxy := strings.TrimSpace(cfg.Proxy); proxy != "" {
+			opts.proxy = proxy
 		}
 	}
 

@@ -10,6 +10,7 @@ server:
     issuer: "ragodesk"
     audience: "ragodesk-admin"
 data:
+  proxy: "http://127.0.0.1:10808"
   database:
     driver: mysql
     source: root:ragodesk@tcp(127.0.0.1:3306)/ragodesk?parseTime=True&loc=Local
@@ -44,12 +45,12 @@ data:
       api_key: ""
       model: text-embedding-3-small
       dim: 0
-      timeout_ms: 15000
+      timeout_ms: 60000
       batch_size: 64
     ingestion:
       max_retries: 3
       backoff_base_ms: 500
-      async_enabled: false
+      async_enabled: true
       worker_concurrency: 1
   rag:
     timeout_ms: 20000

@@ -15,6 +15,7 @@ func newEmbeddingProvider(opts ingestionOptions) provider.Provider {
 		Model:     opts.embeddingModel,
 		Dim:       opts.embeddingDim,
 		TimeoutMs: opts.embeddingTimeoutMs,
+		Proxy:     opts.proxy,
 	}
 	return provider.NewProvider(cfg)
 }

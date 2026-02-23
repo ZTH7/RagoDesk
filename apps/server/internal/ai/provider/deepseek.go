@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -16,6 +18,7 @@ type deepSeekChatProvider struct {
 	apiKey   string
 	model    string
 	client   *http.Client
+	proxy    string
 }
 
 func init() {
@@ -36,9 +39,8 @@ func newDeepSeekChatProvider(cfg LLMConfig) LLMProvider {
 		endpoint: strings.TrimRight(endpoint, "/"),
 		apiKey:   strings.TrimSpace(cfg.APIKey),
 		model:    strings.TrimSpace(cfg.Model),
-		client: &http.Client{
-			Timeout: timeout,
-		},
+		proxy:    cfg.Proxy,
+		client:   newHTTPClient(timeout, cfg.Proxy),
 	}
 }
 
@@ -47,7 +49,7 @@ func (p *deepSeekChatProvider) Generate(ctx context.Context, req LLMRequest) (LL
 		return LLMResponse{}, errors.InternalServer("LLM_ENDPOINT_MISSING", "llm endpoint missing")
 	}
 	if p.client == nil {
-		p.client = &http.Client{Timeout: 20 * time.Second}
+		p.client = newHTTPClient(20*time.Second, p.proxy)
 	}
 	messages := make([]openAIChatMessage, 0, 2)
 	if system := strings.TrimSpace(req.System); system != "" {
@@ -83,7 +85,9 @@ func (p *deepSeekChatProvider) Generate(ctx context.Context, req LLMRequest) (LL
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return LLMResponse{}, errors.InternalServer("LLM_REQUEST_FAILED", "llm request failed")
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		msg := fmt.Sprintf("llm request failed (status=%d): %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return LLMResponse{}, errors.InternalServer("LLM_REQUEST_FAILED", msg)
 	}
 	var parsed openAIChatResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {

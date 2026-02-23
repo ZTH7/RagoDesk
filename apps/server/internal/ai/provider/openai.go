@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -17,6 +19,7 @@ type openAIProvider struct {
 	model    string
 	dim      int
 	client   *http.Client
+	proxy    string
 }
 
 type openAIEmbeddingRequest struct {
@@ -51,9 +54,8 @@ func newOpenAIProvider(cfg Config) Provider {
 		apiKey:   strings.TrimSpace(cfg.APIKey),
 		model:    cfg.Model,
 		dim:      cfg.Dim,
-		client: &http.Client{
-			Timeout: timeout,
-		},
+		proxy:    cfg.Proxy,
+		client:   newHTTPClient(timeout, cfg.Proxy),
 	}
 }
 
@@ -62,7 +64,7 @@ func (p *openAIProvider) Embed(ctx context.Context, inputs []string) ([][]float3
 		return nil, errors.InternalServer("EMBEDDING_ENDPOINT_MISSING", "embedding endpoint missing")
 	}
 	if p.client == nil {
-		p.client = &http.Client{Timeout: 15 * time.Second}
+		p.client = newHTTPClient(15*time.Second, p.proxy)
 	}
 	reqBody := openAIEmbeddingRequest{
 		Model: p.Model(),
@@ -90,7 +92,9 @@ func (p *openAIProvider) Embed(ctx context.Context, inputs []string) ([][]float3
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, errors.InternalServer("EMBEDDING_REQUEST_FAILED", "embedding request failed")
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		msg := fmt.Sprintf("embedding request failed (status=%d): %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return nil, errors.InternalServer("EMBEDDING_REQUEST_FAILED", msg)
 	}
 	var parsed openAIEmbeddingResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
@@ -123,6 +127,7 @@ type openAIChatProvider struct {
 	apiKey   string
 	model    string
 	client   *http.Client
+	proxy    string
 }
 
 type openAIChatMessage struct {
@@ -161,9 +166,8 @@ func newOpenAIChatProvider(cfg LLMConfig) LLMProvider {
 		endpoint: strings.TrimRight(endpoint, "/"),
 		apiKey:   strings.TrimSpace(cfg.APIKey),
 		model:    strings.TrimSpace(cfg.Model),
-		client: &http.Client{
-			Timeout: timeout,
-		},
+		proxy:    cfg.Proxy,
+		client:   newHTTPClient(timeout, cfg.Proxy),
 	}
 }
 
@@ -172,7 +176,7 @@ func (p *openAIChatProvider) Generate(ctx context.Context, req LLMRequest) (LLMR
 		return LLMResponse{}, errors.InternalServer("LLM_ENDPOINT_MISSING", "llm endpoint missing")
 	}
 	if p.client == nil {
-		p.client = &http.Client{Timeout: 20 * time.Second}
+		p.client = newHTTPClient(20*time.Second, p.proxy)
 	}
 	messages := make([]openAIChatMessage, 0, 2)
 	if system := strings.TrimSpace(req.System); system != "" {
@@ -208,7 +212,9 @@ func (p *openAIChatProvider) Generate(ctx context.Context, req LLMRequest) (LLMR
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return LLMResponse{}, errors.InternalServer("LLM_REQUEST_FAILED", "llm request failed")
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		msg := fmt.Sprintf("llm request failed (status=%d): %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return LLMResponse{}, errors.InternalServer("LLM_REQUEST_FAILED", msg)
 	}
 	var parsed openAIChatResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {

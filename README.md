@@ -69,6 +69,18 @@ npm run dev
 - HTTP: `0.0.0.0:8000`
 - gRPC: `0.0.0.0:9100`
 
+### Outbound Proxy (LLM/Embedding)
+Configure an HTTP proxy for outbound requests (OpenAI/DeepSeek):
+```yaml
+data:
+  proxy: "http://127.0.0.1:10808"
+```
+
+### PDF Parsing (pure Go)
+PDF parsing uses a pure Go extractor (`github.com/ledongthuc/pdf`) with a best-effort
+fallback for raw text. No external binaries or OCR are required. Image-only/scanned
+PDFs will not yield text without OCR and may result in empty content.
+
 ## Documentation
 - [PRD](docs/PRD.md)
 - [Development Plan](docs/DevelopmentPlan.md)

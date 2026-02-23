@@ -85,6 +85,8 @@ message Data {
     Chunking chunking = 1;
     Embedding embedding = 2;
     Ingestion ingestion = 3;
+    reserved 4;
+    reserved "parsing";
   }
   message Rag {
     message Retrieval {
@@ -119,6 +121,7 @@ message Data {
     int32 tenant_qps_limit = 2;
     int32 tenant_quota_daily = 3;
   }
+  string proxy = 10;
   Database database = 1;
   Redis redis = 2;
   VectorDB vectordb = 3;

@@ -104,6 +104,7 @@ func NewRAGUsecase(kbRepo BotKBResolver, vectorRepo VectorSearcher, chunkRepo Ch
 		APIKey:    opts.llmAPIKey,
 		Model:     opts.llmModel,
 		TimeoutMs: opts.llmTimeoutMs,
+		Proxy:     opts.proxy,
 	})
 	uc := &RAGUsecase{
 		kbRepo:     kbRepo,

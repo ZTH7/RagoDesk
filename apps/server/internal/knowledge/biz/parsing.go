@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -19,7 +18,7 @@ import (
 	"unicode/utf16"
 
 	"github.com/go-kratos/kratos/v2/errors"
-	"rsc.io/pdf"
+	ldpdf "github.com/ledongthuc/pdf"
 )
 
 const maxDocumentBytes = 5 << 20
@@ -275,7 +274,19 @@ func parseDocxBytes(payload []byte) (string, error) {
 	return builder.String(), nil
 }
 
-func parsePDFBlocks(payload []byte) (blocks []DocumentBlock, err error) {
+func parsePDFBlocks(payload []byte) ([]DocumentBlock, error) {
+	blocks, err := parsePDFBlocksPlain(payload)
+	if err == nil && len(blocks) > 0 {
+		return blocks, nil
+	}
+	fallback := parsePDFFallbackBlocks(payload)
+	if len(fallback) > 0 {
+		return fallback, nil
+	}
+	return nil, errors.BadRequest("PDF_PARSE_FAILED", "pdf content parse failed")
+}
+
+func parsePDFBlocksPlain(payload []byte) (blocks []DocumentBlock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errors.BadRequest("PDF_PARSE_FAILED", "pdf content parse failed")
@@ -298,31 +309,66 @@ func parsePDFBlocks(payload []byte) (blocks []DocumentBlock, err error) {
 	if err := tmpFile.Close(); err != nil {
 		return nil, err
 	}
-	reader, err := pdf.Open(filepath.Clean(tmpFile.Name()))
+	file, reader, err := ldpdf.Open(tmpFile.Name())
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = file.Close() }()
+
+	fonts := make(map[string]*ldpdf.Font)
 	blocks = make([]DocumentBlock, 0, reader.NumPage())
+	var firstErr error
 	for i := 1; i <= reader.NumPage(); i++ {
 		page := reader.Page(i)
-		if page.V.IsNull() {
+		if page.V.IsNull() || page.V.Key("Contents").Kind() == ldpdf.Null {
 			continue
 		}
-		content := page.Content()
-		var builder strings.Builder
-		for _, text := range content.Text {
-			if text.S == "" {
-				continue
+		for _, name := range page.Fonts() {
+			if _, ok := fonts[name]; !ok {
+				f := page.Font(name)
+				fonts[name] = &f
 			}
-			builder.WriteString(text.S)
-			builder.WriteString(" ")
+		}
+		text, err := page.GetPlainText(fonts)
+		if err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+		if strings.TrimSpace(text) == "" {
+			continue
 		}
 		blocks = append(blocks, DocumentBlock{
-			Text:   builder.String(),
+			Text:   text,
 			PageNo: int32(i),
 		})
 	}
+	if len(blocks) == 0 && firstErr != nil {
+		return nil, firstErr
+	}
 	return blocks, nil
+}
+
+func parsePDFFallbackBlocks(payload []byte) []DocumentBlock {
+	if len(payload) == 0 {
+		return nil
+	}
+	text := extractUTF16Text(payload)
+	ascii := extractASCIIText(payload)
+	if len(ascii) > len(text) {
+		text = ascii
+	}
+	return parsePDFTextBlocks(text)
+}
+
+func parsePDFTextBlocks(text string) []DocumentBlock {
+	text = cleanContent(text)
+	if strings.TrimSpace(text) == "" {
+		return nil
+	}
+	blocks, _ := splitTextBlocks(text)
+	return blocks
 }
 
 func looksLikeZip(payload []byte) bool {

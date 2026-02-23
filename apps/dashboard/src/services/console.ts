@@ -179,23 +179,31 @@ export type CreateRoleInput = {
 }
 
 export const consoleApi = {
+  normalizeKnowledgeBaseResponse(input: any): { knowledge_base: KnowledgeBase } {
+    if (!input) return { knowledge_base: { id: '', name: '', description: '', created_at: '' } }
+    return {
+      knowledge_base: input.knowledge_base ?? input.knowledgeBase ?? input.knowledge ?? input.kb ?? input,
+    }
+  },
   listKnowledgeBases() {
     return request<{ items: KnowledgeBase[] }>('/console/v1/knowledge_bases')
   },
   createKnowledgeBase(payload: CreateKnowledgeBaseInput) {
-    return request<{ knowledge_base: KnowledgeBase }>('/console/v1/knowledge_bases', {
+    return request<any>('/console/v1/knowledge_bases', {
       method: 'POST',
       body: JSON.stringify(payload),
-    })
+    }).then((res) => consoleApi.normalizeKnowledgeBaseResponse(res))
   },
   getKnowledgeBase(id: string) {
-    return request<{ knowledge_base: KnowledgeBase }>(`/console/v1/knowledge_bases/${id}`)
+    return request<any>(`/console/v1/knowledge_bases/${id}`).then((res) =>
+      consoleApi.normalizeKnowledgeBaseResponse(res),
+    )
   },
   updateKnowledgeBase(id: string, payload: CreateKnowledgeBaseInput) {
-    return request<{ knowledge_base: KnowledgeBase }>(`/console/v1/knowledge_bases/${id}`, {
+    return request<any>(`/console/v1/knowledge_bases/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ id, ...payload }),
-    })
+    }).then((res) => consoleApi.normalizeKnowledgeBaseResponse(res))
   },
   deleteKnowledgeBase(id: string) {
     return request<void>(`/console/v1/knowledge_bases/${id}`, {

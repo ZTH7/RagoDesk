@@ -20,6 +20,7 @@ type Config struct {
 	Model     string
 	Dim       int
 	TimeoutMs int
+	Proxy     string
 }
 
 // Factory builds a provider from config.
@@ -82,6 +83,7 @@ type LLMConfig struct {
 	APIKey    string
 	Model     string
 	TimeoutMs int
+	Proxy     string
 }
 
 // LLMFactory builds an LLM provider from config.
