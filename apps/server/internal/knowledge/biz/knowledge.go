@@ -212,6 +212,19 @@ func (uc *KnowledgeUsecase) StartIngestionConsumer(ctx context.Context) error {
 	return nil
 }
 
+// AsyncEnabled reports whether async ingestion is enabled and queue is available.
+func (uc *KnowledgeUsecase) AsyncEnabled() bool {
+	return uc != nil && uc.asyncEnabled && uc.queue != nil
+}
+
+// CloseIngestionQueue releases queue resources.
+func (uc *KnowledgeUsecase) CloseIngestionQueue() {
+	if uc == nil || uc.queue == nil {
+		return
+	}
+	_ = uc.queue.Close()
+}
+
 func (uc *KnowledgeUsecase) CreateKnowledgeBase(ctx context.Context, kb KnowledgeBase) (KnowledgeBase, error) {
 	kb.Name = strings.TrimSpace(kb.Name)
 	if kb.Name == "" {

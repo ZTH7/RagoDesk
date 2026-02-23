@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
+	knowledgebiz "github.com/ZTH7/RagoDesk/apps/server/internal/knowledge/biz"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -33,8 +35,8 @@ func init() {
 	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
 }
 
-func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
-	return kratos.New(
+func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server, knowledgeUC *knowledgebiz.KnowledgeUsecase) *kratos.App {
+	options := []kratos.Option{
 		kratos.ID(id),
 		kratos.Name(Name),
 		kratos.Version(Version),
@@ -44,7 +46,26 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 			gs,
 			hs,
 		),
-	)
+	}
+	if knowledgeUC != nil && knowledgeUC.AsyncEnabled() {
+		helper := log.NewHelper(logger)
+		options = append(options,
+			kratos.AfterStart(func(ctx context.Context) error {
+				if err := knowledgeUC.StartIngestionConsumer(ctx); err != nil {
+					helper.Warnf("ingestion consumer start failed: %v", err)
+				} else {
+					helper.Info("ingestion consumer started")
+				}
+				return nil
+			}),
+			kratos.BeforeStop(func(ctx context.Context) error {
+				knowledgeUC.CloseIngestionQueue()
+				helper.Info("ingestion consumer stopped")
+				return nil
+			}),
+		)
+	}
+	return kratos.New(options...)
 }
 
 func main() {

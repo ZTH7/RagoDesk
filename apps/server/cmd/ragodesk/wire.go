@@ -32,7 +32,7 @@ func wireApp(*conf.Server, *conf.Data, log.Logger) (*kratos.App, func(), error) 
 		data.NewData,
 		analyticsdata.ProviderSet,
 		apimgmtdata.ProviderSet,
-	authdata.ProviderSet,
+		authdata.ProviderSet,
 		botdata.ProviderSet,
 		conversationdata.ProviderSet,
 		iamdata.ProviderSet,

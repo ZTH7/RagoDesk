@@ -86,7 +86,7 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	ragService := ragservice.NewRAGService(ragUsecase, conversationUsecase, apimgmtUsecase, analyticsUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService, botService, consoleAuthService, platformAuthService)
 	httpServer := server.NewHTTPServer(confServer, logger, iamService, knowledgeService, ragService, conversationService, apimgmtService, analyticsService, botService, consoleAuthService, platformAuthService)
-	app := newApp(logger, grpcServer, httpServer)
+	app := newApp(logger, grpcServer, httpServer, knowledgeUsecase)
 	return app, func() {
 		cleanup()
 	}, nil
