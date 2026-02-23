@@ -62,6 +62,7 @@ func (r *conversationRepo) GetSession(ctx context.Context, sessionID string) (bi
 		return biz.Session{}, err
 	}
 	var s biz.Session
+	var closedAt sql.NullTime
 	err = r.db.QueryRowContext(
 		ctx,
 		`SELECT id, tenant_id, bot_id, status, close_reason, user_external_id, metadata, created_at, updated_at, closed_at
@@ -78,13 +79,16 @@ func (r *conversationRepo) GetSession(ctx context.Context, sessionID string) (bi
 		&s.Metadata,
 		&s.CreatedAt,
 		&s.UpdatedAt,
-		&s.ClosedAt,
+		&closedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return biz.Session{}, errors.NotFound("SESSION_NOT_FOUND", "session not found")
 		}
 		return biz.Session{}, err
+	}
+	if closedAt.Valid {
+		s.ClosedAt = closedAt.Time
 	}
 	return s, nil
 }
@@ -183,6 +187,7 @@ func (r *conversationRepo) ListSessions(ctx context.Context, limit int, offset i
 	sessions := make([]biz.Session, 0)
 	for rows.Next() {
 		var s biz.Session
+		var closedAt sql.NullTime
 		if err := rows.Scan(
 			&s.ID,
 			&s.TenantID,
@@ -193,9 +198,12 @@ func (r *conversationRepo) ListSessions(ctx context.Context, limit int, offset i
 			&s.Metadata,
 			&s.CreatedAt,
 			&s.UpdatedAt,
-			&s.ClosedAt,
+			&closedAt,
 		); err != nil {
 			return nil, err
+		}
+		if closedAt.Valid {
+			s.ClosedAt = closedAt.Time
 		}
 		sessions = append(sessions, s)
 	}

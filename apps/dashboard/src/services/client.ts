@@ -29,9 +29,9 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers['Content-Type'] = 'application/json'
   }
   const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
     credentials: 'include',
     headers,
-    ...init,
   })
 
   let payload: any = null

@@ -53,12 +53,6 @@ cd apps/server
 go run ./cmd/ragodesk -conf ./configs
 ```
 
-### Ingestion Worker (optional)
-```bash
-cd apps/server
-go run ./cmd/ingester -conf ./configs
-```
-
 ### Dashboard (React + Vite)
 ```bash
 cd apps/dashboard

@@ -37,6 +37,7 @@ export function ApiKeys() {
   const [editForm] = Form.useForm()
 
   const { data, loading, source, error, reload } = useRequest(() => consoleApi.listApiKeys(), { items: [] })
+  const { data: botData } = useRequest(() => consoleApi.listBots(), { items: [] })
 
   const filtered = useMemo(() => {
     return data.items.filter((item) => {
@@ -46,12 +47,28 @@ export function ApiKeys() {
     })
   }, [data.items, keyword, status])
 
+  const botOptions = useMemo(
+    () =>
+      botData.items.map((bot) => ({
+        label: `${bot.name} (${bot.id})`,
+        value: bot.id,
+      })),
+    [botData.items],
+  )
+
+  const botNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    botData.items.forEach((bot) => map.set(bot.id, bot.name))
+    return map
+  }, [botData.items])
+
   const handleCreate = async () => {
     try {
       const values = await createForm.validateFields()
       const res = await consoleApi.createApiKey(values)
       message.success('已创建 API Key')
-      setRawKey(res.raw_key)
+      const raw = (res as any).raw_key ?? (res as any).rawKey ?? ''
+      setRawKey(raw)
       setRawKeyOpen(true)
       setCreateOpen(false)
       createForm.resetFields()
@@ -88,7 +105,8 @@ export function ApiKeys() {
     try {
       const res = await consoleApi.rotateApiKey(id)
       message.success('已轮换 API Key')
-      setRawKey(res.raw_key)
+      const raw = (res as any).raw_key ?? (res as any).rawKey ?? ''
+      setRawKey(raw)
       setRawKeyOpen(true)
       reload()
     } catch (err) {
@@ -148,7 +166,11 @@ export function ApiKeys() {
                 <Link to={`/console/api-keys/${record.id}`}>{record.name}</Link>
               ),
             },
-            { title: 'Bot', dataIndex: 'bot_id' },
+            {
+              title: 'Bot',
+              dataIndex: 'bot_id',
+              render: (value: string) => botNameById.get(value) || value,
+            },
             {
               title: '状态',
               dataIndex: 'status',
@@ -223,8 +245,13 @@ export function ApiKeys() {
           <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
             <Input placeholder="例如：客服 API Key" />
           </Form.Item>
-          <Form.Item label="Bot ID" name="bot_id" rules={[{ required: true, message: '请输入 Bot ID' }]}>
-            <Input placeholder="绑定的 Bot ID" />
+          <Form.Item label="Bot" name="bot_id" rules={[{ required: true, message: '请选择 Bot' }]}>
+            <Select
+              placeholder="选择要绑定的 Bot"
+              options={botOptions}
+              showSearch
+              optionFilterProp="label"
+            />
           </Form.Item>
           <Form.Item label="Scopes" name="scopes">
             <Select mode="tags" placeholder="输入或选择 scopes" />
