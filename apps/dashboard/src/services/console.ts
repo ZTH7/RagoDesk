@@ -179,6 +179,40 @@ export type CreateRoleInput = {
 }
 
 export const consoleApi = {
+  normalizeDocument(input: any): DocumentItem {
+    if (!input) {
+      return {
+        id: '',
+        kb_id: '',
+        title: '',
+        source_type: '',
+        status: '',
+        current_version: 0,
+        updated_at: '',
+      }
+    }
+    return {
+      id: input.id ?? '',
+      kb_id: input.kb_id ?? input.kbId ?? '',
+      title: input.title ?? '',
+      source_type: input.source_type ?? input.sourceType ?? '',
+      status: input.status ?? '',
+      current_version: input.current_version ?? input.currentVersion ?? 0,
+      updated_at: input.updated_at ?? input.updatedAt ?? '',
+      created_at: input.created_at ?? input.createdAt ?? '',
+    }
+  },
+  normalizeDocumentVersion(input: any): DocumentVersion {
+    if (!input) {
+      return { id: '', version: 0, status: '', created_at: '' }
+    }
+    return {
+      id: input.id ?? '',
+      version: input.version ?? 0,
+      status: input.status ?? '',
+      created_at: input.created_at ?? input.createdAt ?? '',
+    }
+  },
   normalizeKnowledgeBaseResponse(input: any): { knowledge_base: KnowledgeBase } {
     if (!input) return { knowledge_base: { id: '', name: '', description: '', created_at: '' } }
     return {
@@ -216,7 +250,9 @@ export const consoleApi = {
     if (params?.limit) query.set('limit', String(params.limit))
     if (params?.offset) query.set('offset', String(params.offset))
     const suffix = query.toString() ? `?${query.toString()}` : ''
-    return request<{ items: DocumentItem[] }>(`/console/v1/documents${suffix}`)
+    return request<{ items: DocumentItem[] }>(`/console/v1/documents${suffix}`).then((res) => ({
+      items: (res.items ?? []).map(consoleApi.normalizeDocument),
+    }))
   },
   uploadDocument(payload: UploadDocumentInput) {
     return request<{ document: DocumentItem; version: DocumentVersion }>(
@@ -225,7 +261,10 @@ export const consoleApi = {
         method: 'POST',
         body: JSON.stringify(payload),
       },
-    )
+    ).then((res) => ({
+      document: consoleApi.normalizeDocument(res.document),
+      version: consoleApi.normalizeDocumentVersion(res.version),
+    }))
   },
   uploadDocumentFile(payload: FormData) {
     return request<{ items: { document: DocumentItem; version: DocumentVersion }[] }>(
@@ -234,12 +273,28 @@ export const consoleApi = {
         method: 'POST',
         body: payload,
       },
-    )
+    ).then((res) => ({
+      items: (res.items ?? []).map((item) => ({
+        document: consoleApi.normalizeDocument(item.document),
+        version: consoleApi.normalizeDocumentVersion(item.version),
+      })),
+    }))
   },
   getDocument(id: string) {
     return request<{ document: DocumentItem; versions: DocumentVersion[] }>(
       `/console/v1/documents/${id}`,
-    )
+    ).then((res) => ({
+      document: consoleApi.normalizeDocument(res.document),
+      versions: (res.versions ?? []).map(consoleApi.normalizeDocumentVersion),
+    }))
+  },
+  updateDocument(id: string, payload: { kb_id?: string }) {
+    const body: Record<string, unknown> = { id }
+    if (payload.kb_id !== undefined) body.kb_id = payload.kb_id
+    return request<{ document: DocumentItem }>(`/console/v1/documents/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
   },
   deleteDocument(id: string) {
     return request<void>(`/console/v1/documents/${id}`, {

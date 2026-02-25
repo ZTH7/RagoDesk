@@ -1204,6 +1204,102 @@ func (x *DeleteDocumentRequest) GetId() string {
 	return ""
 }
 
+type UpdateDocumentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	KbId          string                 `protobuf:"bytes,2,opt,name=kb_id,json=kbId,proto3" json:"kb_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateDocumentRequest) Reset() {
+	*x = UpdateDocumentRequest{}
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateDocumentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateDocumentRequest) ProtoMessage() {}
+
+func (x *UpdateDocumentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateDocumentRequest.ProtoReflect.Descriptor instead.
+func (*UpdateDocumentRequest) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *UpdateDocumentRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateDocumentRequest) GetKbId() string {
+	if x != nil {
+		return x.KbId
+	}
+	return ""
+}
+
+type DocumentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Document      *Document              `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DocumentResponse) Reset() {
+	*x = DocumentResponse{}
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DocumentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DocumentResponse) ProtoMessage() {}
+
+func (x *DocumentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DocumentResponse.ProtoReflect.Descriptor instead.
+func (*DocumentResponse) Descriptor() ([]byte, []int) {
+	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *DocumentResponse) GetDocument() *Document {
+	if x != nil {
+		return x.Document
+	}
+	return nil
+}
+
 type ReindexDocumentRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1213,7 +1309,7 @@ type ReindexDocumentRequest struct {
 
 func (x *ReindexDocumentRequest) Reset() {
 	*x = ReindexDocumentRequest{}
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[21]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1225,7 +1321,7 @@ func (x *ReindexDocumentRequest) String() string {
 func (*ReindexDocumentRequest) ProtoMessage() {}
 
 func (x *ReindexDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[21]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1238,7 +1334,7 @@ func (x *ReindexDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReindexDocumentRequest.ProtoReflect.Descriptor instead.
 func (*ReindexDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{21}
+	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ReindexDocumentRequest) GetId() string {
@@ -1258,7 +1354,7 @@ type RollbackDocumentRequest struct {
 
 func (x *RollbackDocumentRequest) Reset() {
 	*x = RollbackDocumentRequest{}
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[22]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1270,7 +1366,7 @@ func (x *RollbackDocumentRequest) String() string {
 func (*RollbackDocumentRequest) ProtoMessage() {}
 
 func (x *RollbackDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[22]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1283,7 +1379,7 @@ func (x *RollbackDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RollbackDocumentRequest.ProtoReflect.Descriptor instead.
 func (*RollbackDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{22}
+	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *RollbackDocumentRequest) GetId() string {
@@ -1311,7 +1407,7 @@ type BindBotKnowledgeBaseRequest struct {
 
 func (x *BindBotKnowledgeBaseRequest) Reset() {
 	*x = BindBotKnowledgeBaseRequest{}
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[23]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1323,7 +1419,7 @@ func (x *BindBotKnowledgeBaseRequest) String() string {
 func (*BindBotKnowledgeBaseRequest) ProtoMessage() {}
 
 func (x *BindBotKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[23]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1336,7 +1432,7 @@ func (x *BindBotKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindBotKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
 func (*BindBotKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{23}
+	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *BindBotKnowledgeBaseRequest) GetBotId() string {
@@ -1370,7 +1466,7 @@ type UnbindBotKnowledgeBaseRequest struct {
 
 func (x *UnbindBotKnowledgeBaseRequest) Reset() {
 	*x = UnbindBotKnowledgeBaseRequest{}
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[24]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1382,7 +1478,7 @@ func (x *UnbindBotKnowledgeBaseRequest) String() string {
 func (*UnbindBotKnowledgeBaseRequest) ProtoMessage() {}
 
 func (x *UnbindBotKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[24]
+	mi := &file_api_knowledge_v1_console_knowledge_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1395,7 +1491,7 @@ func (x *UnbindBotKnowledgeBaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnbindBotKnowledgeBaseRequest.ProtoReflect.Descriptor instead.
 func (*UnbindBotKnowledgeBaseRequest) Descriptor() ([]byte, []int) {
-	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{24}
+	return file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UnbindBotKnowledgeBaseRequest) GetBotId() string {
@@ -1499,7 +1595,12 @@ const file_api_knowledge_v1_console_knowledge_proto_rawDesc = "" +
 	"\bdocument\x18\x01 \x01(\v2\x1a.api.knowledge.v1.DocumentR\bdocument\x12=\n" +
 	"\bversions\x18\x02 \x03(\v2!.api.knowledge.v1.DocumentVersionR\bversions\"'\n" +
 	"\x15DeleteDocumentRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"(\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"<\n" +
+	"\x15UpdateDocumentRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x13\n" +
+	"\x05kb_id\x18\x02 \x01(\tR\x04kbId\"J\n" +
+	"\x10DocumentResponse\x126\n" +
+	"\bdocument\x18\x01 \x01(\v2\x1a.api.knowledge.v1.DocumentR\bdocument\"(\n" +
 	"\x16ReindexDocumentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"C\n" +
 	"\x17RollbackDocumentRequest\x12\x0e\n" +
@@ -1511,7 +1612,7 @@ const file_api_knowledge_v1_console_knowledge_proto_rawDesc = "" +
 	"\x06weight\x18\x04 \x01(\x01R\x06weightJ\x04\b\x03\x10\x04\"K\n" +
 	"\x1dUnbindBotKnowledgeBaseRequest\x12\x15\n" +
 	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x13\n" +
-	"\x05kb_id\x18\x02 \x01(\tR\x04kbId2\x82\x10\n" +
+	"\x05kb_id\x18\x02 \x01(\tR\x04kbId2\x89\x11\n" +
 	"\x10ConsoleKnowledge\x12\x94\x01\n" +
 	"\x13CreateKnowledgeBase\x12,.api.knowledge.v1.CreateKnowledgeBaseRequest\x1a'.api.knowledge.v1.KnowledgeBaseResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/console/v1/knowledge_bases\x12\x90\x01\n" +
 	"\x10GetKnowledgeBase\x12).api.knowledge.v1.GetKnowledgeBaseRequest\x1a'.api.knowledge.v1.KnowledgeBaseResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /console/v1/knowledge_bases/{id}\x12\x99\x01\n" +
@@ -1524,7 +1625,8 @@ const file_api_knowledge_v1_console_knowledge_proto_rawDesc = "" +
 	"\x16UnbindBotKnowledgeBase\x12/.api.knowledge.v1.UnbindBotKnowledgeBaseRequest\x1a\x16.google.protobuf.Empty\"9\x82\xd3\xe4\x93\x023*1/console/v1/bots/{bot_id}/knowledge_bases/{kb_id}\x12\x8c\x01\n" +
 	"\x0eUploadDocument\x12'.api.knowledge.v1.UploadDocumentRequest\x1a(.api.knowledge.v1.UploadDocumentResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/console/v1/documents/upload\x12~\n" +
 	"\vGetDocument\x12$.api.knowledge.v1.GetDocumentRequest\x1a%.api.knowledge.v1.GetDocumentResponse\"\"\x82\xd3\xe4\x93\x02\x1c\x12\x1a/console/v1/documents/{id}\x12u\n" +
-	"\x0eDeleteDocument\x12'.api.knowledge.v1.DeleteDocumentRequest\x1a\x16.google.protobuf.Empty\"\"\x82\xd3\xe4\x93\x02\x1c*\x1a/console/v1/documents/{id}\x12\x82\x01\n" +
+	"\x0eDeleteDocument\x12'.api.knowledge.v1.DeleteDocumentRequest\x1a\x16.google.protobuf.Empty\"\"\x82\xd3\xe4\x93\x02\x1c*\x1a/console/v1/documents/{id}\x12\x84\x01\n" +
+	"\x0eUpdateDocument\x12'.api.knowledge.v1.UpdateDocumentRequest\x1a\".api.knowledge.v1.DocumentResponse\"%\x82\xd3\xe4\x93\x02\x1f:\x01*2\x1a/console/v1/documents/{id}\x12\x82\x01\n" +
 	"\x0fReindexDocument\x12(.api.knowledge.v1.ReindexDocumentRequest\x1a\x16.google.protobuf.Empty\"-\x82\xd3\xe4\x93\x02':\x01*\"\"/console/v1/documents/{id}/reindex\x12\x85\x01\n" +
 	"\x10RollbackDocument\x12).api.knowledge.v1.RollbackDocumentRequest\x1a\x16.google.protobuf.Empty\".\x82\xd3\xe4\x93\x02(:\x01*\"#/console/v1/documents/{id}/rollbackB:Z8github.com/ZTH7/RagoDesk/apps/server/api/knowledge/v1;v1b\x06proto3"
 
@@ -1540,7 +1642,7 @@ func file_api_knowledge_v1_console_knowledge_proto_rawDescGZIP() []byte {
 	return file_api_knowledge_v1_console_knowledge_proto_rawDescData
 }
 
-var file_api_knowledge_v1_console_knowledge_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_api_knowledge_v1_console_knowledge_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_api_knowledge_v1_console_knowledge_proto_goTypes = []any{
 	(*KnowledgeBase)(nil),                 // 0: api.knowledge.v1.KnowledgeBase
 	(*BotKnowledgeBase)(nil),              // 1: api.knowledge.v1.BotKnowledgeBase
@@ -1563,20 +1665,22 @@ var file_api_knowledge_v1_console_knowledge_proto_goTypes = []any{
 	(*GetDocumentRequest)(nil),            // 18: api.knowledge.v1.GetDocumentRequest
 	(*GetDocumentResponse)(nil),           // 19: api.knowledge.v1.GetDocumentResponse
 	(*DeleteDocumentRequest)(nil),         // 20: api.knowledge.v1.DeleteDocumentRequest
-	(*ReindexDocumentRequest)(nil),        // 21: api.knowledge.v1.ReindexDocumentRequest
-	(*RollbackDocumentRequest)(nil),       // 22: api.knowledge.v1.RollbackDocumentRequest
-	(*BindBotKnowledgeBaseRequest)(nil),   // 23: api.knowledge.v1.BindBotKnowledgeBaseRequest
-	(*UnbindBotKnowledgeBaseRequest)(nil), // 24: api.knowledge.v1.UnbindBotKnowledgeBaseRequest
-	(*timestamppb.Timestamp)(nil),         // 25: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),                 // 26: google.protobuf.Empty
+	(*UpdateDocumentRequest)(nil),         // 21: api.knowledge.v1.UpdateDocumentRequest
+	(*DocumentResponse)(nil),              // 22: api.knowledge.v1.DocumentResponse
+	(*ReindexDocumentRequest)(nil),        // 23: api.knowledge.v1.ReindexDocumentRequest
+	(*RollbackDocumentRequest)(nil),       // 24: api.knowledge.v1.RollbackDocumentRequest
+	(*BindBotKnowledgeBaseRequest)(nil),   // 25: api.knowledge.v1.BindBotKnowledgeBaseRequest
+	(*UnbindBotKnowledgeBaseRequest)(nil), // 26: api.knowledge.v1.UnbindBotKnowledgeBaseRequest
+	(*timestamppb.Timestamp)(nil),         // 27: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),                 // 28: google.protobuf.Empty
 }
 var file_api_knowledge_v1_console_knowledge_proto_depIdxs = []int32{
-	25, // 0: api.knowledge.v1.KnowledgeBase.created_at:type_name -> google.protobuf.Timestamp
-	25, // 1: api.knowledge.v1.KnowledgeBase.updated_at:type_name -> google.protobuf.Timestamp
-	25, // 2: api.knowledge.v1.BotKnowledgeBase.created_at:type_name -> google.protobuf.Timestamp
-	25, // 3: api.knowledge.v1.Document.created_at:type_name -> google.protobuf.Timestamp
-	25, // 4: api.knowledge.v1.Document.updated_at:type_name -> google.protobuf.Timestamp
-	25, // 5: api.knowledge.v1.DocumentVersion.created_at:type_name -> google.protobuf.Timestamp
+	27, // 0: api.knowledge.v1.KnowledgeBase.created_at:type_name -> google.protobuf.Timestamp
+	27, // 1: api.knowledge.v1.KnowledgeBase.updated_at:type_name -> google.protobuf.Timestamp
+	27, // 2: api.knowledge.v1.BotKnowledgeBase.created_at:type_name -> google.protobuf.Timestamp
+	27, // 3: api.knowledge.v1.Document.created_at:type_name -> google.protobuf.Timestamp
+	27, // 4: api.knowledge.v1.Document.updated_at:type_name -> google.protobuf.Timestamp
+	27, // 5: api.knowledge.v1.DocumentVersion.created_at:type_name -> google.protobuf.Timestamp
 	0,  // 6: api.knowledge.v1.ListKnowledgeBasesResponse.items:type_name -> api.knowledge.v1.KnowledgeBase
 	2,  // 7: api.knowledge.v1.ListDocumentsResponse.items:type_name -> api.knowledge.v1.Document
 	1,  // 8: api.knowledge.v1.ListBotKnowledgeBasesResponse.items:type_name -> api.knowledge.v1.BotKnowledgeBase
@@ -1586,39 +1690,42 @@ var file_api_knowledge_v1_console_knowledge_proto_depIdxs = []int32{
 	3,  // 12: api.knowledge.v1.UploadDocumentResponse.version:type_name -> api.knowledge.v1.DocumentVersion
 	2,  // 13: api.knowledge.v1.GetDocumentResponse.document:type_name -> api.knowledge.v1.Document
 	3,  // 14: api.knowledge.v1.GetDocumentResponse.versions:type_name -> api.knowledge.v1.DocumentVersion
-	4,  // 15: api.knowledge.v1.ConsoleKnowledge.CreateKnowledgeBase:input_type -> api.knowledge.v1.CreateKnowledgeBaseRequest
-	5,  // 16: api.knowledge.v1.ConsoleKnowledge.GetKnowledgeBase:input_type -> api.knowledge.v1.GetKnowledgeBaseRequest
-	6,  // 17: api.knowledge.v1.ConsoleKnowledge.UpdateKnowledgeBase:input_type -> api.knowledge.v1.UpdateKnowledgeBaseRequest
-	7,  // 18: api.knowledge.v1.ConsoleKnowledge.DeleteKnowledgeBase:input_type -> api.knowledge.v1.DeleteKnowledgeBaseRequest
-	8,  // 19: api.knowledge.v1.ConsoleKnowledge.ListKnowledgeBases:input_type -> api.knowledge.v1.ListKnowledgeBasesRequest
-	10, // 20: api.knowledge.v1.ConsoleKnowledge.ListDocuments:input_type -> api.knowledge.v1.ListDocumentsRequest
-	12, // 21: api.knowledge.v1.ConsoleKnowledge.ListBotKnowledgeBases:input_type -> api.knowledge.v1.ListBotKnowledgeBasesRequest
-	23, // 22: api.knowledge.v1.ConsoleKnowledge.BindBotKnowledgeBase:input_type -> api.knowledge.v1.BindBotKnowledgeBaseRequest
-	24, // 23: api.knowledge.v1.ConsoleKnowledge.UnbindBotKnowledgeBase:input_type -> api.knowledge.v1.UnbindBotKnowledgeBaseRequest
-	16, // 24: api.knowledge.v1.ConsoleKnowledge.UploadDocument:input_type -> api.knowledge.v1.UploadDocumentRequest
-	18, // 25: api.knowledge.v1.ConsoleKnowledge.GetDocument:input_type -> api.knowledge.v1.GetDocumentRequest
-	20, // 26: api.knowledge.v1.ConsoleKnowledge.DeleteDocument:input_type -> api.knowledge.v1.DeleteDocumentRequest
-	21, // 27: api.knowledge.v1.ConsoleKnowledge.ReindexDocument:input_type -> api.knowledge.v1.ReindexDocumentRequest
-	22, // 28: api.knowledge.v1.ConsoleKnowledge.RollbackDocument:input_type -> api.knowledge.v1.RollbackDocumentRequest
-	14, // 29: api.knowledge.v1.ConsoleKnowledge.CreateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
-	14, // 30: api.knowledge.v1.ConsoleKnowledge.GetKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
-	14, // 31: api.knowledge.v1.ConsoleKnowledge.UpdateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
-	26, // 32: api.knowledge.v1.ConsoleKnowledge.DeleteKnowledgeBase:output_type -> google.protobuf.Empty
-	9,  // 33: api.knowledge.v1.ConsoleKnowledge.ListKnowledgeBases:output_type -> api.knowledge.v1.ListKnowledgeBasesResponse
-	11, // 34: api.knowledge.v1.ConsoleKnowledge.ListDocuments:output_type -> api.knowledge.v1.ListDocumentsResponse
-	13, // 35: api.knowledge.v1.ConsoleKnowledge.ListBotKnowledgeBases:output_type -> api.knowledge.v1.ListBotKnowledgeBasesResponse
-	15, // 36: api.knowledge.v1.ConsoleKnowledge.BindBotKnowledgeBase:output_type -> api.knowledge.v1.BotKnowledgeBaseResponse
-	26, // 37: api.knowledge.v1.ConsoleKnowledge.UnbindBotKnowledgeBase:output_type -> google.protobuf.Empty
-	17, // 38: api.knowledge.v1.ConsoleKnowledge.UploadDocument:output_type -> api.knowledge.v1.UploadDocumentResponse
-	19, // 39: api.knowledge.v1.ConsoleKnowledge.GetDocument:output_type -> api.knowledge.v1.GetDocumentResponse
-	26, // 40: api.knowledge.v1.ConsoleKnowledge.DeleteDocument:output_type -> google.protobuf.Empty
-	26, // 41: api.knowledge.v1.ConsoleKnowledge.ReindexDocument:output_type -> google.protobuf.Empty
-	26, // 42: api.knowledge.v1.ConsoleKnowledge.RollbackDocument:output_type -> google.protobuf.Empty
-	29, // [29:43] is the sub-list for method output_type
-	15, // [15:29] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	2,  // 15: api.knowledge.v1.DocumentResponse.document:type_name -> api.knowledge.v1.Document
+	4,  // 16: api.knowledge.v1.ConsoleKnowledge.CreateKnowledgeBase:input_type -> api.knowledge.v1.CreateKnowledgeBaseRequest
+	5,  // 17: api.knowledge.v1.ConsoleKnowledge.GetKnowledgeBase:input_type -> api.knowledge.v1.GetKnowledgeBaseRequest
+	6,  // 18: api.knowledge.v1.ConsoleKnowledge.UpdateKnowledgeBase:input_type -> api.knowledge.v1.UpdateKnowledgeBaseRequest
+	7,  // 19: api.knowledge.v1.ConsoleKnowledge.DeleteKnowledgeBase:input_type -> api.knowledge.v1.DeleteKnowledgeBaseRequest
+	8,  // 20: api.knowledge.v1.ConsoleKnowledge.ListKnowledgeBases:input_type -> api.knowledge.v1.ListKnowledgeBasesRequest
+	10, // 21: api.knowledge.v1.ConsoleKnowledge.ListDocuments:input_type -> api.knowledge.v1.ListDocumentsRequest
+	12, // 22: api.knowledge.v1.ConsoleKnowledge.ListBotKnowledgeBases:input_type -> api.knowledge.v1.ListBotKnowledgeBasesRequest
+	25, // 23: api.knowledge.v1.ConsoleKnowledge.BindBotKnowledgeBase:input_type -> api.knowledge.v1.BindBotKnowledgeBaseRequest
+	26, // 24: api.knowledge.v1.ConsoleKnowledge.UnbindBotKnowledgeBase:input_type -> api.knowledge.v1.UnbindBotKnowledgeBaseRequest
+	16, // 25: api.knowledge.v1.ConsoleKnowledge.UploadDocument:input_type -> api.knowledge.v1.UploadDocumentRequest
+	18, // 26: api.knowledge.v1.ConsoleKnowledge.GetDocument:input_type -> api.knowledge.v1.GetDocumentRequest
+	20, // 27: api.knowledge.v1.ConsoleKnowledge.DeleteDocument:input_type -> api.knowledge.v1.DeleteDocumentRequest
+	21, // 28: api.knowledge.v1.ConsoleKnowledge.UpdateDocument:input_type -> api.knowledge.v1.UpdateDocumentRequest
+	23, // 29: api.knowledge.v1.ConsoleKnowledge.ReindexDocument:input_type -> api.knowledge.v1.ReindexDocumentRequest
+	24, // 30: api.knowledge.v1.ConsoleKnowledge.RollbackDocument:input_type -> api.knowledge.v1.RollbackDocumentRequest
+	14, // 31: api.knowledge.v1.ConsoleKnowledge.CreateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
+	14, // 32: api.knowledge.v1.ConsoleKnowledge.GetKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
+	14, // 33: api.knowledge.v1.ConsoleKnowledge.UpdateKnowledgeBase:output_type -> api.knowledge.v1.KnowledgeBaseResponse
+	28, // 34: api.knowledge.v1.ConsoleKnowledge.DeleteKnowledgeBase:output_type -> google.protobuf.Empty
+	9,  // 35: api.knowledge.v1.ConsoleKnowledge.ListKnowledgeBases:output_type -> api.knowledge.v1.ListKnowledgeBasesResponse
+	11, // 36: api.knowledge.v1.ConsoleKnowledge.ListDocuments:output_type -> api.knowledge.v1.ListDocumentsResponse
+	13, // 37: api.knowledge.v1.ConsoleKnowledge.ListBotKnowledgeBases:output_type -> api.knowledge.v1.ListBotKnowledgeBasesResponse
+	15, // 38: api.knowledge.v1.ConsoleKnowledge.BindBotKnowledgeBase:output_type -> api.knowledge.v1.BotKnowledgeBaseResponse
+	28, // 39: api.knowledge.v1.ConsoleKnowledge.UnbindBotKnowledgeBase:output_type -> google.protobuf.Empty
+	17, // 40: api.knowledge.v1.ConsoleKnowledge.UploadDocument:output_type -> api.knowledge.v1.UploadDocumentResponse
+	19, // 41: api.knowledge.v1.ConsoleKnowledge.GetDocument:output_type -> api.knowledge.v1.GetDocumentResponse
+	28, // 42: api.knowledge.v1.ConsoleKnowledge.DeleteDocument:output_type -> google.protobuf.Empty
+	22, // 43: api.knowledge.v1.ConsoleKnowledge.UpdateDocument:output_type -> api.knowledge.v1.DocumentResponse
+	28, // 44: api.knowledge.v1.ConsoleKnowledge.ReindexDocument:output_type -> google.protobuf.Empty
+	28, // 45: api.knowledge.v1.ConsoleKnowledge.RollbackDocument:output_type -> google.protobuf.Empty
+	31, // [31:46] is the sub-list for method output_type
+	16, // [16:31] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_api_knowledge_v1_console_knowledge_proto_init() }
@@ -1632,7 +1739,7 @@ func file_api_knowledge_v1_console_knowledge_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_knowledge_v1_console_knowledge_proto_rawDesc), len(file_api_knowledge_v1_console_knowledge_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   25,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

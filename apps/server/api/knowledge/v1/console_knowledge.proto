@@ -76,6 +76,12 @@ service ConsoleKnowledge {
       delete: "/console/v1/documents/{id}"
     };
   }
+  rpc UpdateDocument(UpdateDocumentRequest) returns (DocumentResponse) {
+    option (google.api.http) = {
+      patch: "/console/v1/documents/{id}"
+      body: "*"
+    };
+  }
   rpc ReindexDocument(ReindexDocumentRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/console/v1/documents/{id}/reindex"
@@ -205,6 +211,15 @@ message GetDocumentResponse {
 
 message DeleteDocumentRequest {
   string id = 1;
+}
+
+message UpdateDocumentRequest {
+  string id = 1;
+  string kb_id = 2;
+}
+
+message DocumentResponse {
+  Document document = 1;
 }
 
 message ReindexDocumentRequest {

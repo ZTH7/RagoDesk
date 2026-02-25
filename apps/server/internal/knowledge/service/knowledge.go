@@ -229,6 +229,20 @@ func (s *KnowledgeService) DeleteDocument(ctx context.Context, req *v1.DeleteDoc
 	return &emptypb.Empty{}, nil
 }
 
+func (s *KnowledgeService) UpdateDocument(ctx context.Context, req *v1.UpdateDocumentRequest) (*v1.DocumentResponse, error) {
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iamUC.RequirePermission(ctx, biz.PermissionDocumentUpload); err != nil {
+		return nil, err
+	}
+	updated, err := s.uc.UpdateDocumentKB(ctx, req.GetId(), req.GetKbId())
+	if err != nil {
+		return nil, err
+	}
+	return &v1.DocumentResponse{Document: toDocument(updated)}, nil
+}
+
 func (s *KnowledgeService) ReindexDocument(ctx context.Context, req *v1.ReindexDocumentRequest) (*emptypb.Empty, error) {
 	if err := requireTenantContext(ctx); err != nil {
 		return nil, err

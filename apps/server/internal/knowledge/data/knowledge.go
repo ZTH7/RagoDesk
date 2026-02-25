@@ -320,6 +320,32 @@ func (r *knowledgeRepo) ListDocuments(ctx context.Context, kbID string, limit in
 	return items, rows.Err()
 }
 
+func (r *knowledgeRepo) UpdateDocumentKB(ctx context.Context, documentID string, kbID string) (biz.Document, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return biz.Document{}, err
+	}
+	res, err := r.db.ExecContext(
+		ctx,
+		"UPDATE document SET kb_id = ?, updated_at = ? WHERE tenant_id = ? AND id = ?",
+		strings.TrimSpace(kbID),
+		time.Now(),
+		tenantID,
+		strings.TrimSpace(documentID),
+	)
+	if err != nil {
+		return biz.Document{}, err
+	}
+	rows, err := res.RowsAffected()
+	if err == nil && rows == 0 {
+		return biz.Document{}, kerrors.NotFound("DOC_NOT_FOUND", "document not found")
+	}
+	if err != nil {
+		return biz.Document{}, err
+	}
+	return r.GetDocument(ctx, documentID)
+}
+
 func (r *knowledgeRepo) UpdateDocumentIndexState(ctx context.Context, documentID string, status string, currentVersion int32) error {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {

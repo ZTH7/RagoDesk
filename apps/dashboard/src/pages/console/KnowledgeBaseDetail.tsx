@@ -6,6 +6,7 @@ import {
   Input,
   Modal,
   Popconfirm,
+  Select,
   Space,
   Table,
   Tag,
@@ -13,7 +14,7 @@ import {
   message,
 } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
 import { RequestBanner } from '../../components/RequestBanner'
@@ -26,6 +27,8 @@ export function KnowledgeBaseDetail() {
   const kbId = id ?? ''
   const [editOpen, setEditOpen] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
+  const [bindOpen, setBindOpen] = useState(false)
+  const [bindDocIds, setBindDocIds] = useState<string[]>([])
   const [form] = Form.useForm()
 
   const { data: kbData, loading: kbLoading, error: kbError, reload: reloadKB } = useRequest(
@@ -46,6 +49,21 @@ export function KnowledgeBaseDetail() {
     { items: [] },
     { enabled: Boolean(kbId), deps: [kbId] },
   )
+
+  const { data: allDocsData, loading: allDocsLoading, reload: reloadAllDocs } = useRequest(
+    () => consoleApi.listDocuments(),
+    { items: [] },
+  )
+
+  const { data: kbListData } = useRequest(() => consoleApi.listKnowledgeBases(), { items: [] })
+
+  const kbNameMap = useMemo(() => {
+    return new Map(kbListData.items.map((kb) => [kb.id, kb.name]))
+  }, [kbListData.items])
+
+  const bindCandidates = useMemo(() => {
+    return allDocsData.items.filter((doc) => doc.id && doc.kb_id !== kbId)
+  }, [allDocsData.items, kbId])
 
   const handleEdit = () => {
     form.setFieldsValue({
@@ -101,6 +119,36 @@ export function KnowledgeBaseDetail() {
     }
   }
 
+  const handleUnbind = async (documentId: string) => {
+    if (!kbId) return
+    try {
+      await consoleApi.updateDocument(documentId, { kb_id: '' })
+      message.success('已解绑文档')
+      reloadDocs()
+      reloadAllDocs()
+    } catch (err) {
+      if (err instanceof Error) message.error(err.message)
+    }
+  }
+
+  const handleBind = async () => {
+    if (!kbId) return
+    if (bindDocIds.length === 0) {
+      message.warning('请选择要绑定的文档')
+      return
+    }
+    try {
+      await Promise.all(bindDocIds.map((docId) => consoleApi.updateDocument(docId, { kb_id: kbId })))
+      message.success('已绑定文档')
+      setBindDocIds([])
+      setBindOpen(false)
+      reloadDocs()
+      reloadAllDocs()
+    } catch (err) {
+      if (err instanceof Error) message.error(err.message)
+    }
+  }
+
   return (
     <div className="page">
       <PageHeader
@@ -127,7 +175,14 @@ export function KnowledgeBaseDetail() {
           </Descriptions>
         )}
       </Card>
-      <Card title="关联文档">
+      <Card
+        title="关联文档"
+        extra={
+          <Button onClick={() => setBindOpen(true)} disabled={!kbId}>
+            绑定文档
+          </Button>
+        }
+      >
         <Table
           rowKey="id"
           dataSource={docData.items}
@@ -142,6 +197,15 @@ export function KnowledgeBaseDetail() {
               render: (value: string) => <Tag color={value === 'ready' ? 'green' : 'gold'}>{value}</Tag>,
             },
             { title: '更新时间', dataIndex: 'updated_at' },
+            {
+              title: '操作',
+              key: 'actions',
+              render: (_: unknown, record) => (
+                <Popconfirm title="确认解绑该文档？" onConfirm={() => handleUnbind(record.id)}>
+                  <Button size="small">解绑</Button>
+                </Popconfirm>
+              ),
+            },
           ]}
         />
       </Card>
@@ -176,6 +240,35 @@ export function KnowledgeBaseDetail() {
           </Form.Item>
           <Form.Item label="描述" name="description">
             <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="绑定文档"
+        open={bindOpen}
+        onCancel={() => setBindOpen(false)}
+        onOk={handleBind}
+        okText="绑定"
+      >
+        <Form layout="vertical">
+          <Form.Item label="选择文档">
+            <Select
+              mode="multiple"
+              placeholder="选择要绑定到当前知识库的文档"
+              value={bindDocIds}
+              onChange={(value) => setBindDocIds(value)}
+              loading={allDocsLoading}
+              options={bindCandidates.map((doc) => ({
+                value: doc.id,
+                label: `${doc.title}${
+                  doc.kb_id
+                    ? ` · 当前：${kbNameMap.get(doc.kb_id) ?? doc.kb_id}`
+                    : ' · 未绑定'
+                }`,
+              }))}
+              notFoundContent="暂无可绑定文档"
+            />
           </Form.Item>
         </Form>
       </Modal>

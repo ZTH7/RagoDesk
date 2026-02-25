@@ -32,6 +32,7 @@ const (
 	ConsoleKnowledge_UploadDocument_FullMethodName         = "/api.knowledge.v1.ConsoleKnowledge/UploadDocument"
 	ConsoleKnowledge_GetDocument_FullMethodName            = "/api.knowledge.v1.ConsoleKnowledge/GetDocument"
 	ConsoleKnowledge_DeleteDocument_FullMethodName         = "/api.knowledge.v1.ConsoleKnowledge/DeleteDocument"
+	ConsoleKnowledge_UpdateDocument_FullMethodName         = "/api.knowledge.v1.ConsoleKnowledge/UpdateDocument"
 	ConsoleKnowledge_ReindexDocument_FullMethodName        = "/api.knowledge.v1.ConsoleKnowledge/ReindexDocument"
 	ConsoleKnowledge_RollbackDocument_FullMethodName       = "/api.knowledge.v1.ConsoleKnowledge/RollbackDocument"
 )
@@ -52,6 +53,7 @@ type ConsoleKnowledgeClient interface {
 	UploadDocument(ctx context.Context, in *UploadDocumentRequest, opts ...grpc.CallOption) (*UploadDocumentResponse, error)
 	GetDocument(ctx context.Context, in *GetDocumentRequest, opts ...grpc.CallOption) (*GetDocumentResponse, error)
 	DeleteDocument(ctx context.Context, in *DeleteDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpdateDocument(ctx context.Context, in *UpdateDocumentRequest, opts ...grpc.CallOption) (*DocumentResponse, error)
 	ReindexDocument(ctx context.Context, in *ReindexDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RollbackDocument(ctx context.Context, in *RollbackDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -184,6 +186,16 @@ func (c *consoleKnowledgeClient) DeleteDocument(ctx context.Context, in *DeleteD
 	return out, nil
 }
 
+func (c *consoleKnowledgeClient) UpdateDocument(ctx context.Context, in *UpdateDocumentRequest, opts ...grpc.CallOption) (*DocumentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DocumentResponse)
+	err := c.cc.Invoke(ctx, ConsoleKnowledge_UpdateDocument_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *consoleKnowledgeClient) ReindexDocument(ctx context.Context, in *ReindexDocumentRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
@@ -220,6 +232,7 @@ type ConsoleKnowledgeServer interface {
 	UploadDocument(context.Context, *UploadDocumentRequest) (*UploadDocumentResponse, error)
 	GetDocument(context.Context, *GetDocumentRequest) (*GetDocumentResponse, error)
 	DeleteDocument(context.Context, *DeleteDocumentRequest) (*emptypb.Empty, error)
+	UpdateDocument(context.Context, *UpdateDocumentRequest) (*DocumentResponse, error)
 	ReindexDocument(context.Context, *ReindexDocumentRequest) (*emptypb.Empty, error)
 	RollbackDocument(context.Context, *RollbackDocumentRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedConsoleKnowledgeServer()
@@ -267,6 +280,9 @@ func (UnimplementedConsoleKnowledgeServer) GetDocument(context.Context, *GetDocu
 }
 func (UnimplementedConsoleKnowledgeServer) DeleteDocument(context.Context, *DeleteDocumentRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteDocument not implemented")
+}
+func (UnimplementedConsoleKnowledgeServer) UpdateDocument(context.Context, *UpdateDocumentRequest) (*DocumentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateDocument not implemented")
 }
 func (UnimplementedConsoleKnowledgeServer) ReindexDocument(context.Context, *ReindexDocumentRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReindexDocument not implemented")
@@ -511,6 +527,24 @@ func _ConsoleKnowledge_DeleteDocument_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ConsoleKnowledge_UpdateDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateDocumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsoleKnowledgeServer).UpdateDocument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConsoleKnowledge_UpdateDocument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsoleKnowledgeServer).UpdateDocument(ctx, req.(*UpdateDocumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ConsoleKnowledge_ReindexDocument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReindexDocumentRequest)
 	if err := dec(in); err != nil {
@@ -601,6 +635,10 @@ var ConsoleKnowledge_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteDocument",
 			Handler:    _ConsoleKnowledge_DeleteDocument_Handler,
+		},
+		{
+			MethodName: "UpdateDocument",
+			Handler:    _ConsoleKnowledge_UpdateDocument_Handler,
 		},
 		{
 			MethodName: "ReindexDocument",

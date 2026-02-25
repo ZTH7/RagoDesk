@@ -157,6 +157,7 @@ type KnowledgeRepo interface {
 	RollbackDocument(ctx context.Context, documentID string, version int32) error
 
 	ListDocuments(ctx context.Context, kbID string, limit int, offset int) ([]Document, error)
+	UpdateDocumentKB(ctx context.Context, documentID string, kbID string) (Document, error)
 	DeleteDocument(ctx context.Context, documentID string) error
 
 	ListBotKnowledgeBases(ctx context.Context, botID string) ([]BotKnowledgeBase, error)
@@ -254,6 +255,20 @@ func (uc *KnowledgeUsecase) ListDocuments(ctx context.Context, kbID string, limi
 		offset = 0
 	}
 	return uc.repo.ListDocuments(ctx, kbID, int(limit), int(offset))
+}
+
+func (uc *KnowledgeUsecase) UpdateDocumentKB(ctx context.Context, documentID string, kbID string) (Document, error) {
+	documentID = strings.TrimSpace(documentID)
+	kbID = strings.TrimSpace(kbID)
+	if documentID == "" {
+		return Document{}, errors.BadRequest("DOC_ID_MISSING", "document id missing")
+	}
+	if kbID != "" {
+		if _, err := uc.repo.GetKnowledgeBase(ctx, kbID); err != nil {
+			return Document{}, err
+		}
+	}
+	return uc.repo.UpdateDocumentKB(ctx, documentID, kbID)
 }
 
 func (uc *KnowledgeUsecase) ListBotKnowledgeBases(ctx context.Context, botID string) ([]BotKnowledgeBase, error) {

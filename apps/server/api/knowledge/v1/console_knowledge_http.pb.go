@@ -32,6 +32,7 @@ const OperationConsoleKnowledgeListKnowledgeBases = "/api.knowledge.v1.ConsoleKn
 const OperationConsoleKnowledgeReindexDocument = "/api.knowledge.v1.ConsoleKnowledge/ReindexDocument"
 const OperationConsoleKnowledgeRollbackDocument = "/api.knowledge.v1.ConsoleKnowledge/RollbackDocument"
 const OperationConsoleKnowledgeUnbindBotKnowledgeBase = "/api.knowledge.v1.ConsoleKnowledge/UnbindBotKnowledgeBase"
+const OperationConsoleKnowledgeUpdateDocument = "/api.knowledge.v1.ConsoleKnowledge/UpdateDocument"
 const OperationConsoleKnowledgeUpdateKnowledgeBase = "/api.knowledge.v1.ConsoleKnowledge/UpdateKnowledgeBase"
 const OperationConsoleKnowledgeUploadDocument = "/api.knowledge.v1.ConsoleKnowledge/UploadDocument"
 
@@ -48,6 +49,7 @@ type ConsoleKnowledgeHTTPServer interface {
 	ReindexDocument(context.Context, *ReindexDocumentRequest) (*emptypb.Empty, error)
 	RollbackDocument(context.Context, *RollbackDocumentRequest) (*emptypb.Empty, error)
 	UnbindBotKnowledgeBase(context.Context, *UnbindBotKnowledgeBaseRequest) (*emptypb.Empty, error)
+	UpdateDocument(context.Context, *UpdateDocumentRequest) (*DocumentResponse, error)
 	UpdateKnowledgeBase(context.Context, *UpdateKnowledgeBaseRequest) (*KnowledgeBaseResponse, error)
 	UploadDocument(context.Context, *UploadDocumentRequest) (*UploadDocumentResponse, error)
 }
@@ -66,6 +68,7 @@ func RegisterConsoleKnowledgeHTTPServer(s *http.Server, srv ConsoleKnowledgeHTTP
 	r.POST("/console/v1/documents/upload", _ConsoleKnowledge_UploadDocument0_HTTP_Handler(srv))
 	r.GET("/console/v1/documents/{id}", _ConsoleKnowledge_GetDocument0_HTTP_Handler(srv))
 	r.DELETE("/console/v1/documents/{id}", _ConsoleKnowledge_DeleteDocument0_HTTP_Handler(srv))
+	r.PATCH("/console/v1/documents/{id}", _ConsoleKnowledge_UpdateDocument0_HTTP_Handler(srv))
 	r.POST("/console/v1/documents/{id}/reindex", _ConsoleKnowledge_ReindexDocument0_HTTP_Handler(srv))
 	r.POST("/console/v1/documents/{id}/rollback", _ConsoleKnowledge_RollbackDocument0_HTTP_Handler(srv))
 }
@@ -334,6 +337,31 @@ func _ConsoleKnowledge_DeleteDocument0_HTTP_Handler(srv ConsoleKnowledgeHTTPServ
 	}
 }
 
+func _ConsoleKnowledge_UpdateDocument0_HTTP_Handler(srv ConsoleKnowledgeHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateDocumentRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationConsoleKnowledgeUpdateDocument)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateDocument(ctx, req.(*UpdateDocumentRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*DocumentResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _ConsoleKnowledge_ReindexDocument0_HTTP_Handler(srv ConsoleKnowledgeHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ReindexDocumentRequest
@@ -397,6 +425,7 @@ type ConsoleKnowledgeHTTPClient interface {
 	ReindexDocument(ctx context.Context, req *ReindexDocumentRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	RollbackDocument(ctx context.Context, req *RollbackDocumentRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	UnbindBotKnowledgeBase(ctx context.Context, req *UnbindBotKnowledgeBaseRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	UpdateDocument(ctx context.Context, req *UpdateDocumentRequest, opts ...http.CallOption) (rsp *DocumentResponse, err error)
 	UpdateKnowledgeBase(ctx context.Context, req *UpdateKnowledgeBaseRequest, opts ...http.CallOption) (rsp *KnowledgeBaseResponse, err error)
 	UploadDocument(ctx context.Context, req *UploadDocumentRequest, opts ...http.CallOption) (rsp *UploadDocumentResponse, err error)
 }
@@ -559,6 +588,19 @@ func (c *ConsoleKnowledgeHTTPClientImpl) UnbindBotKnowledgeBase(ctx context.Cont
 	opts = append(opts, http.Operation(OperationConsoleKnowledgeUnbindBotKnowledgeBase))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ConsoleKnowledgeHTTPClientImpl) UpdateDocument(ctx context.Context, in *UpdateDocumentRequest, opts ...http.CallOption) (*DocumentResponse, error) {
+	var out DocumentResponse
+	pattern := "/console/v1/documents/{id}"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationConsoleKnowledgeUpdateDocument))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PATCH", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

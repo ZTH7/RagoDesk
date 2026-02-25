@@ -292,6 +292,7 @@
 - `POST /console/v1/documents/upload`
 - `GET /console/v1/documents`（可选 `kb_id` 过滤）
 - `GET /console/v1/documents/{id}`
+- `PATCH /console/v1/documents/{id}`（更新 `kb_id`，用于绑定/解绑）
 - `DELETE /console/v1/documents/{id}`
 - `POST /console/v1/documents/{id}/reindex`
 - `POST /console/v1/documents/{id}/rollback`
