@@ -348,6 +348,8 @@ func (r *apimgmtRepo) ListUsageLogs(ctx context.Context, filter biz.UsageFilter)
 	items := make([]biz.UsageLog, 0)
 	for rows.Next() {
 		var item biz.UsageLog
+		var apiVersion sql.NullString
+		var model sql.NullString
 		var clientIP sql.NullString
 		var userAgent sql.NullString
 		if err := rows.Scan(
@@ -356,8 +358,8 @@ func (r *apimgmtRepo) ListUsageLogs(ctx context.Context, filter biz.UsageFilter)
 			&item.TenantID,
 			&item.BotID,
 			&item.Path,
-			&item.APIVersion,
-			&item.Model,
+			&apiVersion,
+			&model,
 			&item.StatusCode,
 			&item.LatencyMs,
 			&item.PromptTokens,
@@ -368,6 +370,12 @@ func (r *apimgmtRepo) ListUsageLogs(ctx context.Context, filter biz.UsageFilter)
 			&item.CreatedAt,
 		); err != nil {
 			return nil, err
+		}
+		if apiVersion.Valid {
+			item.APIVersion = apiVersion.String
+		}
+		if model.Valid {
+			item.Model = model.String
 		}
 		if clientIP.Valid {
 			item.ClientIP = clientIP.String
