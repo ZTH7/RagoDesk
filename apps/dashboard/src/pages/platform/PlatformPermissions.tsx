@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Tag, message } from 'antd'
+import { Button, Form, Input, Modal, Select, Tag } from 'antd'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { FilterBar } from '../../components/FilterBar'
@@ -8,6 +8,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
 
+import { uiMessage } from '../../services/uiMessage'
 export function PlatformPermissions() {
   const [scope, setScope] = useState<string>('all')
   const [createOpen, setCreateOpen] = useState(false)
@@ -23,12 +24,12 @@ export function PlatformPermissions() {
     try {
       const values = await form.validateFields()
       await platformApi.createPermission(values)
-      message.success('已创建权限')
+      uiMessage.success('已创建权限')
       setCreateOpen(false)
       form.resetFields()
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -92,3 +93,4 @@ export function PlatformPermissions() {
     </div>
   )
 }
+

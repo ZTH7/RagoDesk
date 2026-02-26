@@ -169,6 +169,31 @@ a {
   color: #ff9f1a;
 }
 
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-solid) 92%, transparent);
+}
+
+.theme-toggle-icon {
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle-icon.is-active {
+  color: var(--accent);
+  transform: scale(1.06);
+}
+
+.theme-toggle :where(.ant-switch) {
+  min-width: 44px;
+}
+
 .code-block {
   background: #0b1b2b;
   color: #e2e8f0;

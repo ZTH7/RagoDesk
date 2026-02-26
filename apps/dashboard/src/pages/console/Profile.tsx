@@ -1,8 +1,9 @@
-import { Button, Card, Descriptions, Form, Input, Space, Typography, message } from 'antd'
+import { Button, Card, Descriptions, Form, Input, Space, Typography } from 'antd'
 import { useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { clearTenantId, clearToken, getTenantId, getToken, setTenantId, setToken } from '../../auth/storage'
 
+import { uiMessage } from '../../services/uiMessage'
 export function Profile() {
   const [form] = Form.useForm()
   const [token, setTokenState] = useState(getToken() ?? '')
@@ -30,10 +31,10 @@ export function Profile() {
         setTenantIdState('')
       }
 
-      message.success('已更新本地会话信息')
+      uiMessage.success('已更新本地会话信息')
     } catch (err) {
       if (err instanceof Error) {
-        message.error(err.message)
+        uiMessage.error(err.message)
       }
     }
   }
@@ -76,7 +77,7 @@ export function Profile() {
                 setTokenState('')
                 setTenantIdState('')
                 form.setFieldsValue({ token: '', tenantId: '' })
-                message.success('已清空本地会话')
+                uiMessage.success('已清空本地会话')
               }}
             >
               清空会话
@@ -87,3 +88,4 @@ export function Profile() {
     </div>
   )
 }
+

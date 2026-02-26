@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Space, Tag, message } from 'antd'
+import { Button, Form, Input, Modal, Select, Space, Tag } from 'antd'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { FilterBar } from '../../components/FilterBar'
@@ -9,6 +9,7 @@ import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 import { getTenantId } from '../../auth/storage'
 
+import { uiMessage } from '../../services/uiMessage'
 export function Users() {
   const tenantId = getTenantId() ?? ''
   const [status, setStatus] = useState<string>('all')
@@ -36,18 +37,18 @@ export function Users() {
 
   const handleInvite = async () => {
     if (!tenantId) {
-      message.error('请先在个人中心设置 Tenant ID')
+      uiMessage.error('请先在个人中心设置 Tenant ID')
       return
     }
     try {
       const values = await inviteForm.validateFields()
       await consoleApi.createUser(tenantId, values)
-      message.success('已邀请成员')
+      uiMessage.success('已邀请成员')
       inviteForm.resetFields()
       setInviteOpen(false)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -55,11 +56,11 @@ export function Users() {
     try {
       const values = await assignForm.validateFields()
       await consoleApi.assignRole(assigningUserId, values.role_id)
-      message.success('已分配角色')
+      uiMessage.success('已分配角色')
       setAssignOpen(false)
       assignForm.resetFields()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -176,3 +177,4 @@ export function Users() {
     </div>
   )
 }
+

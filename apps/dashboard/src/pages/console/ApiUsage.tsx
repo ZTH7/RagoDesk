@@ -1,4 +1,4 @@
-import { Button, DatePicker, Input, Select, Tag, Space, message } from 'antd'
+import { Button, DatePicker, Input, Select, Tag, Space } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -10,6 +10,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 export function ApiUsage() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
@@ -95,9 +96,9 @@ export function ApiUsage() {
         return
       }
 
-      message.info('暂无可下载内容')
+      uiMessage.info('暂无可下载内容')
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -206,3 +207,4 @@ export function ApiUsage() {
     </div>
   )
 }
+

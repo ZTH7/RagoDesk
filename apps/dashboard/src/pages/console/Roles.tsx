@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Space, message } from 'antd'
+import { Button, Form, Input, Modal, Select, Space } from 'antd'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { FilterBar } from '../../components/FilterBar'
@@ -8,6 +8,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 export function Roles() {
   const [keyword, setKeyword] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
@@ -29,12 +30,12 @@ export function Roles() {
     try {
       const values = await form.validateFields()
       await consoleApi.createRole(values)
-      message.success('已创建角色')
+      uiMessage.success('已创建角色')
       form.resetFields()
       setCreateOpen(false)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -46,7 +47,7 @@ export function Roles() {
       const res = await consoleApi.listRolePermissions(roleId)
       setPermissionCodes(res.items.map((item) => item.code))
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     } finally {
       setPermLoading(false)
     }
@@ -55,10 +56,10 @@ export function Roles() {
   const handleAssignPermissions = async () => {
     try {
       await consoleApi.assignRolePermissions(activeRoleId, permissionCodes)
-      message.success('已更新角色权限')
+      uiMessage.success('已更新角色权限')
       setPermOpen(false)
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -139,3 +140,4 @@ export function Roles() {
     </div>
   )
 }
+

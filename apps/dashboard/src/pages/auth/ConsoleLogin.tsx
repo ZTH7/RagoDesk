@@ -1,9 +1,10 @@
-import { Button, Form, Input, Space, Typography, message } from 'antd'
+import { Button, Form, Input, Space, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { clearTenantId, setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
 
+import { uiMessage } from '../../services/uiMessage'
 export function ConsoleLogin() {
   const [form] = Form.useForm()
   const navigate = useNavigate()
@@ -24,7 +25,7 @@ export function ConsoleLogin() {
         } else {
           clearTenantId()
         }
-        message.success('Token 已保存')
+        uiMessage.success('Token 已保存')
         navigate('/console/analytics/overview', { replace: true })
         return
       }
@@ -44,11 +45,11 @@ export function ConsoleLogin() {
       if (res.profile?.tenant_id) {
         setTenantId(res.profile.tenant_id)
       }
-      message.success('登录成功')
+      uiMessage.success('登录成功')
       navigate('/console/analytics/overview', { replace: true })
     } catch (err) {
       if (err instanceof Error) {
-        message.error(err.message)
+        uiMessage.error(err.message)
       }
     }
   }
@@ -81,3 +82,4 @@ export function ConsoleLogin() {
     </AuthLayout>
   )
 }
+

@@ -8,7 +8,6 @@ import {
   Select,
   Space,
   Tag,
-  message,
 } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -20,6 +19,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   active: 'green',
   disabled: 'red',
@@ -66,7 +66,7 @@ export function ApiKeys() {
     try {
       const values = await createForm.validateFields()
       const res = await consoleApi.createApiKey(values)
-      message.success('已创建 API Key')
+      uiMessage.success('已创建 API Key')
       const raw = (res as any).raw_key ?? (res as any).rawKey ?? ''
       setRawKey(raw)
       setRawKeyOpen(true)
@@ -74,7 +74,7 @@ export function ApiKeys() {
       createForm.resetFields()
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -83,44 +83,44 @@ export function ApiKeys() {
     try {
       const values = await editForm.validateFields()
       await consoleApi.updateApiKey(editingId, values)
-      message.success('已更新 API Key')
+      uiMessage.success('已更新 API Key')
       setEditOpen(false)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleToggleStatus = async (id: string, nextStatus: string) => {
     try {
       await consoleApi.updateApiKey(id, { status: nextStatus })
-      message.success('已更新状态')
+      uiMessage.success('已更新状态')
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleRotate = async (id: string) => {
     try {
       const res = await consoleApi.rotateApiKey(id)
-      message.success('已轮换 API Key')
+      uiMessage.success('已轮换 API Key')
       const raw = (res as any).raw_key ?? (res as any).rawKey ?? ''
       setRawKey(raw)
       setRawKeyOpen(true)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       await consoleApi.deleteApiKey(id)
-      message.success('已删除 API Key')
+      uiMessage.success('已删除 API Key')
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -309,3 +309,4 @@ export function ApiKeys() {
     </div>
   )
 }
+

@@ -11,7 +11,6 @@ import {
   Space,
   Table,
   Tag,
-  message,
   Skeleton,
 } from 'antd'
 import { useState } from 'react'
@@ -21,6 +20,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 export function BotDetail() {
   const { id } = useParams()
   const botId = id ?? ''
@@ -57,22 +57,22 @@ export function BotDetail() {
     try {
       const values = await bindForm.validateFields()
       await consoleApi.bindBotKnowledgeBase(botId, values.kb_id, values.weight)
-      message.success('已绑定知识库')
+      uiMessage.success('已绑定知识库')
       setBindOpen(false)
       bindForm.resetFields()
       reloadBindings()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleUnbind = async (kbId: string) => {
     try {
       await consoleApi.unbindBotKnowledgeBase(botId, kbId)
-      message.success('已解绑知识库')
+      uiMessage.success('已解绑知识库')
       reloadBindings()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -90,11 +90,11 @@ export function BotDetail() {
     try {
       const values = await editForm.validateFields()
       await consoleApi.updateBot(botId, values)
-      message.success('已更新机器人')
+      uiMessage.success('已更新机器人')
       setEditOpen(false)
       reloadBot()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -211,3 +211,4 @@ export function BotDetail() {
     </div>
   )
 }
+

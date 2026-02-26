@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Radio, Select, Space, Tag, Typography, message } from 'antd'
+import { Button, Form, Input, Modal, Radio, Select, Space, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -9,6 +9,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
 
+import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   active: 'green',
   disabled: 'red',
@@ -53,7 +54,7 @@ export function PlatformAdmins() {
         payload.invite_base_url = window.location.origin
       }
       const res = await platformApi.createAdmin(payload)
-      message.success('已创建管理员')
+      uiMessage.success('已创建管理员')
       setCreateOpen(false)
       createForm.resetFields()
       if (res.invite_link) {
@@ -62,7 +63,7 @@ export function PlatformAdmins() {
       }
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -70,11 +71,11 @@ export function PlatformAdmins() {
     try {
       const values = await assignForm.validateFields()
       await platformApi.assignAdminRole(activeAdminId, values.role_id)
-      message.success('已分配角色')
+      uiMessage.success('已分配角色')
       setAssignOpen(false)
       assignForm.resetFields()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -228,3 +229,4 @@ export function PlatformAdmins() {
     </div>
   )
 }
+

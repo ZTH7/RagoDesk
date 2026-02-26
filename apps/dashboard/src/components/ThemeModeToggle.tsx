@@ -1,22 +1,22 @@
-import { Segmented, Tooltip } from 'antd'
-import { BulbOutlined, DesktopOutlined, MoonOutlined, SunOutlined } from '@ant-design/icons'
+import { Switch, Tooltip } from 'antd'
+import { BulbOutlined, MoonOutlined, SunOutlined } from '@ant-design/icons'
 import { useThemeMode } from '../theme/mode'
 
 export function ThemeModeToggle() {
   const { mode, setMode } = useThemeMode()
+  const isDark = mode === 'dark'
 
   return (
     <Tooltip title="主题模式">
-      <Segmented
-        size="middle"
-        value={mode}
-        onChange={(value) => setMode(value as 'light' | 'dark' | 'system')}
-        options={[
-          { value: 'light', icon: <SunOutlined />, label: '浅色' },
-          { value: 'dark', icon: <MoonOutlined />, label: '深色' },
-          { value: 'system', icon: <DesktopOutlined />, label: '跟随系统' },
-        ]}
-      />
+      <div className="theme-toggle">
+        <SunOutlined className={`theme-toggle-icon ${!isDark ? 'is-active' : ''}`} />
+        <Switch
+          checked={isDark}
+          onChange={(checked) => setMode(checked ? 'dark' : 'light')}
+          aria-label="切换深浅色主题"
+        />
+        <MoonOutlined className={`theme-toggle-icon ${isDark ? 'is-active' : ''}`} />
+      </div>
     </Tooltip>
   )
 }

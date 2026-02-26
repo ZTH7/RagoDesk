@@ -1,9 +1,10 @@
-import { Button, Form, Input, Select, Space, Typography, message } from 'antd'
+import { Button, Form, Input, Select, Space, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
 
+import { uiMessage } from '../../services/uiMessage'
 export function ConsoleRegister() {
   const [form] = Form.useForm()
   const navigate = useNavigate()
@@ -29,11 +30,11 @@ export function ConsoleRegister() {
       if (res.profile?.tenant_id) {
         setTenantId(res.profile.tenant_id)
       }
-      message.success('注册成功')
+      uiMessage.success('注册成功')
       navigate('/console/analytics/overview', { replace: true })
     } catch (err) {
       if (err instanceof Error) {
-        message.error(err.message)
+        uiMessage.error(err.message)
       }
     }
   }
@@ -91,3 +92,4 @@ export function ConsoleRegister() {
     </AuthLayout>
   )
 }
+

@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Upload, message } from 'antd'
+import { Button, Form, Input, Modal, Popconfirm, Select, Space, Upload } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -10,6 +10,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 export function KnowledgeBases() {
   const [keyword, setKeyword] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
@@ -41,7 +42,7 @@ export function KnowledgeBases() {
       const values = await form.validateFields()
       if (editingId) {
         await consoleApi.updateKnowledgeBase(editingId, values)
-        message.success('已更新知识库')
+        uiMessage.success('已更新知识库')
       } else {
         const created = await consoleApi.createKnowledgeBase(values)
         const kbId = created.knowledge_base?.id
@@ -54,26 +55,26 @@ export function KnowledgeBases() {
             }
           })
           await consoleApi.uploadDocumentFile(formData)
-          message.success('已上传文档')
+          uiMessage.success('已上传文档')
         }
-        message.success('已创建知识库')
+        uiMessage.success('已创建知识库')
       }
       setModalOpen(false)
       form.resetFields()
       setUploadFiles([])
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       await consoleApi.deleteKnowledgeBase(id)
-      message.success('已删除知识库')
+      uiMessage.success('已删除知识库')
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -165,3 +166,4 @@ export function KnowledgeBases() {
     </div>
   )
 }
+

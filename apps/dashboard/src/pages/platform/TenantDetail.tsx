@@ -41,7 +41,7 @@ export function TenantDetail() {
         )}
       </Card>
       <Card>
-        <Alert type="info" message="租户资源统计接口尚未开放" showIcon />
+        <Alert type="info" title="租户资源统计接口尚未开放" showIcon />
       </Card>
     </div>
   )

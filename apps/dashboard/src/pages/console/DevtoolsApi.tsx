@@ -9,12 +9,12 @@ import {
   Space,
   Table,
   Typography,
-  message,
 } from 'antd'
 import { useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { publicApi } from '../../services/public'
 
+import { uiMessage } from '../../services/uiMessage'
 export function DevtoolsApi() {
   const [form] = Form.useForm()
   const [sessionId, setSessionId] = useState('')
@@ -30,7 +30,7 @@ export function DevtoolsApi() {
       const values = await form.validateFields(['api_key', 'user_external_id', 'metadata'])
       const apiKey = values.api_key as string
       if (!apiKey) {
-        message.error('请先输入 API Key')
+        uiMessage.error('请先输入 API Key')
         return
       }
       let metadata: Record<string, unknown> | undefined = undefined
@@ -45,9 +45,9 @@ export function DevtoolsApi() {
       })
       setSessionId(res.session.id)
       form.setFieldsValue({ session_id: res.session.id })
-      message.success('已创建会话')
+      uiMessage.success('已创建会话')
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -58,7 +58,7 @@ export function DevtoolsApi() {
       const values = await form.validateFields(['api_key', 'session_id', 'message', 'top_k', 'threshold'])
       const apiKey = values.api_key as string
       if (!apiKey) {
-        message.error('请先输入 API Key')
+        uiMessage.error('请先输入 API Key')
         return
       }
       setLoading(true)
@@ -71,9 +71,9 @@ export function DevtoolsApi() {
       setReply(res.reply)
       setConfidence(res.confidence)
       setReferences(res.references || [])
-      message.success('已收到回复')
+      uiMessage.success('已收到回复')
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -84,16 +84,16 @@ export function DevtoolsApi() {
       const values = await form.validateFields(['api_key', 'session_id'])
       const apiKey = values.api_key as string
       if (!apiKey) {
-        message.error('请先输入 API Key')
+        uiMessage.error('请先输入 API Key')
         return
       }
       setLoading(true)
       const res = await publicApi.getSession(apiKey, values.session_id, { include_messages: true })
       setSessionInfo(res.session)
       setSessionMessages(res.messages || [])
-      message.success('已获取会话信息')
+      uiMessage.success('已获取会话信息')
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -104,14 +104,14 @@ export function DevtoolsApi() {
       const values = await form.validateFields(['api_key', 'session_id', 'close_reason'])
       const apiKey = values.api_key as string
       if (!apiKey) {
-        message.error('请先输入 API Key')
+        uiMessage.error('请先输入 API Key')
         return
       }
       setLoading(true)
       await publicApi.closeSession(apiKey, values.session_id, values.close_reason)
-      message.success('已关闭会话')
+      uiMessage.success('已关闭会话')
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     } finally {
       setLoading(false)
     }
@@ -183,7 +183,7 @@ export function DevtoolsApi() {
             <Typography.Paragraph>{reply}</Typography.Paragraph>
             <Alert
               type="info"
-              message={`Confidence: ${confidence ?? 0}`}
+              title={`Confidence: ${confidence ?? 0}`}
               showIcon
               style={{ marginBottom: 16 }}
             />
@@ -201,7 +201,7 @@ export function DevtoolsApi() {
             />
           </>
         ) : (
-          <Alert type="info" message="暂无响应，请发送请求" showIcon />
+          <Alert type="info" title="暂无响应，请发送请求" showIcon />
         )}
       </Card>
 
@@ -229,9 +229,10 @@ export function DevtoolsApi() {
             />
           </>
         ) : (
-          <Alert type="info" message="暂无会话信息，请先获取会话。" showIcon />
+          <Alert type="info" title="暂无会话信息，请先获取会话。" showIcon />
         )}
       </Card>
     </div>
   )
 }
+

@@ -11,7 +11,6 @@ import {
   Table,
   Tag,
   Upload,
-  message,
 } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
@@ -21,6 +20,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 export function KnowledgeBaseDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -77,28 +77,28 @@ export function KnowledgeBaseDetail() {
     try {
       const values = await form.validateFields()
       await consoleApi.updateKnowledgeBase(kbId, values)
-      message.success('已更新知识库')
+      uiMessage.success('已更新知识库')
       setEditOpen(false)
       reloadKB()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleDelete = async () => {
     try {
       await consoleApi.deleteKnowledgeBase(kbId)
-      message.success('已删除知识库')
+      uiMessage.success('已删除知识库')
       navigate('/console/knowledge-bases')
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleUpload = async () => {
     if (!kbId) return
     if (uploadFiles.length === 0) {
-      message.warning('请先选择文件')
+      uiMessage.warning('请先选择文件')
       return
     }
     try {
@@ -110,12 +110,12 @@ export function KnowledgeBaseDetail() {
         }
       })
       await consoleApi.uploadDocumentFile(formData)
-      message.success('已提交文档上传')
+      uiMessage.success('已提交文档上传')
       setUploadFiles([])
       reloadKB()
       reloadDocs()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -123,29 +123,29 @@ export function KnowledgeBaseDetail() {
     if (!kbId) return
     try {
       await consoleApi.updateDocument(documentId, { kb_id: '' })
-      message.success('已解绑文档')
+      uiMessage.success('已解绑文档')
       reloadDocs()
       reloadAllDocs()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleBind = async () => {
     if (!kbId) return
     if (bindDocIds.length === 0) {
-      message.warning('请选择要绑定的文档')
+      uiMessage.warning('请选择要绑定的文档')
       return
     }
     try {
       await Promise.all(bindDocIds.map((docId) => consoleApi.updateDocument(docId, { kb_id: kbId })))
-      message.success('已绑定文档')
+      uiMessage.success('已绑定文档')
       setBindDocIds([])
       setBindOpen(false)
       reloadDocs()
       reloadAllDocs()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -275,3 +275,4 @@ export function KnowledgeBaseDetail() {
     </div>
   )
 }
+

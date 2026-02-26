@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Descriptions, Modal, Select, Space, Tag, message, Skeleton } from 'antd'
+import { Alert, Button, Card, Descriptions, Modal, Select, Space, Tag, Skeleton } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -6,6 +6,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
 
+import { uiMessage } from '../../services/uiMessage'
 export function PlatformAdminDetail() {
   const { id } = useParams()
   const adminId = id ?? ''
@@ -18,16 +19,16 @@ export function PlatformAdminDetail() {
 
   const handleAssign = async () => {
     if (!selectedRole) {
-      message.error('请选择角色')
+      uiMessage.error('请选择角色')
       return
     }
     try {
       await platformApi.assignAdminRole(adminId, selectedRole)
-      message.success('已分配角色')
+      uiMessage.success('已分配角色')
       setAssignOpen(false)
       setSelectedRole('')
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -59,7 +60,7 @@ export function PlatformAdminDetail() {
         )}
       </Card>
       <Card title="角色列表">
-        <Alert type="info" message="当前接口未提供管理员已分配角色列表" showIcon />
+        <Alert type="info" title="当前接口未提供管理员已分配角色列表" showIcon />
       </Card>
 
       <Modal
@@ -80,3 +81,4 @@ export function PlatformAdminDetail() {
     </div>
   )
 }
+

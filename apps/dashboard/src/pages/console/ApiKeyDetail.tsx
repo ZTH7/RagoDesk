@@ -1,4 +1,4 @@
-import { Button, Card, Descriptions, Input, Modal, Space, Tag, Popconfirm, message, Skeleton } from 'antd'
+import { Button, Card, Descriptions, Input, Modal, Space, Tag, Popconfirm, Skeleton } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -6,6 +6,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 export function ApiKeyDetail() {
   const { id } = useParams()
   const keyId = id ?? ''
@@ -20,22 +21,22 @@ export function ApiKeyDetail() {
     try {
       const nextStatus = key.status === 'active' ? 'disabled' : 'active'
       await consoleApi.updateApiKey(key.id, { status: nextStatus })
-      message.success('已更新状态')
+      uiMessage.success('已更新状态')
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleRotate = async () => {
     try {
       const res = await consoleApi.rotateApiKey(keyId)
-      message.success('已触发轮换')
+      uiMessage.success('已触发轮换')
       setRawKey(res.raw_key)
       setRawKeyOpen(true)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -85,3 +86,4 @@ export function ApiKeyDetail() {
     </div>
   )
 }
+

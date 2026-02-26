@@ -9,7 +9,6 @@ import {
   Table,
   Tag,
   Popconfirm,
-  message,
   Skeleton,
 } from 'antd'
 import { useMemo, useState } from 'react'
@@ -19,6 +18,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 export function DocumentDetail() {
   const { id } = useParams()
   const docId = id ?? ''
@@ -76,10 +76,10 @@ export function DocumentDetail() {
   const handleReindex = async () => {
     try {
       await consoleApi.reindexDocument(docId)
-      message.success('已触发 Reindex')
+      uiMessage.success('已触发 Reindex')
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -87,11 +87,11 @@ export function DocumentDetail() {
     try {
       const values = await rollbackForm.validateFields()
       await consoleApi.rollbackDocument(docId, Number(values.version))
-      message.success('已触发 Rollback')
+      uiMessage.success('已触发 Rollback')
       setRollbackOpen(false)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -174,3 +174,4 @@ export function DocumentDetail() {
     </div>
   )
 }
+

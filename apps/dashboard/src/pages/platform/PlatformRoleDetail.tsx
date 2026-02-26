@@ -1,4 +1,4 @@
-import { Card, Descriptions, Table, Tag, Space, Button, Modal, Select, message, Skeleton } from 'antd'
+import { Card, Descriptions, Table, Tag, Space, Button, Modal, Select, Skeleton } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -6,6 +6,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
 
+import { uiMessage } from '../../services/uiMessage'
 export function PlatformRoleDetail() {
   const { id } = useParams()
   const roleId = id ?? ''
@@ -34,11 +35,11 @@ export function PlatformRoleDetail() {
   const handleSave = async () => {
     try {
       await platformApi.assignRolePermissions(roleId, permissionCodes)
-      message.success('已更新角色权限')
+      uiMessage.success('已更新角色权限')
       setEditOpen(false)
       permRequest.reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -98,3 +99,4 @@ export function PlatformRoleDetail() {
     </div>
   )
 }
+

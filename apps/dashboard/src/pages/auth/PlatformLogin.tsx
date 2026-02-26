@@ -1,9 +1,10 @@
-import { Button, Form, Input, Space, Typography, message } from 'antd'
+import { Button, Form, Input, Space, Typography } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { setProfile, setScope, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
 
+import { uiMessage } from '../../services/uiMessage'
 export function PlatformLogin() {
   const [form] = Form.useForm()
   const navigate = useNavigate()
@@ -14,7 +15,7 @@ export function PlatformLogin() {
         setToken(values.token)
         setScope('platform')
         setProfile({ scope: 'platform' })
-        message.success('Token 已保存')
+        uiMessage.success('Token 已保存')
         navigate('/platform/tenants', { replace: true })
         return
       }
@@ -30,11 +31,11 @@ export function PlatformLogin() {
         roles: res.profile?.roles,
         scope: 'platform',
       })
-      message.success('登录成功')
+      uiMessage.success('登录成功')
       navigate('/platform/tenants', { replace: true })
     } catch (err) {
       if (err instanceof Error) {
-        message.error(err.message)
+        uiMessage.error(err.message)
       }
     }
   }
@@ -61,3 +62,4 @@ export function PlatformLogin() {
     </AuthLayout>
   )
 }
+

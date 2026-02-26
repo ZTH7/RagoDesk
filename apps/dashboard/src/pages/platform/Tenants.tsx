@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, Modal, Select, Tag, message } from 'antd'
+import { Button, Card, Form, Input, Modal, Select, Tag } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -9,6 +9,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
 
+import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   active: 'green',
   suspended: 'red',
@@ -29,12 +30,12 @@ export function Tenants() {
     try {
       const values = await form.validateFields()
       await platformApi.createTenant(values)
-      message.success('已创建租户')
+      uiMessage.success('已创建租户')
       form.resetFields()
       setCreateOpen(false)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -118,3 +119,4 @@ export function Tenants() {
     </div>
   )
 }
+

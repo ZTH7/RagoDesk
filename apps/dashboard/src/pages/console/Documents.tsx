@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Tag, Upload, message } from 'antd'
+import { Button, Form, Input, Modal, Popconfirm, Select, Space, Tag, Upload } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -10,6 +10,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   ready: 'green',
   processing: 'gold',
@@ -44,27 +45,27 @@ export function Documents() {
         }
       })
       if (uploadFiles.length === 0) {
-        message.warning('请先选择文件')
+        uiMessage.warning('请先选择文件')
         return
       }
       await consoleApi.uploadDocumentFile(formData)
-      message.success('已提交文档上传')
+      uiMessage.success('已提交文档上传')
       form.resetFields()
       setUploadFiles([])
       setUploadOpen(false)
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       await consoleApi.deleteDocument(id)
-      message.success('已删除文档')
+      uiMessage.success('已删除文档')
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -171,3 +172,4 @@ export function Documents() {
     </div>
   )
 }
+

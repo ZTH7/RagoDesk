@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Tag, message } from 'antd'
+import { Button, Form, Input, Modal, Popconfirm, Select, Space, Tag } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -9,6 +9,7 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
+import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   active: 'green',
   disabled: 'red',
@@ -47,26 +48,26 @@ export function Bots() {
       const values = await form.validateFields()
       if (editingId) {
         await consoleApi.updateBot(editingId, values)
-        message.success('已更新机器人')
+        uiMessage.success('已更新机器人')
       } else {
         await consoleApi.createBot(values)
-        message.success('已创建机器人')
+        uiMessage.success('已创建机器人')
       }
       setModalOpen(false)
       form.resetFields()
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       await consoleApi.deleteBot(id)
-      message.success('已删除机器人')
+      uiMessage.success('已删除机器人')
       reload()
     } catch (err) {
-      if (err instanceof Error) message.error(err.message)
+      if (err instanceof Error) uiMessage.error(err.message)
     }
   }
 
@@ -165,3 +166,4 @@ export function Bots() {
     </div>
   )
 }
+
