@@ -11,7 +11,7 @@ export function ApiUsageSummary() {
   const [apiKeyId, setApiKeyId] = useState('all')
   const [apiVersion, setApiVersion] = useState('')
   const [model, setModel] = useState('')
-  const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null)
+  const [range, setRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
   const [query, setQuery] = useState<{
     bot_id?: string
     api_key_id?: string
@@ -53,7 +53,7 @@ export function ApiUsageSummary() {
     if (apiKeyId && apiKeyId !== 'all') next.api_key_id = apiKeyId
     if (apiVersion) next.api_version = apiVersion
     if (model) next.model = model
-    if (range) {
+    if (range && range[0] && range[1]) {
       next.start_time = range[0].toISOString()
       next.end_time = range[1].toISOString()
     }

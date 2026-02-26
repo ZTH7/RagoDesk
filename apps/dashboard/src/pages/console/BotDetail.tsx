@@ -34,7 +34,11 @@ export function BotDetail() {
     loading: botLoading,
     error: botError,
     reload: reloadBot,
-  } = useRequest(() => consoleApi.getBot(botId), { bot: undefined }, { enabled: Boolean(botId), deps: [botId] })
+  } = useRequest(
+    () => consoleApi.getBot(botId),
+    { bot: { id: '', name: '', status: '', created_at: '' } },
+    { enabled: Boolean(botId), deps: [botId] },
+  )
   const bot = botData.bot
 
   const { data: kbData, reload: reloadBindings } = useRequest(

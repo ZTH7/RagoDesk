@@ -10,7 +10,7 @@ export function RequestBanner({ error }: RequestBannerProps) {
   return (
     <Alert
       type="warning"
-      message="接口暂不可用"
+      title="接口暂不可用"
       description={error}
       showIcon
     />

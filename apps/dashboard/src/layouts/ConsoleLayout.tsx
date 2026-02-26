@@ -1,4 +1,4 @@
-import { Layout, Menu, Avatar, Dropdown, Space, Typography, Tag, Button } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Space, Typography, Tag } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -6,6 +6,8 @@ import { consoleNavItems, consoleMenuKeys } from '../routes/console'
 import { buildMenuItems, resolveSelectedKey } from '../routes/utils'
 import { usePermissions } from '../auth/PermissionContext'
 import { clearProfile, clearScope, clearTenantId, clearToken, getProfile, getTenantId, getToken } from '../auth/storage'
+import { ThemeModeToggle, ThemeStatusDot } from '../components/ThemeModeToggle'
+import { useThemeMode } from '../theme/mode'
 
 const { Sider, Header, Content } = Layout
 
@@ -19,6 +21,8 @@ export function ConsoleLayout() {
   const token = getToken()
   const profile = getProfile()
   const displayName = profile?.name || profile?.account || (token ? '已登录' : '未登录')
+  const { resolvedMode } = useThemeMode()
+  const siderTheme = resolvedMode === 'dark' ? 'dark' : 'light'
 
   useEffect(() => {
     if (selectedKey.startsWith('/console/analytics')) {
@@ -32,9 +36,10 @@ export function ConsoleLayout() {
 
   return (
     <Layout className="app-shell">
-      <Sider width={240} theme="light">
+      <Sider width={240} theme={siderTheme}>
         <div className="app-logo">RagoDesk</div>
         <Menu
+          theme={siderTheme}
           mode="inline"
           items={menuItems}
           selectedKeys={[selectedKey]}
@@ -51,12 +56,11 @@ export function ConsoleLayout() {
         <Header className="app-header">
           <Space align="center">
             <Tag color="blue">Console</Tag>
+            <ThemeStatusDot />
             <Typography.Text className="muted">Tenant: {tenantId || '-'}</Typography.Text>
           </Space>
           <Space align="center">
-            <Button size="small" type="default">
-              中文
-            </Button>
+            <ThemeModeToggle />
             <Dropdown
               menu={{
                 items: [

@@ -12,7 +12,7 @@ import { TrendLine } from '../../components/TrendLine'
 
 export function AnalyticsLatency() {
   const [botId, setBotId] = useState<string>('all')
-  const [range, setRange] = useState<[Dayjs, Dayjs] | null>(null)
+  const [range, setRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
   const [query, setQuery] = useState<{ bot_id?: string; start_time?: string; end_time?: string }>({})
 
   const { data: botsData } = useRequest(() => consoleApi.listBots(), { items: [] })
@@ -21,7 +21,7 @@ export function AnalyticsLatency() {
   const applyFilters = () => {
     const next: { bot_id?: string; start_time?: string; end_time?: string } = {}
     if (botId && botId !== 'all') next.bot_id = botId
-    if (range) {
+    if (range && range[0] && range[1]) {
       next.start_time = range[0].toISOString()
       next.end_time = range[1].toISOString()
     }

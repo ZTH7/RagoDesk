@@ -1,6 +1,7 @@
 import { Avatar, Button, Card, Col, Row, Space, Tag, Typography } from 'antd'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ThemeModeToggle, ThemeStatusDot } from '../components/ThemeModeToggle'
 import {
   clearProfile,
   clearScope,
@@ -35,18 +36,29 @@ export function Home() {
   }
 
   return (
-    <div className="home-shell">
+    <div className="home-shell motion-enter">
       <section className="home-hero">
-        <Typography.Title level={2}>RagoDesk</Typography.Title>
-        <Typography.Paragraph className="muted">
-          多租户 AI 客服平台，覆盖知识库、RAG、会话与 API 管理的全链路。
+        <div className="home-hero-meta">
+          <Space>
+            <Tag color="blue">AI Support</Tag>
+            <ThemeStatusDot />
+          </Space>
+          <ThemeModeToggle />
+        </div>
+        <Typography.Title level={2} style={{ marginBottom: 8 }}>
+          RagoDesk
+        </Typography.Title>
+        <Typography.Paragraph className="muted home-subtitle">
+          多租户 AI 客服平台，覆盖知识库入库、RAG 问答、会话管理与 API 运营分析。
         </Typography.Paragraph>
-        <Space size="middle">
-          <Button type="primary" onClick={() => navigate('/console/login')}>
+        <Space size="middle" wrap>
+          <Button type="primary" size="large" onClick={() => navigate('/console/login')}>
             Console 登录
           </Button>
-          <Button onClick={() => navigate('/console/register')}>Console 注册</Button>
-          <Button type="dashed" onClick={() => navigate('/platform/login')}>
+          <Button size="large" onClick={() => navigate('/console/register')}>
+            Console 注册
+          </Button>
+          <Button type="dashed" size="large" onClick={() => navigate('/platform/login')}>
             Platform 登录
           </Button>
         </Space>
@@ -55,7 +67,7 @@ export function Home() {
       <Row gutter={16} className="home-cards">
         {token ? (
           <Col xs={24} lg={12}>
-            <Card>
+            <Card className="surface-card" bordered={false}>
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                 <Space align="center">
                   <Avatar size={56}>{avatarText}</Avatar>
@@ -90,7 +102,7 @@ export function Home() {
         ) : null}
 
         <Col xs={24} lg={12}>
-          <Card title="标准使用流程">
+          <Card className="surface-card" bordered={false} title="标准使用流程">
             <ol className="home-list">
               <li>注册租户并创建管理员</li>
               <li>创建知识库并上传文档</li>
@@ -103,7 +115,7 @@ export function Home() {
 
       <Row gutter={16}>
         <Col xs={24} md={8}>
-          <Card title="Console 区">
+          <Card className="surface-card" bordered={false} title="Console 区">
             <Typography.Paragraph className="muted">
               租户侧的日常运营入口，包含知识库、机器人、会话、调用统计等能力。
             </Typography.Paragraph>
@@ -113,7 +125,7 @@ export function Home() {
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card title="Platform 区">
+          <Card className="surface-card" bordered={false} title="Platform 区">
             <Typography.Paragraph className="muted">
               平台运维入口，管理租户、平台管理员、权限与角色。
             </Typography.Paragraph>
@@ -121,7 +133,7 @@ export function Home() {
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card title="API 调试">
+          <Card className="surface-card" bordered={false} title="API 调试">
             <Typography.Paragraph className="muted">
               Console 登录后可通过 API 调试页验证会话与 RAG 调用。
             </Typography.Paragraph>

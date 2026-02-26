@@ -9,7 +9,7 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, description, extra }: PageHeaderProps) {
   return (
-    <div className="page-header">
+    <div className="page-header motion-enter">
       <div>
         <Typography.Title level={3} style={{ marginBottom: 4 }}>
           {title}

@@ -1,4 +1,5 @@
-﻿import type { MenuProps } from 'antd'
+import type { MenuProps } from 'antd'
+import type { ItemType } from 'antd/es/menu/interface'
 import type { NavItem } from './types'
 
 export function resolveSelectedKey(pathname: string, menuKeys: string[]) {
@@ -8,29 +9,35 @@ export function resolveSelectedKey(pathname: string, menuKeys: string[]) {
   return match ?? menuKeys[0]
 }
 
-export function buildMenuItems(items: NavItem[], permissions: Set<string>): MenuProps['items'] {
+export function buildMenuItems(items: NavItem[], permissions: Set<string>): ItemType[] {
   const filtered = filterNavItems(items, permissions)
-  return filtered.map((item) => toMenuItem(item, permissions))
+  return filtered.map((item) => toMenuItem(item))
 }
 
 function filterNavItems(items: NavItem[], permissions: Set<string>): NavItem[] {
-  return items
-    .map((item) => {
-      const children = item.children ? filterNavItems(item.children, permissions) : undefined
-      const allowed = !item.permission || permissions.has(item.permission)
-      if (children && children.length > 0) {
-        return { ...item, children }
-      }
-      return allowed ? { ...item, children } : null
-    })
-    .filter((item): item is NavItem => item !== null)
+  const result: NavItem[] = []
+  for (const item of items) {
+    const children = item.children ? filterNavItems(item.children, permissions) : undefined
+    const allowed = !item.permission || permissions.has(item.permission)
+
+    if (children && children.length > 0) {
+      result.push({ ...item, children })
+      continue
+    }
+
+    if (allowed) {
+      result.push({ ...item, children: undefined })
+    }
+  }
+  return result
 }
 
-function toMenuItem(item: NavItem, permissions: Set<string>): MenuProps['items'][number] {
-  return {
+function toMenuItem(item: NavItem): ItemType {
+  const menuItem: NonNullable<MenuProps['items']>[number] = {
     key: item.key,
     icon: item.icon,
     label: item.label,
-    children: item.children ? item.children.map((child) => toMenuItem(child, permissions)) : undefined,
+    children: item.children ? item.children.map((child) => toMenuItem(child)) : undefined,
   }
+  return menuItem
 }
