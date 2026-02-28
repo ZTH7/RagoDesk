@@ -17,15 +17,19 @@ const statusColors: Record<string, string> = {
 
 export function Tenants() {
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [keyword, setKeyword] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [form] = Form.useForm()
   const { data, loading, source, error, reload } = useRequest(() => platformApi.listTenants(), { items: [] })
 
   const filtered = useMemo(() => {
-    if (!statusFilter) return data.items
-    return data.items.filter((item) => item.status === statusFilter)
-  }, [data.items, statusFilter])
+    return data.items.filter((item) => {
+      if (statusFilter && item.status !== statusFilter) return false
+      if (keyword && !item.name.toLowerCase().includes(keyword.toLowerCase())) return false
+      return true
+    })
+  }, [data.items, keyword, statusFilter])
 
   const handleCreate = async () => {
     try {
@@ -51,9 +55,12 @@ export function Tenants() {
       <Card>
         <FilterBar
           left={
-            <Button type="primary" onClick={() => setCreateOpen(true)}>
-              新建租户
-            </Button>
+            <Space>
+              <Input.Search placeholder="按租户名称搜索" onSearch={setKeyword} allowClear style={{ width: 220 }} />
+              <Button type="primary" onClick={() => setCreateOpen(true)}>
+                新建租户
+              </Button>
+            </Space>
           }
           right={
             <Space>
@@ -93,12 +100,19 @@ export function Tenants() {
               dataIndex: 'name',
               render: (_: string, record) => <Link to={`/platform/tenants/${record.id}`}>{record.name}</Link>,
             },
-            { title: '类型', dataIndex: 'type' },
+            {
+              title: '类型',
+              dataIndex: 'type',
+              render: (value: string) =>
+                value === 'enterprise' ? '企业' : value === 'individual' ? '个人' : value,
+            },
             { title: '套餐', dataIndex: 'plan' },
             {
               title: '状态',
               dataIndex: 'status',
-              render: (status: string) => <Tag color={statusColors[status] || 'default'}>{status}</Tag>,
+              render: (status: string) => (
+                <Tag color={statusColors[status] || 'default'}>{status === 'active' ? '启用' : '停用'}</Tag>
+              ),
             },
             { title: '创建时间', dataIndex: 'created_at' },
           ],
@@ -119,8 +133,8 @@ export function Tenants() {
           <Form.Item label="类型" name="type" rules={[{ required: true, message: '请选择类型' }]}>
             <Select
               options={[
-                { value: 'enterprise', label: 'Enterprise' },
-                { value: 'individual', label: 'Individual' },
+                { value: 'enterprise', label: '企业' },
+                { value: 'individual', label: '个人' },
               ]}
             />
           </Form.Item>
@@ -128,7 +142,7 @@ export function Tenants() {
             <Input placeholder="例如：pro" />
           </Form.Item>
           <Form.Item label="状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
-            <Select options={[{ value: 'active', label: 'Active' }, { value: 'suspended', label: 'Suspended' }]} />
+            <Select options={[{ value: 'active', label: '启用' }, { value: 'suspended', label: '停用' }]} />
           </Form.Item>
         </Form>
       </Modal>

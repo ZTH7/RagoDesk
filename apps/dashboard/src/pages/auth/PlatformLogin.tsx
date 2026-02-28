@@ -1,4 +1,4 @@
-import { Button, Collapse, Form, Input, Space, Typography } from 'antd'
+import { Button, Form, Input, Space, Typography } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { setProfile, setScope, setToken } from '../../auth/storage'
@@ -9,16 +9,8 @@ export function PlatformLogin() {
   const [form] = Form.useForm()
   const navigate = useNavigate()
 
-  const onFinish = async (values: { account: string; password: string; token?: string }) => {
+  const onFinish = async (values: { account: string; password: string }) => {
     try {
-      if (values.token) {
-        setToken(values.token)
-        setScope('platform')
-        setProfile({ scope: 'platform' })
-        uiMessage.success('Token 已保存')
-        navigate('/platform/tenants', { replace: true })
-        return
-      }
       const res = await authApi.platformLogin({
         account: values.account,
         password: values.password,
@@ -50,25 +42,11 @@ export function PlatformLogin() {
         <Form.Item label="密码" name="password" rules={[{ required: true }]}>
           <Input.Password placeholder="请输入密码" />
         </Form.Item>
-        <Collapse
-          size="small"
-          items={[
-            {
-              key: 'advanced',
-              label: '高级登录选项（一般无需填写）',
-              children: (
-                <Form.Item label="Access Token（可选）" name="token" style={{ marginBottom: 0 }}>
-                  <Input placeholder="仅联调时粘贴 JWT" />
-                </Form.Item>
-              ),
-            },
-          ]}
-        />
         <Space direction="vertical" style={{ width: '100%' }}>
           <Button type="primary" htmlType="submit" block>
             登录
           </Button>
-          <Typography.Text className="muted">使用账号密码登录，或粘贴 JWT 直接进入平台。</Typography.Text>
+          <Typography.Text className="muted">使用平台管理员账号登录平台管理区。</Typography.Text>
         </Space>
       </Form>
     </AuthLayout>

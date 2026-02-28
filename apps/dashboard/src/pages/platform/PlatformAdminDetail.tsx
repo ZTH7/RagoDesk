@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Descriptions, Modal, Select, Space, Tag, Skeleton } from 'antd'
+import { Button, Card, Descriptions, Empty, Modal, Select, Space, Tag, Skeleton, Typography } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -50,11 +50,15 @@ export function PlatformAdminDetail() {
       <Card>
         {loading ? (
           <Skeleton active paragraph={{ rows: 3 }} />
+        ) : !admin ? (
+          <Empty description="未找到该管理员" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="姓名">{admin?.name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="姓名">{admin.name}</Descriptions.Item>
             <Descriptions.Item label="状态">
-              <Tag color={admin?.status === 'active' ? 'green' : 'red'}>{admin?.status || 'unknown'}</Tag>
+              <Tag color={admin.status === 'active' ? 'green' : 'red'}>
+                {admin.status === 'active' ? '启用' : '停用'}
+              </Tag>
             </Descriptions.Item>
           </Descriptions>
         )}
@@ -62,8 +66,32 @@ export function PlatformAdminDetail() {
       <Card>
         <TechnicalMeta items={[{ key: 'admin-id', label: 'Admin ID', value: admin?.id || adminId }]} />
       </Card>
-      <Card title="角色列表">
-        <Alert type="info" title="当前接口未提供管理员已分配角色列表" showIcon />
+      <Card title="可分配角色">
+        {roleData.items.length === 0 ? (
+          <Empty description="暂无可分配角色" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        ) : (
+          <Space wrap>
+            {roleData.items.map((role) => (
+              <Button
+                key={role.id}
+                size="small"
+                onClick={async () => {
+                  try {
+                    await platformApi.assignAdminRole(adminId, role.id)
+                    uiMessage.success(`已为管理员分配角色：${role.name}`)
+                  } catch (err) {
+                    if (err instanceof Error) uiMessage.error(err.message)
+                  }
+                }}
+              >
+                添加：{role.name}
+              </Button>
+            ))}
+          </Space>
+        )}
+        <Typography.Paragraph className="muted" style={{ marginTop: 12, marginBottom: 0 }}>
+          当前后端未提供“已分配角色列表”查询接口，此处提供快速分配入口。
+        </Typography.Paragraph>
       </Card>
 
       <Modal

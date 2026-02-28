@@ -1,4 +1,4 @@
-import { Card, Descriptions, Table, Tag, Space, Button, Modal, Select, Skeleton } from 'antd'
+import { Card, Descriptions, Table, Tag, Space, Button, Modal, Select, Skeleton, Empty } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -59,23 +59,29 @@ export function PlatformRoleDetail() {
       <Card>
         {roleLoading ? (
           <Skeleton active paragraph={{ rows: 3 }} />
+        ) : !role ? (
+          <Empty description="未找到该角色" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="名称">{role?.name || '-'}</Descriptions.Item>
+            <Descriptions.Item label="名称">{role.name}</Descriptions.Item>
           </Descriptions>
         )}
       </Card>
       <Card>
         <TechnicalMeta items={[{ key: 'role-id', label: 'Role ID', value: role?.id || roleId }]} />
       </Card>
-      <Card title="权限列表">
+      <Card title={`权限列表（${permData.items.length}）`}>
         <Table
           rowKey="code"
           dataSource={permData.items}
           pagination={false}
           columns={[
             { title: 'Code', dataIndex: 'code' },
-            { title: 'Scope', dataIndex: 'scope', render: (value: string) => <Tag>{value}</Tag> },
+            {
+              title: '权限域',
+              dataIndex: 'scope',
+              render: (value: string) => <Tag>{value === 'platform' ? '平台域' : value === 'tenant' ? '租户域' : value}</Tag>,
+            },
             { title: '创建时间', dataIndex: 'created_at' },
           ]}
         />

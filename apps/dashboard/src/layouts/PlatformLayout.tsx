@@ -48,7 +48,7 @@ export function PlatformLayout() {
           <Space align="center">
             <Tag color="purple">Platform</Tag>
             <ThemeStatusDot />
-            <Typography.Text className="muted">Platform Scope</Typography.Text>
+            <Typography.Text className="muted">平台管理台</Typography.Text>
           </Space>
           <Space align="center">
             <ThemeModeToggle />

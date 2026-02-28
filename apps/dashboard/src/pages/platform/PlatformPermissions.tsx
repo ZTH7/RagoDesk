@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Tag } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Select, Space, Switch, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { FilterBar } from '../../components/FilterBar'
@@ -11,14 +11,25 @@ import { platformApi } from '../../services/platform'
 import { uiMessage } from '../../services/uiMessage'
 export function PlatformPermissions() {
   const [scope, setScope] = useState<string>('all')
+  const [keyword, setKeyword] = useState('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [form] = Form.useForm()
   const { data, loading, source, error, reload } = useRequest(() => platformApi.listPermissions(), { items: [] })
 
   const filtered = useMemo(() => {
-    if (scope === 'all') return data.items
-    return data.items.filter((item) => item.scope === scope)
-  }, [data.items, scope])
+    return data.items.filter((item) => {
+      if (scope !== 'all' && item.scope !== scope) return false
+      if (
+        keyword &&
+        !item.code.toLowerCase().includes(keyword.toLowerCase()) &&
+        !(item.description || '').toLowerCase().includes(keyword.toLowerCase())
+      ) {
+        return false
+      }
+      return true
+    })
+  }, [data.items, keyword, scope])
 
   const handleCreate = async () => {
     try {
@@ -39,21 +50,30 @@ export function PlatformPermissions() {
       <RequestBanner error={error} />
       <FilterBar
         left={
-          <Select
-            value={scope}
-            style={{ width: 160 }}
-            onChange={setScope}
-            options={[
-              { value: 'all', label: '全部 Scope' },
-              { value: 'platform', label: 'Platform' },
-              { value: 'tenant', label: 'Tenant' },
-            ]}
-          />
+          <Space>
+            <Input.Search placeholder="按权限名或描述搜索" onSearch={setKeyword} allowClear style={{ width: 220 }} />
+            <Select
+              value={scope}
+              style={{ width: 160 }}
+              onChange={setScope}
+              options={[
+                { value: 'all', label: '全部权限域' },
+                { value: 'platform', label: '平台域' },
+                { value: 'tenant', label: '租户域' },
+              ]}
+            />
+          </Space>
         }
         right={
-          <Button type="primary" onClick={() => setCreateOpen(true)}>
-            新建权限
-          </Button>
+          <Space>
+            <Button type="primary" onClick={() => setCreateOpen(true)}>
+              新建权限
+            </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
+          </Space>
         }
       />
       <TableCard
@@ -62,11 +82,23 @@ export function PlatformPermissions() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="权限 Code">{record.code}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
-            { title: 'Code', dataIndex: 'code' },
-            { title: '描述', dataIndex: 'description' },
-            { title: 'Scope', dataIndex: 'scope', render: (value: string) => <Tag>{value}</Tag> },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '权限描述', dataIndex: 'description', render: (value?: string) => value || '-' },
+            {
+              title: '权限域',
+              dataIndex: 'scope',
+              render: (value: string) => <Tag>{value === 'platform' ? '平台域' : value === 'tenant' ? '租户域' : value}</Tag>,
+            },
           ],
         }}
       />
@@ -86,7 +118,7 @@ export function PlatformPermissions() {
             <Input placeholder="描述该权限用途" />
           </Form.Item>
           <Form.Item label="Scope" name="scope" rules={[{ required: true, message: '请选择 scope' }]}>
-            <Select options={[{ value: 'platform', label: 'Platform' }, { value: 'tenant', label: 'Tenant' }]} />
+            <Select options={[{ value: 'platform', label: '平台域' }, { value: 'tenant', label: '租户域' }]} />
           </Form.Item>
         </Form>
       </Modal>

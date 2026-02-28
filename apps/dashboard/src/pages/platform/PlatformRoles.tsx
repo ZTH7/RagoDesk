@@ -70,7 +70,7 @@ export function PlatformRoles() {
       <PageHeader title="平台角色" description="平台角色与权限" extra={<DataSourceTag source={source} />} />
       <RequestBanner error={error} />
       <FilterBar
-        left={<Input.Search placeholder="搜索角色" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
+        left={<Input.Search placeholder="按角色名称搜索" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
           <>
             <Button type="primary" onClick={() => setCreateOpen(true)}>
@@ -112,7 +112,7 @@ export function PlatformRoles() {
               render: (_: unknown, record) => (
                 <Space>
                   <Button size="small" onClick={() => openPermissions(record.id)}>
-                    编辑权限
+                    配置权限
                   </Button>
                 </Space>
               ),

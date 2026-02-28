@@ -15,6 +15,11 @@ const statusColors: Record<string, string> = {
   disabled: 'red',
 }
 
+const statusLabels: Record<string, string> = {
+  active: '启用',
+  disabled: '停用',
+}
+
 export function PlatformAdmins() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
@@ -34,7 +39,13 @@ export function PlatformAdmins() {
   const filtered = useMemo(() => {
     return data.items.filter((item) => {
       if (status !== 'all' && item.status !== status) return false
-      if (keyword && !item.name.toLowerCase().includes(keyword.toLowerCase())) return false
+      if (
+        keyword &&
+        !item.name.toLowerCase().includes(keyword.toLowerCase()) &&
+        !item.email.toLowerCase().includes(keyword.toLowerCase())
+      ) {
+        return false
+      }
       return true
     })
   }, [data.items, keyword, status])
@@ -89,7 +100,7 @@ export function PlatformAdmins() {
       />
       <RequestBanner error={error} />
       <FilterBar
-        left={<Input.Search placeholder="搜索管理员" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
+        left={<Input.Search placeholder="按姓名或邮箱搜索" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
           <>
             <Select
@@ -98,8 +109,8 @@ export function PlatformAdmins() {
               onChange={setStatus}
               options={[
                 { value: 'all', label: '全部状态' },
-                { value: 'active', label: 'Active' },
-                { value: 'disabled', label: 'Disabled' },
+                { value: 'active', label: '启用' },
+                { value: 'disabled', label: '停用' },
               ]}
             />
             <Button type="primary" onClick={() => setCreateOpen(true)}>
@@ -138,7 +149,7 @@ export function PlatformAdmins() {
             {
               title: '状态',
               dataIndex: 'status',
-              render: (value: string) => <Tag color={statusColors[value] || 'default'}>{value}</Tag>,
+              render: (value: string) => <Tag color={statusColors[value] || 'default'}>{statusLabels[value] || value}</Tag>,
             },
             { title: '创建时间', dataIndex: 'created_at' },
             {
@@ -189,7 +200,7 @@ export function PlatformAdmins() {
             <Input placeholder="可选" />
           </Form.Item>
           <Form.Item label="状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
-            <Select options={[{ value: 'active', label: 'Active' }, { value: 'disabled', label: 'Disabled' }]} />
+            <Select options={[{ value: 'active', label: '启用' }, { value: 'disabled', label: '停用' }]} />
           </Form.Item>
           <Form.Item label="创建方式" name="createMode" initialValue="password">
             <Radio.Group>
