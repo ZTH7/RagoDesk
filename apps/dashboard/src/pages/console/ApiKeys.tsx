@@ -21,11 +21,17 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   active: 'green',
   disabled: 'red',
+}
+
+const statusLabels: Record<string, string> = {
+  active: '启用',
+  disabled: '停用',
 }
 
 export function ApiKeys() {
@@ -131,13 +137,13 @@ export function ApiKeys() {
   return (
     <div className="page">
       <PageHeader
-        title="API Keys"
-        description="创建、轮换与管理 API Key"
+        title="接口密钥"
+        description="创建、轮换与管理接口密钥"
         extra={<DataSourceTag source={source} />}
       />
       <RequestBanner error={error} />
       <FilterBar
-        left={<Input.Search placeholder="搜索 Key" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
+        left={<Input.Search placeholder="搜索密钥名称" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
           <>
             <Select
@@ -146,12 +152,12 @@ export function ApiKeys() {
               onChange={setStatus}
               options={[
                 { value: 'all', label: '全部状态' },
-                { value: 'active', label: 'Active' },
-                { value: 'disabled', label: 'Disabled' },
+                { value: 'active', label: '启用' },
+                { value: 'disabled', label: '停用' },
               ]}
             />
             <Button type="primary" onClick={() => setCreateOpen(true)}>
-              创建 Key
+              创建密钥
             </Button>
             <Space size={6}>
               <Typography.Text className="muted">高级列</Typography.Text>
@@ -169,13 +175,13 @@ export function ApiKeys() {
           expandable: showAdvanced
             ? {
                 expandedRowRender: (record) => (
-                  <Descriptions column={2} bordered size="small">
-                    <Descriptions.Item label="API Key ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="Bot ID">{record.bot_id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="最近使用">{record.last_used_at || '-'}</Descriptions.Item>
-                  </Descriptions>
-                ),
+                    <Descriptions column={2} bordered size="small">
+                      <Descriptions.Item label="API Key ID">{record.id}</Descriptions.Item>
+                      <Descriptions.Item label="Bot ID">{record.bot_id}</Descriptions.Item>
+                      <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
+                      <Descriptions.Item label="最近使用">{formatDateTime(record.last_used_at)}</Descriptions.Item>
+                    </Descriptions>
+                  ),
               }
             : undefined,
           columns: [
@@ -194,21 +200,23 @@ export function ApiKeys() {
             {
               title: '状态',
               dataIndex: 'status',
-              render: (value: string) => <Tag color={statusColors[value] || 'default'}>{value}</Tag>,
+              render: (value: string) => (
+                <Tag color={statusColors[value] || 'default'}>{statusLabels[value] || value}</Tag>
+              ),
             },
             {
-              title: 'Scopes',
+              title: '权限范围',
               dataIndex: 'scopes',
               render: (scopes: string[]) => (Array.isArray(scopes) ? scopes.join(', ') : '-'),
             },
             {
-              title: 'API Versions',
+              title: '接口版本',
               dataIndex: 'api_versions',
               render: (v: string[]) => (Array.isArray(v) ? v.join(', ') : '-'),
             },
-            { title: 'Quota', dataIndex: 'quota_daily' },
+            { title: '日配额', dataIndex: 'quota_daily' },
             { title: 'QPS', dataIndex: 'qps_limit' },
-            { title: 'Last Used', dataIndex: 'last_used_at' },
+            { title: '最近使用', dataIndex: 'last_used_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',
@@ -255,7 +263,7 @@ export function ApiKeys() {
       />
 
       <Modal
-        title="创建 API Key"
+        title="创建接口密钥"
         open={createOpen}
         onCancel={() => setCreateOpen(false)}
         onOk={handleCreate}
@@ -265,21 +273,21 @@ export function ApiKeys() {
           <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
             <Input placeholder="例如：客服 API Key" />
           </Form.Item>
-          <Form.Item label="Bot" name="bot_id" rules={[{ required: true, message: '请选择 Bot' }]}>
+          <Form.Item label="机器人" name="bot_id" rules={[{ required: true, message: '请选择机器人' }]}>
             <Select
-              placeholder="选择要绑定的 Bot"
+              placeholder="选择要绑定的机器人"
               options={botOptions}
               showSearch
               optionFilterProp="label"
             />
           </Form.Item>
-          <Form.Item label="Scopes" name="scopes">
-            <Select mode="tags" placeholder="输入或选择 scopes" />
+          <Form.Item label="权限范围" name="scopes">
+            <Select mode="tags" placeholder="输入或选择权限范围" />
           </Form.Item>
-          <Form.Item label="API Versions" name="api_versions">
+          <Form.Item label="接口版本" name="api_versions">
             <Select mode="tags" placeholder="例如：v1" />
           </Form.Item>
-          <Form.Item label="Quota Daily" name="quota_daily" rules={[{ required: true, message: '请输入配额' }]}>
+          <Form.Item label="日配额" name="quota_daily" rules={[{ required: true, message: '请输入配额' }]}>
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item label="QPS Limit" name="qps_limit" rules={[{ required: true, message: '请输入 QPS' }]}>
@@ -289,7 +297,7 @@ export function ApiKeys() {
       </Modal>
 
       <Modal
-        title="编辑 API Key"
+        title="编辑接口密钥"
         open={editOpen}
         onCancel={() => setEditOpen(false)}
         onOk={handleEdit}
@@ -300,15 +308,15 @@ export function ApiKeys() {
             <Input />
           </Form.Item>
           <Form.Item label="状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
-            <Select options={[{ value: 'active', label: 'Active' }, { value: 'disabled', label: 'Disabled' }]} />
+            <Select options={[{ value: 'active', label: '启用' }, { value: 'disabled', label: '停用' }]} />
           </Form.Item>
-          <Form.Item label="Scopes" name="scopes">
+          <Form.Item label="权限范围" name="scopes">
             <Select mode="tags" />
           </Form.Item>
-          <Form.Item label="API Versions" name="api_versions">
+          <Form.Item label="接口版本" name="api_versions">
             <Select mode="tags" />
           </Form.Item>
-          <Form.Item label="Quota Daily" name="quota_daily">
+          <Form.Item label="日配额" name="quota_daily">
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item label="QPS Limit" name="qps_limit">
@@ -318,7 +326,7 @@ export function ApiKeys() {
       </Modal>
 
       <Modal
-        title="新的 API Key"
+        title="新接口密钥"
         open={rawKeyOpen}
         onCancel={() => setRawKeyOpen(false)}
         footer={<Button onClick={() => setRawKeyOpen(false)}>关闭</Button>}

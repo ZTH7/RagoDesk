@@ -9,6 +9,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 
@@ -146,7 +147,7 @@ export function ApiUsage() {
               value={apiKeyId}
               style={{ width: 220 }}
               onChange={setApiKeyId}
-              options={[{ label: '全部 API Key', value: 'all' }].concat(
+              options={[{ label: '全部接口密钥', value: 'all' }].concat(
                 apiKeysData.items.map((key) => ({ label: key.name, value: key.id })),
               )}
               showSearch
@@ -235,7 +236,7 @@ export function ApiUsage() {
             },
             { title: '响应耗时', dataIndex: 'latency_ms', render: (v: number) => `${v} ms` },
             { title: 'Token 消耗', dataIndex: 'total_tokens' },
-            { title: '时间', dataIndex: 'created_at' },
+            { title: '时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
           ],
         }}
       />

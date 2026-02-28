@@ -255,7 +255,6 @@
 ## B9. 外部 API 调用（开发者视图）
 - 使用说明：X-API-Key 方式调用。
 - Quick Start：创建 bot → 绑定 KB → 创建 API key → 调用接口。
-- API 调试：发送 `/api/v1/message`，显示请求与响应。
 
 ---
 
@@ -314,7 +313,6 @@
 - `/console/api-usage/summary`：API 用量汇总。
 - `/console/sessions`：会话列表。
 - `/console/sessions/:id`：会话详情与消息列表。
-- `/console/devtools/api`：外部 API 调试工具（使用 X-API-Key）。
 - `/console/profile`：个人中心（基本资料 / 退出登录）。
 
 ---

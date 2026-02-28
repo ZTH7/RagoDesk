@@ -1,4 +1,4 @@
-import { Button, Card, Descriptions, Input, Modal, Space, Tag, Popconfirm, Skeleton } from 'antd'
+import { Button, Card, Descriptions, Empty, Input, Modal, Space, Tag, Popconfirm, Skeleton } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -6,6 +6,7 @@ import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function ApiKeyDetail() {
@@ -44,8 +45,8 @@ export function ApiKeyDetail() {
   return (
     <div className="page">
       <PageHeader
-        title="API Key 详情"
-        description="查看 Key 配置与限制"
+        title="接口密钥详情"
+        description="查看密钥配置与限制"
         extra={
           <Space>
             <Popconfirm title="确认变更该 Key 状态？" onConfirm={handleToggle}>
@@ -61,15 +62,21 @@ export function ApiKeyDetail() {
       <Card>
         {loading ? (
           <Skeleton active paragraph={{ rows: 3 }} />
+        ) : !key ? (
+          <Empty description="未找到该密钥" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Descriptions column={1} bordered size="middle">
             <Descriptions.Item label="状态">
-              <Tag color={key?.status === 'active' ? 'green' : 'red'}>{key?.status || 'unknown'}</Tag>
+              <Tag color={key.status === 'active' ? 'green' : 'red'}>
+                {key.status === 'active' ? '启用' : '停用'}
+              </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Scopes">{key?.scopes?.join(', ') || '-'}</Descriptions.Item>
-            <Descriptions.Item label="API Versions">{key?.api_versions?.join(', ') || '-'}</Descriptions.Item>
-            <Descriptions.Item label="Quota Daily">{key?.quota_daily ?? '-'}</Descriptions.Item>
-            <Descriptions.Item label="QPS Limit">{key?.qps_limit ?? '-'}</Descriptions.Item>
+            <Descriptions.Item label="权限范围">{key.scopes?.join(', ') || '-'}</Descriptions.Item>
+            <Descriptions.Item label="接口版本">{key.api_versions?.join(', ') || '-'}</Descriptions.Item>
+            <Descriptions.Item label="日配额">{key.quota_daily ?? '-'}</Descriptions.Item>
+            <Descriptions.Item label="QPS 限制">{key.qps_limit ?? '-'}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{formatDateTime(key.created_at)}</Descriptions.Item>
+            <Descriptions.Item label="最近使用">{formatDateTime(key.last_used_at)}</Descriptions.Item>
           </Descriptions>
         )}
       </Card>
@@ -83,12 +90,12 @@ export function ApiKeyDetail() {
       </Card>
 
       <Modal
-        title="新的 API Key"
+        title="新接口密钥"
         open={rawKeyOpen}
         onCancel={() => setRawKeyOpen(false)}
         footer={<Button onClick={() => setRawKeyOpen(false)}>关闭</Button>}
       >
-        <p>这是唯一一次展示原始 Key，请妥善保存。</p>
+        <p>这是唯一一次展示原始密钥，请妥善保存。</p>
         <Input.TextArea value={rawKey} readOnly rows={3} />
       </Modal>
     </div>

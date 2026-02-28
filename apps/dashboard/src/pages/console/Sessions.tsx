@@ -8,6 +8,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 export function Sessions() {
   const [status, setStatus] = useState<string>('all')
@@ -66,12 +67,12 @@ export function Sessions() {
           expandable: showAdvanced
             ? {
                 expandedRowRender: (record) => (
-                  <Descriptions column={2} bordered size="small">
-                    <Descriptions.Item label="Session ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="Bot ID">{record.bot_id || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="关闭原因">{record.close_reason || '-'}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
-                  </Descriptions>
+                    <Descriptions column={2} bordered size="small">
+                      <Descriptions.Item label="Session ID">{record.id}</Descriptions.Item>
+                      <Descriptions.Item label="Bot ID">{record.bot_id || '-'}</Descriptions.Item>
+                      <Descriptions.Item label="关闭原因">{record.close_reason || '-'}</Descriptions.Item>
+                      <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
+                    </Descriptions>
                 ),
                 rowExpandable: () => true,
               }
@@ -95,7 +96,7 @@ export function Sessions() {
               ),
             },
             { title: '关闭原因', dataIndex: 'close_reason', render: (value: string) => value || '-' },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
           ],
         }}
       />

@@ -36,7 +36,7 @@ export function TenantDetail() {
           <Descriptions column={1} bordered size="middle">
             <Descriptions.Item label="名称">{data.tenant.name || '-'}</Descriptions.Item>
             <Descriptions.Item label="类型">
-              {data.tenant.type === 'enterprise' ? '企业' : data.tenant.type === 'individual' ? '个人' : data.tenant.type || '-'}
+              {data.tenant.type === 'enterprise' ? '企业' : data.tenant.type === 'personal' ? '个人' : data.tenant.type || '-'}
             </Descriptions.Item>
             <Descriptions.Item label="套餐">{data.tenant.plan || '-'}</Descriptions.Item>
             <Descriptions.Item label="状态">

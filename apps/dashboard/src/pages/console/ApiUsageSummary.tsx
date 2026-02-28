@@ -89,20 +89,20 @@ export function ApiUsageSummary() {
             value={apiKeyId}
             style={{ width: 220 }}
             onChange={setApiKeyId}
-            options={[{ label: '全部 API Key', value: 'all' }].concat(
+            options={[{ label: '全部接口密钥', value: 'all' }].concat(
               apiKeysData.items.map((key) => ({ label: key.name, value: key.id })),
             )}
             showSearch
             optionFilterProp="label"
           />
           <Input
-            placeholder="API Version"
+            placeholder="接口版本"
             value={apiVersion}
             onChange={(e) => setApiVersion(e.target.value)}
             style={{ width: 140 }}
           />
           <Input
-            placeholder="Model"
+            placeholder="模型"
             value={model}
             onChange={(e) => setModel(e.target.value)}
             style={{ width: 140 }}

@@ -9,12 +9,19 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   ready: 'green',
   processing: 'gold',
   failed: 'red',
+}
+
+const statusLabels: Record<string, string> = {
+  ready: '可用',
+  processing: '处理中',
+  failed: '失败',
 }
 
 export function Documents() {
@@ -87,9 +94,9 @@ export function Documents() {
               onChange={setStatus}
               options={[
                 { value: 'all', label: '全部状态' },
-                { value: 'ready', label: 'Ready' },
-                { value: 'processing', label: 'Processing' },
-                { value: 'failed', label: 'Failed' },
+                { value: 'ready', label: '可用' },
+                { value: 'processing', label: '处理中' },
+                { value: 'failed', label: '失败' },
               ]}
             />
             <Button type="primary" onClick={() => setUploadOpen(true)}>
@@ -112,14 +119,16 @@ export function Documents() {
                 <Link to={`/console/documents/${record.id}`}>{record.title}</Link>
               ),
             },
-            { title: '类型', dataIndex: 'source_type' },
+            { title: '文档类型', dataIndex: 'source_type' },
             {
               title: '状态',
               dataIndex: 'status',
-              render: (value: string) => <Tag color={statusColors[value] || 'default'}>{value}</Tag>,
+              render: (value: string) => (
+                <Tag color={statusColors[value] || 'default'}>{statusLabels[value] || value}</Tag>
+              ),
             },
             { title: '当前版本', dataIndex: 'current_version' },
-            { title: '更新时间', dataIndex: 'updated_at' },
+            { title: '更新时间', dataIndex: 'updated_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',

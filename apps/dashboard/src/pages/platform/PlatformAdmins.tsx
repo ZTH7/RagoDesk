@@ -21,6 +21,11 @@ const statusLabels: Record<string, string> = {
   disabled: '停用',
 }
 
+const normalizeAccount = (raw: string) => raw.trim()
+const normalizePhone = (raw: string) => raw.replace(/[\s-]/g, '')
+const looksLikeEmail = (value: string) => /\S+@\S+\.\S+/.test(value)
+const looksLikePhone = (value: string) => /^\+?\d{6,20}$/.test(normalizePhone(value))
+
 export function PlatformAdmins() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
@@ -42,8 +47,9 @@ export function PlatformAdmins() {
       if (status !== 'all' && item.status !== status) return false
       if (
         keyword &&
-        !item.name.toLowerCase().includes(keyword.toLowerCase()) &&
-        !item.email.toLowerCase().includes(keyword.toLowerCase())
+        !`${item.name || ''} ${item.email || ''} ${item.phone || ''}`
+          .toLowerCase()
+          .includes(keyword.toLowerCase())
       ) {
         return false
       }
@@ -54,10 +60,11 @@ export function PlatformAdmins() {
   const handleCreate = async () => {
     try {
       const values = await createForm.validateFields()
+      const account = normalizeAccount(values.account)
       const payload: any = {
         name: values.name,
-        email: values.email,
-        phone: values.phone,
+        email: looksLikeEmail(account) ? account : undefined,
+        phone: looksLikeEmail(account) ? undefined : normalizePhone(account),
         status: values.status,
       }
       if (createMode === 'password') {
@@ -194,11 +201,25 @@ export function PlatformAdmins() {
           <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
             <Input placeholder="管理员姓名" />
           </Form.Item>
-          <Form.Item label="邮箱" name="email" rules={[{ required: true, message: '请输入邮箱' }]}>
-            <Input placeholder="admin@company.com" />
-          </Form.Item>
-          <Form.Item label="手机号" name="phone">
-            <Input placeholder="可选" />
+          <Form.Item
+            label="管理员账号（邮箱/手机号）"
+            name="account"
+            rules={[
+              { required: true, message: '请输入邮箱或手机号' },
+              {
+                validator: (_, value: string) => {
+                  if (!value) return Promise.resolve()
+                  const normalized = normalizeAccount(value)
+                  if (looksLikeEmail(normalized) || looksLikePhone(normalized)) {
+                    return Promise.resolve()
+                  }
+                  return Promise.reject(new Error('请输入合法邮箱或手机号'))
+                },
+              },
+            ]}
+            extra="支持邮箱或手机号，手机号中的空格与 - 会自动忽略"
+          >
+            <Input placeholder="admin@company.com 或 +86 13800000000" allowClear />
           </Form.Item>
           <Form.Item label="状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
             <Select options={[{ value: 'active', label: '启用' }, { value: 'disabled', label: '停用' }]} />

@@ -20,6 +20,7 @@ import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function KnowledgeBaseDetail() {
@@ -172,6 +173,7 @@ export function KnowledgeBaseDetail() {
           <Descriptions column={1} bordered size="middle">
             <Descriptions.Item label="名称">{kbData.knowledge_base.name || '-'}</Descriptions.Item>
             <Descriptions.Item label="描述">{kbData.knowledge_base.description || '-'}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{formatDateTime(kbData.knowledge_base.created_at)}</Descriptions.Item>
           </Descriptions>
         )}
       </Card>
@@ -204,9 +206,13 @@ export function KnowledgeBaseDetail() {
             {
               title: '状态',
               dataIndex: 'status',
-              render: (value: string) => <Tag color={value === 'ready' ? 'green' : 'gold'}>{value}</Tag>,
+              render: (value: string) => (
+                <Tag color={value === 'ready' ? 'green' : value === 'failed' ? 'red' : 'gold'}>
+                  {value === 'ready' ? '可用' : value === 'failed' ? '失败' : '处理中'}
+                </Tag>
+              ),
             },
-            { title: '更新时间', dataIndex: 'updated_at' },
+            { title: '更新时间', dataIndex: 'updated_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',
@@ -217,6 +223,7 @@ export function KnowledgeBaseDetail() {
               ),
             },
           ]}
+          locale={{ emptyText: '暂无关联文档' }}
         />
       </Card>
       <Card title="上传文档" style={{ marginTop: 16 }}>

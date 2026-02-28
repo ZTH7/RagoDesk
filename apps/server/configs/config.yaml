@@ -1,9 +1,9 @@
 server:
   http:
-    addr: 0.0.0.0:8000
+    addr: 0.0.0.0:3000
     timeout: 60s
   grpc:
-    addr: 0.0.0.0:9100
+    addr: 0.0.0.0:3333
     timeout: 60s
   auth:
     jwt_secret: "ragodesk-dev-secret"

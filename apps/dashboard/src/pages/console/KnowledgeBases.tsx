@@ -1,4 +1,4 @@
-import { Button, Descriptions, Form, Input, Modal, Popconfirm, Select, Space, Switch, Typography, Upload } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Popconfirm, Space, Switch, Typography, Upload } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -9,6 +9,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function KnowledgeBases() {
@@ -91,7 +92,6 @@ export function KnowledgeBases() {
         left={<Input.Search placeholder="搜索知识库" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
           <>
-            <Select defaultValue="all" style={{ width: 160 }} options={[{ value: 'all', label: '全部类型' }]} />
             <Button type="primary" onClick={openCreate}>
               新建知识库
             </Button>
@@ -113,7 +113,7 @@ export function KnowledgeBases() {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="Knowledge Base ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
@@ -126,7 +126,7 @@ export function KnowledgeBases() {
             },
             { title: '描述', dataIndex: 'description' },
             { title: '文档数量', dataIndex: 'document_count', render: (v) => v ?? '-' },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',

@@ -7,6 +7,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function Roles() {
@@ -69,7 +70,7 @@ export function Roles() {
       <PageHeader title="角色管理" description="定义与授权租户角色" extra={<DataSourceTag source={source} />} />
       <RequestBanner error={error} />
       <FilterBar
-        left={<Input.Search placeholder="搜索角色" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
+        left={<Input.Search placeholder="按角色名称搜索" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
           <>
             <Button type="primary" onClick={() => setCreateOpen(true)}>
@@ -93,21 +94,21 @@ export function Roles() {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="Role ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
             : undefined,
           columns: [
             { title: '名称', dataIndex: 'name' },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',
               render: (_: unknown, record) => (
                 <Space>
                   <Button size="small" onClick={() => openPermissions(record.id)}>
-                    编辑权限
+                    配置权限
                   </Button>
                 </Space>
               ),
@@ -131,7 +132,7 @@ export function Roles() {
       </Modal>
 
       <Modal
-        title="编辑角色权限"
+        title="配置角色权限"
         open={permOpen}
         onCancel={() => setPermOpen(false)}
         onOk={handleAssignPermissions}
@@ -151,6 +152,9 @@ export function Roles() {
               }))}
             />
           </Form.Item>
+          {permissionData.items.length === 0 ? (
+            <Typography.Text className="muted">暂无权限，请先联系管理员维护权限目录。</Typography.Text>
+          ) : null}
         </Form>
       </Modal>
     </div>

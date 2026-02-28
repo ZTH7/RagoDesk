@@ -1,4 +1,4 @@
-import { Layout, Menu, Avatar, Dropdown, Space, Typography, Tag } from 'antd'
+import { Button, Layout, Menu, Avatar, Dropdown, Space, Typography, Tag } from 'antd'
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { platformNavItems, platformMenuKeys } from '../routes/platform'
@@ -8,13 +8,14 @@ import { useMemo } from 'react'
 import { clearProfile, clearScope, clearToken, getProfile, getToken } from '../auth/storage'
 import { ThemeModeToggle, ThemeStatusDot } from '../components/ThemeModeToggle'
 import { useThemeMode } from '../theme/mode'
+import { RequestBanner } from '../components/RequestBanner'
 
 const { Sider, Header, Content } = Layout
 
 export function PlatformLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { permissions } = usePermissions()
+  const { permissions, error, stale, refresh, loading: permissionLoading } = usePermissions()
   const selectedKey = resolveSelectedKey(location.pathname, platformMenuKeys)
   const menuItems = useMemo(() => buildMenuItems(platformNavItems, permissions), [permissions])
   const token = getToken()
@@ -76,6 +77,15 @@ export function PlatformLayout() {
           </Space>
         </Header>
         <Content className="app-content">
+          <RequestBanner
+            error={error}
+            title={stale ? '权限同步失败，当前使用本地缓存权限' : '权限加载失败'}
+            action={
+              <Button size="small" onClick={refresh} loading={permissionLoading}>
+                重试
+              </Button>
+            }
+          />
           <Outlet />
         </Content>
       </Layout>

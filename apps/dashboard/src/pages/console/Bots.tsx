@@ -8,11 +8,17 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
   active: 'green',
   disabled: 'red',
+}
+
+const statusLabels: Record<string, string> = {
+  active: '启用',
+  disabled: '停用',
 }
 
 export function Bots() {
@@ -76,12 +82,12 @@ export function Bots() {
     <div className="page">
       <PageHeader
         title="机器人"
-        description="管理 Bot 与默认 RAG 流水线"
+        description="管理机器人配置与知识范围"
         extra={<DataSourceTag source={source} />}
       />
       <RequestBanner error={error} />
       <FilterBar
-        left={<Input.Search placeholder="搜索 Bot" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
+        left={<Input.Search placeholder="搜索机器人" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
           <Space>
             <Select
@@ -89,8 +95,8 @@ export function Bots() {
               style={{ width: 160 }}
               options={[
                 { value: 'all', label: '全部状态' },
-                { value: 'active', label: 'Active' },
-                { value: 'disabled', label: 'Disabled' },
+                { value: 'active', label: '启用' },
+                { value: 'disabled', label: '停用' },
               ]}
               onChange={setStatusFilter}
             />
@@ -114,8 +120,8 @@ export function Bots() {
             ? {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
-                    <Descriptions.Item label="Bot ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="机器人 ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
@@ -130,9 +136,11 @@ export function Bots() {
             {
               title: '状态',
               dataIndex: 'status',
-              render: (value: string) => <Tag color={statusColors[value] || 'default'}>{value}</Tag>,
+              render: (value: string) => (
+                <Tag color={statusColors[value] || 'default'}>{statusLabels[value] || value}</Tag>
+              ),
             },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',
@@ -170,8 +178,8 @@ export function Bots() {
           <Form.Item label="状态" name="status" rules={[{ required: true }]}>
             <Select
               options={[
-                { value: 'active', label: 'Active' },
-                { value: 'disabled', label: 'Disabled' },
+                { value: 'active', label: '启用' },
+                { value: 'disabled', label: '停用' },
               ]}
             />
           </Form.Item>

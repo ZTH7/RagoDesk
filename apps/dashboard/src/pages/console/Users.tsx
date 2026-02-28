@@ -8,8 +8,26 @@ import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 import { getCurrentTenantId } from '../../auth/storage'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
+const statusColors: Record<string, string> = {
+  active: 'green',
+  invited: 'orange',
+  disabled: 'red',
+}
+
+const statusLabels: Record<string, string> = {
+  active: '启用',
+  invited: '待激活',
+  disabled: '停用',
+}
+
+const normalizeAccount = (raw: string) => raw.trim()
+const normalizePhone = (raw: string) => raw.replace(/[\s-]/g, '')
+const looksLikeEmail = (value: string) => /\S+@\S+\.\S+/.test(value)
+const looksLikePhone = (value: string) => /^\+?\d{6,20}$/.test(normalizePhone(value))
+
 export function Users() {
   const tenantId = getCurrentTenantId() ?? ''
   const [status, setStatus] = useState<string>('all')
@@ -31,19 +49,32 @@ export function Users() {
   const filtered = useMemo(() => {
     return data.items.filter((item) => {
       if (status !== 'all' && item.status !== status) return false
-      if (keyword && !item.name.toLowerCase().includes(keyword.toLowerCase())) return false
+      if (
+        keyword &&
+        !`${item.name || ''} ${item.email || ''} ${item.phone || ''}`
+          .toLowerCase()
+          .includes(keyword.toLowerCase())
+      ) {
+        return false
+      }
       return true
     })
   }, [data.items, keyword, status])
 
   const handleInvite = async () => {
     if (!tenantId) {
-      uiMessage.error('请先在个人中心设置 Tenant ID')
+      uiMessage.error('未获取到租户信息，请重新登录后重试')
       return
     }
     try {
       const values = await inviteForm.validateFields()
-      await consoleApi.createUser(tenantId, values)
+      const account = normalizeAccount(values.account)
+      await consoleApi.createUser(tenantId, {
+        name: values.name,
+        status: values.status,
+        email: looksLikeEmail(account) ? account : undefined,
+        phone: looksLikeEmail(account) ? undefined : normalizePhone(account),
+      })
       uiMessage.success('已邀请成员')
       inviteForm.resetFields()
       setInviteOpen(false)
@@ -70,7 +101,7 @@ export function Users() {
       <PageHeader title="成员管理" description="邀请与管理租户成员" extra={<DataSourceTag source={source} />} />
       <RequestBanner error={error} />
       <FilterBar
-        left={<Input.Search placeholder="搜索成员" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
+        left={<Input.Search placeholder="按姓名或邮箱搜索" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
           <>
             <Select
@@ -79,8 +110,9 @@ export function Users() {
               onChange={setStatus}
               options={[
                 { value: 'all', label: '全部状态' },
-                { value: 'active', label: 'Active' },
-                { value: 'invited', label: 'Invited' },
+                { value: 'active', label: '启用' },
+                { value: 'invited', label: '待激活' },
+                { value: 'disabled', label: '停用' },
               ]}
             />
             <Button type="primary" onClick={() => setInviteOpen(true)}>
@@ -103,8 +135,8 @@ export function Users() {
             ? {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
-                    <Descriptions.Item label="User ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="成员 ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
@@ -116,10 +148,10 @@ export function Users() {
               title: '状态',
               dataIndex: 'status',
               render: (value: string) => (
-                <Tag color={value === 'active' ? 'green' : 'orange'}>{value}</Tag>
+                <Tag color={statusColors[value] || 'default'}>{statusLabels[value] || value}</Tag>
               ),
             },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',
@@ -152,17 +184,32 @@ export function Users() {
           <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
             <Input placeholder="成员姓名" />
           </Form.Item>
-          <Form.Item label="邮箱" name="email" rules={[{ required: true, message: '请输入邮箱' }]}>
-            <Input placeholder="name@company.com" />
-          </Form.Item>
-          <Form.Item label="手机号" name="phone">
-            <Input placeholder="可选" />
+          <Form.Item
+            label="账号（邮箱/手机号）"
+            name="account"
+            rules={[
+              { required: true, message: '请输入邮箱或手机号' },
+              {
+                validator: (_, value: string) => {
+                  if (!value) return Promise.resolve()
+                  const normalized = normalizeAccount(value)
+                  if (looksLikeEmail(normalized) || looksLikePhone(normalized)) {
+                    return Promise.resolve()
+                  }
+                  return Promise.reject(new Error('请输入合法邮箱或手机号'))
+                },
+              },
+            ]}
+            extra="支持邮箱或手机号，手机号中的空格与 - 会自动忽略"
+          >
+            <Input placeholder="name@company.com 或 +86 13800000000" allowClear />
           </Form.Item>
           <Form.Item label="状态" name="status">
             <Select
               options={[
-                { value: 'active', label: 'Active' },
-                { value: 'invited', label: 'Invited' },
+                { value: 'active', label: '启用' },
+                { value: 'invited', label: '待激活' },
+                { value: 'disabled', label: '停用' },
               ]}
             />
           </Form.Item>
@@ -186,6 +233,9 @@ export function Users() {
               }))}
             />
           </Form.Item>
+          {roleData.items.length === 0 ? (
+            <Typography.Text className="muted">暂无角色，请先前往「角色管理」创建角色。</Typography.Text>
+          ) : null}
         </Form>
       </Modal>
     </div>

@@ -1,4 +1,4 @@
-import { Layout, Menu, Avatar, Dropdown, Space, Typography, Tag } from 'antd'
+import { Button, Layout, Menu, Avatar, Dropdown, Space, Typography, Tag } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
@@ -16,13 +16,14 @@ import {
 } from '../auth/storage'
 import { ThemeModeToggle, ThemeStatusDot } from '../components/ThemeModeToggle'
 import { useThemeMode } from '../theme/mode'
+import { RequestBanner } from '../components/RequestBanner'
 
 const { Sider, Header, Content } = Layout
 
 export function ConsoleLayout() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { permissions } = usePermissions()
+  const { permissions, error, stale, refresh, loading: permissionLoading } = usePermissions()
   const selectedKey = resolveSelectedKey(location.pathname, consoleMenuKeys)
   const [openKeys, setOpenKeys] = useState<string[]>([])
   const tenantId = getCurrentTenantId()
@@ -102,6 +103,15 @@ export function ConsoleLayout() {
           </Space>
         </Header>
         <Content className="app-content">
+          <RequestBanner
+            error={error}
+            title={stale ? '权限同步失败，当前使用本地缓存权限' : '权限加载失败'}
+            action={
+              <Button size="small" onClick={refresh} loading={permissionLoading}>
+                重试
+              </Button>
+            }
+          />
           <Outlet />
         </Content>
       </Layout>

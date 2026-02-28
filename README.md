@@ -84,8 +84,8 @@ npm run dev
 ```
 
 ### Default Ports
-- HTTP: `0.0.0.0:8000`
-- gRPC: `0.0.0.0:9100`
+- HTTP: `0.0.0.0:3000`
+- gRPC: `0.0.0.0:3333`
 - Dashboard: `http://localhost:5173`
 
 ## Configuration

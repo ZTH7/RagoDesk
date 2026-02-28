@@ -223,11 +223,11 @@ export function Home() {
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card className="surface-card" bordered={false} title="开发与接入">
+          <Card className="surface-card" bordered={false} title="接口接入">
             <Typography.Paragraph className="muted">
-              Console 登录后可通过调试页面验证会话调用，再接入业务系统。
+              在 Console 创建 API Key 后，通过标准 HTTP 接口接入你现有的业务系统。
             </Typography.Paragraph>
-            <Button onClick={() => navigate('/console/devtools/api')}>进入调试</Button>
+            <Button onClick={() => navigate('/console/api-keys')}>前往 API Key 管理</Button>
           </Card>
         </Col>
       </Row>

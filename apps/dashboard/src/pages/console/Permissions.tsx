@@ -29,9 +29,13 @@ export function Permissions() {
           loading,
           pagination: { pageSize: 10 },
           columns: [
-            { title: 'Code', dataIndex: 'code' },
+            { title: '权限标识', dataIndex: 'code' },
             { title: '描述', dataIndex: 'description' },
-            { title: 'Scope', dataIndex: 'scope', render: (scope: string) => <Tag>{scope}</Tag> },
+            {
+              title: '权限域',
+              dataIndex: 'scope',
+              render: (scope: string) => <Tag>{scope === 'tenant' ? '租户域' : scope}</Tag>,
+            },
           ],
         }}
       />

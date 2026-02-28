@@ -105,7 +105,7 @@ export function Tenants() {
               title: '类型',
               dataIndex: 'type',
               render: (value: string) =>
-                value === 'enterprise' ? '企业' : value === 'individual' ? '个人' : value,
+                value === 'enterprise' ? '企业' : value === 'personal' ? '个人' : value,
             },
             { title: '套餐', dataIndex: 'plan' },
             {
@@ -135,7 +135,7 @@ export function Tenants() {
             <Select
               options={[
                 { value: 'enterprise', label: '企业' },
-                { value: 'individual', label: '个人' },
+                { value: 'personal', label: '个人' },
               ]}
             />
           </Form.Item>

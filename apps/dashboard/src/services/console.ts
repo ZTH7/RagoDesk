@@ -120,7 +120,8 @@ export type BotKnowledgeBase = {
 export type UserItem = {
   id: string
   name: string
-  email: string
+  email?: string
+  phone?: string
   status: string
   created_at: string
 }
@@ -169,7 +170,7 @@ export type UpdateApiKeyInput = {
 
 export type CreateUserInput = {
   name: string
-  email: string
+  email?: string
   phone?: string
   status: string
 }

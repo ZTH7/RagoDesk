@@ -78,7 +78,7 @@ export function AnalyticsOverview() {
       <RequestBanner error={error} />
       <Card title="快速上手（推荐流程）" className="surface-card">
         <Typography.Paragraph className="muted" style={{ marginBottom: 12 }}>
-          先完成这 4 步，再进入 API 调试与线上接入。
+          先完成这 4 步，再进行线上接口接入。
         </Typography.Paragraph>
         <Steps
           responsive
@@ -109,9 +109,8 @@ export function AnalyticsOverview() {
           <Button onClick={() => navigate('/console/knowledge-bases')}>去知识库</Button>
           <Button onClick={() => navigate('/console/documents')}>去文档管理</Button>
           <Button onClick={() => navigate('/console/bots')}>去机器人</Button>
-          <Button onClick={() => navigate('/console/api-keys')}>去 API Keys</Button>
-          <Button type={onboardingFinished ? 'primary' : 'default'} onClick={() => navigate('/console/devtools/api')}>
-            去 API 调试
+          <Button type={onboardingFinished ? 'primary' : 'default'} onClick={() => navigate('/console/api-keys')}>
+            去接口密钥
           </Button>
         </Space>
       </Card>
@@ -208,10 +207,10 @@ export function AnalyticsOverview() {
               rowKey="query"
               dataSource={topData.items}
               columns={[
-                { title: 'Query', dataIndex: 'query' },
-                { title: 'Count', dataIndex: 'count' },
-                { title: 'Hit Rate', dataIndex: 'hit_rate', render: (v) => `${Math.round(v * 100)}%` },
-                { title: 'Last Seen', dataIndex: 'last_seen_at' },
+                { title: '问题', dataIndex: 'query' },
+                { title: '次数', dataIndex: 'count' },
+                { title: '命中率', dataIndex: 'hit_rate', render: (v) => `${Math.round(v * 100)}%` },
+                { title: '最近出现', dataIndex: 'last_seen_at' },
               ]}
             />
           </Card>
@@ -224,10 +223,10 @@ export function AnalyticsOverview() {
               rowKey="query"
               dataSource={gapData.items}
               columns={[
-                { title: 'Query', dataIndex: 'query' },
-                { title: 'Miss Count', dataIndex: 'miss_count' },
-                { title: 'Avg Confidence', dataIndex: 'avg_confidence', render: (v) => v.toFixed(2) },
-                { title: 'Last Seen', dataIndex: 'last_seen_at' },
+                { title: '问题', dataIndex: 'query' },
+                { title: '未命中次数', dataIndex: 'miss_count' },
+                { title: '平均置信度', dataIndex: 'avg_confidence', render: (v) => v.toFixed(2) },
+                { title: '最近出现', dataIndex: 'last_seen_at' },
               ]}
             />
           </Card>

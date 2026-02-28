@@ -17,8 +17,8 @@ COPY --from=builder /src/bin /app
 
 WORKDIR /app
 
-EXPOSE 8000
-EXPOSE 9000
+EXPOSE 3000
+EXPOSE 3333
 VOLUME /data/conf
 
 CMD ["./ragodesk", "-conf", "/data/conf"]

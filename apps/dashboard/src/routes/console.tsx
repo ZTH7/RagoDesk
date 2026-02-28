@@ -8,7 +8,6 @@
   RobotOutlined,
   SettingOutlined,
   TeamOutlined,
-  ToolOutlined,
   SafetyOutlined,
   LockOutlined,
 } from '@ant-design/icons'
@@ -31,7 +30,6 @@ import { ApiUsage } from '../pages/console/ApiUsage'
 import { ApiUsageSummary } from '../pages/console/ApiUsageSummary'
 import { Sessions } from '../pages/console/Sessions'
 import { SessionDetail } from '../pages/console/SessionDetail'
-import { DevtoolsApi } from '../pages/console/DevtoolsApi'
 import { Profile } from '../pages/console/Profile'
 import type { AppRoute, NavItem } from './types'
 import { permissions } from '../auth/permissions'
@@ -47,8 +45,8 @@ export const consoleNavItems: NavItem[] = [
     children: [
       { key: '/console/analytics/overview', label: '总览' },
       { key: '/console/analytics/latency', label: '延迟趋势' },
-      { key: '/console/analytics/top-questions', label: 'Top Questions' },
-      { key: '/console/analytics/kb-gaps', label: 'KB Gaps' },
+      { key: '/console/analytics/top-questions', label: '热门问题' },
+      { key: '/console/analytics/kb-gaps', label: '知识缺口' },
     ],
   },
   { key: '/console/users', icon: <TeamOutlined />, label: '成员管理', permission: permissions.tenant.userRead },
@@ -57,10 +55,9 @@ export const consoleNavItems: NavItem[] = [
   { key: '/console/bots', icon: <RobotOutlined />, label: '机器人', permission: permissions.tenant.botRead },
   { key: '/console/knowledge-bases', icon: <DatabaseOutlined />, label: '知识库', permission: permissions.tenant.knowledgeRead },
   { key: '/console/documents', icon: <FileTextOutlined />, label: '文档管理', permission: permissions.tenant.documentRead },
-  { key: '/console/api-keys', icon: <KeyOutlined />, label: 'API Keys', permission: permissions.tenant.apiKeyRead },
+  { key: '/console/api-keys', icon: <KeyOutlined />, label: '接口密钥', permission: permissions.tenant.apiKeyRead },
   { key: '/console/api-usage', icon: <HistoryOutlined />, label: '调用日志', permission: permissions.tenant.apiUsageRead },
   { key: '/console/sessions', icon: <MessageOutlined />, label: '会话管理', permission: permissions.tenant.chatSessionRead },
-  { key: '/console/devtools/api', icon: <ToolOutlined />, label: 'API 调试', permission: permissions.tenant.apiKeyRead },
   { key: '/console/profile', icon: <SettingOutlined />, label: '个人中心' },
 ]
 
@@ -78,7 +75,6 @@ export const consoleMenuKeys = [
   '/console/api-keys',
   '/console/api-usage',
   '/console/sessions',
-  '/console/devtools/api',
   '/console/profile',
 ]
 
@@ -102,6 +98,5 @@ export const consoleRoutes: AppRoute[] = [
   { path: 'api-usage/summary', element: <ApiUsageSummary />, permission: permissions.tenant.apiUsageRead },
   { path: 'sessions', element: <Sessions />, permission: permissions.tenant.chatSessionRead },
   { path: 'sessions/:id', element: <SessionDetail />, permission: permissions.tenant.chatSessionRead },
-  { path: 'devtools/api', element: <DevtoolsApi />, permission: permissions.tenant.apiKeyRead },
   { path: 'profile', element: <Profile /> },
 ]

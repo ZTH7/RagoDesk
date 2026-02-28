@@ -13,7 +13,8 @@ export type TenantItem = {
 export type PlatformAdminItem = {
   id: string
   name: string
-  email: string
+  email?: string
+  phone?: string
   status: string
   created_at: string
 }
@@ -40,7 +41,7 @@ export type CreateTenantInput = {
 
 export type CreatePlatformAdminInput = {
   name: string
-  email: string
+  email?: string
   phone?: string
   status: string
   password?: string
