@@ -8,6 +8,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function PlatformRoles() {
@@ -94,7 +95,7 @@ export function PlatformRoles() {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="Role ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
@@ -105,7 +106,7 @@ export function PlatformRoles() {
               dataIndex: 'name',
               render: (_: string, record) => <Link to={`/platform/roles/${record.id}`}>{record.name}</Link>,
             },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',
@@ -136,7 +137,7 @@ export function PlatformRoles() {
       </Modal>
 
       <Modal
-        title="编辑角色权限"
+        title="配置角色权限"
         open={permOpen}
         onCancel={() => setPermOpen(false)}
         onOk={handleAssignPermissions}
@@ -156,6 +157,9 @@ export function PlatformRoles() {
               }))}
             />
           </Form.Item>
+          {permissionData.items.length === 0 ? (
+            <Typography.Text className="muted">暂无权限，请先前往「权限目录」创建权限。</Typography.Text>
+          ) : null}
         </Form>
       </Modal>
     </div>

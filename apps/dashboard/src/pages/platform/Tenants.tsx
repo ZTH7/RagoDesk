@@ -8,6 +8,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
@@ -68,7 +69,7 @@ export function Tenants() {
                 onClick={() => setStatusFilter(statusFilter === 'active' ? '' : 'active')}
                 type={statusFilter === 'active' ? 'primary' : 'default'}
               >
-                仅显示 Active
+                仅显示启用
               </Button>
               <Space size={6}>
                 <Typography.Text className="muted">高级列</Typography.Text>
@@ -89,7 +90,7 @@ export function Tenants() {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="Tenant ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
@@ -114,7 +115,7 @@ export function Tenants() {
                 <Tag color={statusColors[status] || 'default'}>{status === 'active' ? '启用' : '停用'}</Tag>
               ),
             },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
           ],
         }}
       />

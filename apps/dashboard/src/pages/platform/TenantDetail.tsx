@@ -5,6 +5,7 @@ import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
+import { formatDateTime } from '../../utils/datetime'
 
 export function TenantDetail() {
   const { id } = useParams()
@@ -41,6 +42,7 @@ export function TenantDetail() {
             <Descriptions.Item label="状态">
               {data.tenant.status === 'active' ? '启用' : data.tenant.status === 'suspended' ? '停用' : data.tenant.status || '-'}
             </Descriptions.Item>
+            <Descriptions.Item label="创建时间">{formatDateTime(data.tenant.created_at)}</Descriptions.Item>
           </Descriptions>
         )}
       </Card>

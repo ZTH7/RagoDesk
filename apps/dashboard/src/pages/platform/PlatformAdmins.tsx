@@ -8,6 +8,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 const statusColors: Record<string, string> = {
@@ -134,7 +135,7 @@ export function PlatformAdmins() {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="Admin ID">{record.id}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
@@ -151,7 +152,7 @@ export function PlatformAdmins() {
               dataIndex: 'status',
               render: (value: string) => <Tag color={statusColors[value] || 'default'}>{statusLabels[value] || value}</Tag>,
             },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
             {
               title: '操作',
               key: 'actions',
@@ -249,6 +250,9 @@ export function PlatformAdmins() {
               }))}
             />
           </Form.Item>
+          {roleData.items.length === 0 ? (
+            <Typography.Text className="muted">暂无角色，请先前往「平台角色」创建角色。</Typography.Text>
+          ) : null}
         </Form>
       </Modal>
     </div>

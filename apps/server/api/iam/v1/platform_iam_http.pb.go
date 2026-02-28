@@ -26,12 +26,16 @@ const OperationPlatformIAMCreatePermission = "/api.iam.v1.PlatformIAM/CreatePerm
 const OperationPlatformIAMCreatePlatformAdmin = "/api.iam.v1.PlatformIAM/CreatePlatformAdmin"
 const OperationPlatformIAMCreatePlatformRole = "/api.iam.v1.PlatformIAM/CreatePlatformRole"
 const OperationPlatformIAMCreateTenant = "/api.iam.v1.PlatformIAM/CreateTenant"
+const OperationPlatformIAMGetPlatformAdmin = "/api.iam.v1.PlatformIAM/GetPlatformAdmin"
+const OperationPlatformIAMGetPlatformRole = "/api.iam.v1.PlatformIAM/GetPlatformRole"
 const OperationPlatformIAMGetTenant = "/api.iam.v1.PlatformIAM/GetTenant"
 const OperationPlatformIAMListPermissions = "/api.iam.v1.PlatformIAM/ListPermissions"
+const OperationPlatformIAMListPlatformAdminRoles = "/api.iam.v1.PlatformIAM/ListPlatformAdminRoles"
 const OperationPlatformIAMListPlatformAdmins = "/api.iam.v1.PlatformIAM/ListPlatformAdmins"
 const OperationPlatformIAMListPlatformRolePermissions = "/api.iam.v1.PlatformIAM/ListPlatformRolePermissions"
 const OperationPlatformIAMListPlatformRoles = "/api.iam.v1.PlatformIAM/ListPlatformRoles"
 const OperationPlatformIAMListTenants = "/api.iam.v1.PlatformIAM/ListTenants"
+const OperationPlatformIAMRemovePlatformAdminRole = "/api.iam.v1.PlatformIAM/RemovePlatformAdminRole"
 
 type PlatformIAMHTTPServer interface {
 	AssignPlatformAdminRole(context.Context, *AssignPlatformAdminRoleRequest) (*emptypb.Empty, error)
@@ -40,12 +44,16 @@ type PlatformIAMHTTPServer interface {
 	CreatePlatformAdmin(context.Context, *CreatePlatformAdminRequest) (*PlatformAdminResponse, error)
 	CreatePlatformRole(context.Context, *CreatePlatformRoleRequest) (*PlatformRoleResponse, error)
 	CreateTenant(context.Context, *CreateTenantRequest) (*TenantResponse, error)
+	GetPlatformAdmin(context.Context, *GetPlatformAdminRequest) (*PlatformAdminResponse, error)
+	GetPlatformRole(context.Context, *GetPlatformRoleRequest) (*PlatformRoleResponse, error)
 	GetTenant(context.Context, *GetTenantRequest) (*TenantResponse, error)
 	ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error)
+	ListPlatformAdminRoles(context.Context, *ListPlatformAdminRolesRequest) (*ListPlatformRolesResponse, error)
 	ListPlatformAdmins(context.Context, *ListPlatformAdminsRequest) (*ListPlatformAdminsResponse, error)
 	ListPlatformRolePermissions(context.Context, *ListPlatformRolePermissionsRequest) (*ListPermissionsResponse, error)
 	ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error)
 	ListTenants(context.Context, *ListTenantsRequest) (*ListTenantsResponse, error)
+	RemovePlatformAdminRole(context.Context, *RemovePlatformAdminRoleRequest) (*emptypb.Empty, error)
 }
 
 func RegisterPlatformIAMHTTPServer(s *http.Server, srv PlatformIAMHTTPServer) {
@@ -57,9 +65,13 @@ func RegisterPlatformIAMHTTPServer(s *http.Server, srv PlatformIAMHTTPServer) {
 	r.GET("/platform/v1/permissions", _PlatformIAM_ListPermissions1_HTTP_Handler(srv))
 	r.POST("/platform/v1/admins", _PlatformIAM_CreatePlatformAdmin0_HTTP_Handler(srv))
 	r.GET("/platform/v1/admins", _PlatformIAM_ListPlatformAdmins0_HTTP_Handler(srv))
+	r.GET("/platform/v1/admins/{id}", _PlatformIAM_GetPlatformAdmin0_HTTP_Handler(srv))
 	r.POST("/platform/v1/roles", _PlatformIAM_CreatePlatformRole0_HTTP_Handler(srv))
 	r.GET("/platform/v1/roles", _PlatformIAM_ListPlatformRoles0_HTTP_Handler(srv))
+	r.GET("/platform/v1/roles/{id}", _PlatformIAM_GetPlatformRole0_HTTP_Handler(srv))
 	r.POST("/platform/v1/admins/{admin_id}/roles", _PlatformIAM_AssignPlatformAdminRole0_HTTP_Handler(srv))
+	r.GET("/platform/v1/admins/{admin_id}/roles", _PlatformIAM_ListPlatformAdminRoles0_HTTP_Handler(srv))
+	r.DELETE("/platform/v1/admins/{admin_id}/roles/{role_id}", _PlatformIAM_RemovePlatformAdminRole0_HTTP_Handler(srv))
 	r.POST("/platform/v1/roles/{role_id}/permissions", _PlatformIAM_AssignPlatformRolePermissions0_HTTP_Handler(srv))
 	r.GET("/platform/v1/roles/{role_id}/permissions", _PlatformIAM_ListPlatformRolePermissions0_HTTP_Handler(srv))
 }
@@ -209,6 +221,28 @@ func _PlatformIAM_ListPlatformAdmins0_HTTP_Handler(srv PlatformIAMHTTPServer) fu
 	}
 }
 
+func _PlatformIAM_GetPlatformAdmin0_HTTP_Handler(srv PlatformIAMHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetPlatformAdminRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPlatformIAMGetPlatformAdmin)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetPlatformAdmin(ctx, req.(*GetPlatformAdminRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PlatformAdminResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _PlatformIAM_CreatePlatformRole0_HTTP_Handler(srv PlatformIAMHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreatePlatformRoleRequest
@@ -250,6 +284,28 @@ func _PlatformIAM_ListPlatformRoles0_HTTP_Handler(srv PlatformIAMHTTPServer) fun
 	}
 }
 
+func _PlatformIAM_GetPlatformRole0_HTTP_Handler(srv PlatformIAMHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetPlatformRoleRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPlatformIAMGetPlatformRole)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetPlatformRole(ctx, req.(*GetPlatformRoleRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*PlatformRoleResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _PlatformIAM_AssignPlatformAdminRole0_HTTP_Handler(srv PlatformIAMHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in AssignPlatformAdminRoleRequest
@@ -265,6 +321,50 @@ func _PlatformIAM_AssignPlatformAdminRole0_HTTP_Handler(srv PlatformIAMHTTPServe
 		http.SetOperation(ctx, OperationPlatformIAMAssignPlatformAdminRole)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.AssignPlatformAdminRole(ctx, req.(*AssignPlatformAdminRoleRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _PlatformIAM_ListPlatformAdminRoles0_HTTP_Handler(srv PlatformIAMHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListPlatformAdminRolesRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPlatformIAMListPlatformAdminRoles)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.ListPlatformAdminRoles(ctx, req.(*ListPlatformAdminRolesRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListPlatformRolesResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _PlatformIAM_RemovePlatformAdminRole0_HTTP_Handler(srv PlatformIAMHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in RemovePlatformAdminRoleRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationPlatformIAMRemovePlatformAdminRole)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.RemovePlatformAdminRole(ctx, req.(*RemovePlatformAdminRoleRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -329,12 +429,16 @@ type PlatformIAMHTTPClient interface {
 	CreatePlatformAdmin(ctx context.Context, req *CreatePlatformAdminRequest, opts ...http.CallOption) (rsp *PlatformAdminResponse, err error)
 	CreatePlatformRole(ctx context.Context, req *CreatePlatformRoleRequest, opts ...http.CallOption) (rsp *PlatformRoleResponse, err error)
 	CreateTenant(ctx context.Context, req *CreateTenantRequest, opts ...http.CallOption) (rsp *TenantResponse, err error)
+	GetPlatformAdmin(ctx context.Context, req *GetPlatformAdminRequest, opts ...http.CallOption) (rsp *PlatformAdminResponse, err error)
+	GetPlatformRole(ctx context.Context, req *GetPlatformRoleRequest, opts ...http.CallOption) (rsp *PlatformRoleResponse, err error)
 	GetTenant(ctx context.Context, req *GetTenantRequest, opts ...http.CallOption) (rsp *TenantResponse, err error)
 	ListPermissions(ctx context.Context, req *ListPermissionsRequest, opts ...http.CallOption) (rsp *ListPermissionsResponse, err error)
+	ListPlatformAdminRoles(ctx context.Context, req *ListPlatformAdminRolesRequest, opts ...http.CallOption) (rsp *ListPlatformRolesResponse, err error)
 	ListPlatformAdmins(ctx context.Context, req *ListPlatformAdminsRequest, opts ...http.CallOption) (rsp *ListPlatformAdminsResponse, err error)
 	ListPlatformRolePermissions(ctx context.Context, req *ListPlatformRolePermissionsRequest, opts ...http.CallOption) (rsp *ListPermissionsResponse, err error)
 	ListPlatformRoles(ctx context.Context, req *ListPlatformRolesRequest, opts ...http.CallOption) (rsp *ListPlatformRolesResponse, err error)
 	ListTenants(ctx context.Context, req *ListTenantsRequest, opts ...http.CallOption) (rsp *ListTenantsResponse, err error)
+	RemovePlatformAdminRole(ctx context.Context, req *RemovePlatformAdminRoleRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 }
 
 type PlatformIAMHTTPClientImpl struct {
@@ -423,6 +527,32 @@ func (c *PlatformIAMHTTPClientImpl) CreateTenant(ctx context.Context, in *Create
 	return &out, nil
 }
 
+func (c *PlatformIAMHTTPClientImpl) GetPlatformAdmin(ctx context.Context, in *GetPlatformAdminRequest, opts ...http.CallOption) (*PlatformAdminResponse, error) {
+	var out PlatformAdminResponse
+	pattern := "/platform/v1/admins/{id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationPlatformIAMGetPlatformAdmin))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *PlatformIAMHTTPClientImpl) GetPlatformRole(ctx context.Context, in *GetPlatformRoleRequest, opts ...http.CallOption) (*PlatformRoleResponse, error) {
+	var out PlatformRoleResponse
+	pattern := "/platform/v1/roles/{id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationPlatformIAMGetPlatformRole))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *PlatformIAMHTTPClientImpl) GetTenant(ctx context.Context, in *GetTenantRequest, opts ...http.CallOption) (*TenantResponse, error) {
 	var out TenantResponse
 	pattern := "/platform/v1/tenants/{id}"
@@ -441,6 +571,19 @@ func (c *PlatformIAMHTTPClientImpl) ListPermissions(ctx context.Context, in *Lis
 	pattern := "/platform/v1/permissions"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationPlatformIAMListPermissions))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *PlatformIAMHTTPClientImpl) ListPlatformAdminRoles(ctx context.Context, in *ListPlatformAdminRolesRequest, opts ...http.CallOption) (*ListPlatformRolesResponse, error) {
+	var out ListPlatformRolesResponse
+	pattern := "/platform/v1/admins/{admin_id}/roles"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationPlatformIAMListPlatformAdminRoles))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {
@@ -495,6 +638,19 @@ func (c *PlatformIAMHTTPClientImpl) ListTenants(ctx context.Context, in *ListTen
 	opts = append(opts, http.Operation(OperationPlatformIAMListTenants))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *PlatformIAMHTTPClientImpl) RemovePlatformAdminRole(ctx context.Context, in *RemovePlatformAdminRoleRequest, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/platform/v1/admins/{admin_id}/roles/{role_id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationPlatformIAMRemovePlatformAdminRole))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "DELETE", path, nil, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

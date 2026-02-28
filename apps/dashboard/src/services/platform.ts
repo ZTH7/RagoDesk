@@ -82,6 +82,9 @@ export const platformApi = {
     const suffix = query.toString() ? `?${query.toString()}` : ''
     return request<{ items: PlatformAdminItem[] }>(`/platform/v1/admins${suffix}`)
   },
+  getAdmin(id: string) {
+    return request<{ admin: PlatformAdminItem }>(`/platform/v1/admins/${id}`)
+  },
   createAdmin(payload: CreatePlatformAdminInput) {
     return request<{ admin: PlatformAdminItem; invite_link?: string }>('/platform/v1/admins', {
       method: 'POST',
@@ -95,6 +98,9 @@ export const platformApi = {
     const suffix = query.toString() ? `?${query.toString()}` : ''
     return request<{ items: PlatformRoleItem[] }>(`/platform/v1/roles${suffix}`)
   },
+  getRole(id: string) {
+    return request<{ role: PlatformRoleItem }>(`/platform/v1/roles/${id}`)
+  },
   createRole(payload: CreatePlatformRoleInput) {
     return request<{ role: PlatformRoleItem }>('/platform/v1/roles', {
       method: 'POST',
@@ -105,6 +111,14 @@ export const platformApi = {
     return request<void>(`/platform/v1/admins/${adminId}/roles`, {
       method: 'POST',
       body: JSON.stringify({ admin_id: adminId, role_id: roleId }),
+    })
+  },
+  listAdminRoles(adminId: string) {
+    return request<{ items: PlatformRoleItem[] }>(`/platform/v1/admins/${adminId}/roles`)
+  },
+  removeAdminRole(adminId: string, roleId: string) {
+    return request<void>(`/platform/v1/admins/${adminId}/roles/${roleId}`, {
+      method: 'DELETE',
     })
   },
   listRolePermissions(roleId: string) {

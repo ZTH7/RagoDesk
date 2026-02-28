@@ -143,6 +143,22 @@ func (r *iamRepo) ListPlatformAdmins(ctx context.Context) ([]biz.PlatformAdmin, 
 	return items, rows.Err()
 }
 
+func (r *iamRepo) GetPlatformAdmin(ctx context.Context, id string) (biz.PlatformAdmin, error) {
+	var admin biz.PlatformAdmin
+	err := r.db.QueryRowContext(
+		ctx,
+		"SELECT id, email, phone, name, status, created_at FROM platform_admin WHERE id = ?",
+		id,
+	).Scan(&admin.ID, &admin.Email, &admin.Phone, &admin.Name, &admin.Status, &admin.CreatedAt)
+	if err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return biz.PlatformAdmin{}, kerrors.NotFound("PLATFORM_ADMIN_NOT_FOUND", "platform admin not found")
+		}
+		return biz.PlatformAdmin{}, err
+	}
+	return admin, nil
+}
+
 func (r *iamRepo) CreatePlatformRole(ctx context.Context, role biz.PlatformRole) (biz.PlatformRole, error) {
 	if role.ID == "" {
 		role.ID = uuid.NewString()
@@ -175,6 +191,22 @@ func (r *iamRepo) ListPlatformRoles(ctx context.Context) ([]biz.PlatformRole, er
 		items = append(items, role)
 	}
 	return items, rows.Err()
+}
+
+func (r *iamRepo) GetPlatformRole(ctx context.Context, id string) (biz.PlatformRole, error) {
+	var role biz.PlatformRole
+	err := r.db.QueryRowContext(
+		ctx,
+		"SELECT id, name FROM platform_role WHERE id = ?",
+		id,
+	).Scan(&role.ID, &role.Name)
+	if err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return biz.PlatformRole{}, kerrors.NotFound("PLATFORM_ROLE_NOT_FOUND", "platform role not found")
+		}
+		return biz.PlatformRole{}, err
+	}
+	return role, nil
 }
 
 func (r *iamRepo) AssignPlatformAdminRole(ctx context.Context, adminID string, roleID string) error {
@@ -213,6 +245,52 @@ func (r *iamRepo) AssignPlatformAdminRole(ctx context.Context, adminID string, r
 		return err
 	}
 	return tx.Commit()
+}
+
+func (r *iamRepo) ListPlatformAdminRoles(ctx context.Context, adminID string) ([]biz.PlatformRole, error) {
+	rows, err := r.db.QueryContext(
+		ctx,
+		`SELECT r.id, r.name
+		FROM platform_admin_role ar
+		JOIN platform_role r ON ar.role_id = r.id
+		WHERE ar.admin_id = ?
+		ORDER BY r.name ASC`,
+		adminID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]biz.PlatformRole, 0)
+	for rows.Next() {
+		var role biz.PlatformRole
+		if err := rows.Scan(&role.ID, &role.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, role)
+	}
+	return items, rows.Err()
+}
+
+func (r *iamRepo) RemovePlatformAdminRole(ctx context.Context, adminID string, roleID string) error {
+	result, err := r.db.ExecContext(
+		ctx,
+		"DELETE FROM platform_admin_role WHERE admin_id = ? AND role_id = ?",
+		adminID,
+		roleID,
+	)
+	if err != nil {
+		return err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return kerrors.NotFound("PLATFORM_ADMIN_ROLE_NOT_FOUND", "platform admin role not found")
+	}
+	return nil
 }
 
 func (r *iamRepo) ListPlatformAdminPermissions(ctx context.Context, adminID string) ([]biz.Permission, error) {

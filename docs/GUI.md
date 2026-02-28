@@ -63,11 +63,14 @@
 ## A4. 平台管理员管理
 **页面：管理员列表 / 新建管理员**
 - 列表列：id、name、email、status、created_at。
-- 操作：创建管理员、分配角色、禁用。
+- 详情页：管理员基础信息 + 已分配角色列表。
+- 操作：创建管理员、分配角色、移除角色、禁用。
 - API：
   - `GET /platform/v1/admins`
+  - `GET /platform/v1/admins/{id}`
   - `POST /platform/v1/admins`
   - `POST /platform/v1/admins/{id}/roles`
+  - `GET /platform/v1/admins/{id}/roles`
 
 ## A5. 平台角色管理
 **页面：角色列表 / 详情 / 授权权限**
@@ -75,6 +78,7 @@
 - 详情页：权限清单、授权记录。
 - API：
   - `GET /platform/v1/roles`
+  - `GET /platform/v1/roles/{id}`
   - `POST /platform/v1/roles`
   - `POST /platform/v1/roles/{id}/permissions`
   - `GET /platform/v1/roles/{id}/permissions`

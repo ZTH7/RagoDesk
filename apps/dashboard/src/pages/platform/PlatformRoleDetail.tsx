@@ -6,6 +6,7 @@ import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function PlatformRoleDetail() {
@@ -15,10 +16,11 @@ export function PlatformRoleDetail() {
   const [permissionCodes, setPermissionCodes] = useState<string[]>([])
 
   const { data: roleData, loading: roleLoading, error: roleError } = useRequest(
-    () => platformApi.listRoles(),
-    { items: [] },
+    () => platformApi.getRole(roleId),
+    { role: { id: '', name: '' } },
+    { enabled: Boolean(roleId), deps: [roleId] },
   )
-  const role = roleData.items.find((item) => item.id === roleId)
+  const role = roleData.role
 
   const permRequest = useRequest(
     () => platformApi.listRolePermissions(roleId),
@@ -27,6 +29,7 @@ export function PlatformRoleDetail() {
   )
   const { data: permData } = permRequest
   const { data: allPerms } = useRequest(() => platformApi.listPermissions(), { items: [] })
+  const requestError = roleError || permRequest.error
 
   const openEdit = () => {
     setPermissionCodes(permData.items.map((item) => item.code))
@@ -55,11 +58,11 @@ export function PlatformRoleDetail() {
           </Space>
         }
       />
-      <RequestBanner error={roleError} />
+      <RequestBanner error={requestError} />
       <Card>
         {roleLoading ? (
           <Skeleton active paragraph={{ rows: 3 }} />
-        ) : !role ? (
+        ) : !role?.id ? (
           <Empty description="未找到该角色" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Descriptions column={1} bordered size="middle">
@@ -68,7 +71,7 @@ export function PlatformRoleDetail() {
         )}
       </Card>
       <Card>
-        <TechnicalMeta items={[{ key: 'role-id', label: 'Role ID', value: role?.id || roleId }]} />
+        <TechnicalMeta items={[{ key: 'role-id', label: 'Role ID', value: role.id || roleId }]} />
       </Card>
       <Card title={`权限列表（${permData.items.length}）`}>
         <Table
@@ -76,13 +79,13 @@ export function PlatformRoleDetail() {
           dataSource={permData.items}
           pagination={false}
           columns={[
-            { title: 'Code', dataIndex: 'code' },
+            { title: '权限标识', dataIndex: 'code' },
             {
               title: '权限域',
               dataIndex: 'scope',
               render: (value: string) => <Tag>{value === 'platform' ? '平台域' : value === 'tenant' ? '租户域' : value}</Tag>,
             },
-            { title: '创建时间', dataIndex: 'created_at' },
+            { title: '创建时间', dataIndex: 'created_at', render: (value: string) => formatDateTime(value) },
           ]}
         />
       </Card>

@@ -7,6 +7,7 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function PlatformPermissions() {
@@ -87,7 +88,7 @@ export function PlatformPermissions() {
                 expandedRowRender: (record) => (
                   <Descriptions column={2} bordered size="small">
                     <Descriptions.Item label="权限 Code">{record.code}</Descriptions.Item>
-                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{formatDateTime(record.created_at)}</Descriptions.Item>
                   </Descriptions>
                 ),
               }
@@ -117,7 +118,7 @@ export function PlatformPermissions() {
           <Form.Item label="描述" name="description" rules={[{ required: true, message: '请输入描述' }]}>
             <Input placeholder="描述该权限用途" />
           </Form.Item>
-          <Form.Item label="Scope" name="scope" rules={[{ required: true, message: '请选择 scope' }]}>
+          <Form.Item label="权限域" name="scope" rules={[{ required: true, message: '请选择权限域' }]}>
             <Select options={[{ value: 'platform', label: '平台域' }, { value: 'tenant', label: '租户域' }]} />
           </Form.Item>
         </Form>

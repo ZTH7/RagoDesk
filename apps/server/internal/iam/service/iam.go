@@ -10,8 +10,8 @@ import (
 	"time"
 
 	v1 "github.com/ZTH7/RagoDesk/apps/server/api/iam/v1"
-	jwt "github.com/ZTH7/RagoDesk/apps/server/internal/kit/jwt"
 	biz "github.com/ZTH7/RagoDesk/apps/server/internal/iam/biz"
+	jwt "github.com/ZTH7/RagoDesk/apps/server/internal/kit/jwt"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
@@ -156,6 +156,17 @@ func (s *IAMService) ListPlatformAdmins(ctx context.Context, req *v1.ListPlatfor
 	return resp, nil
 }
 
+func (s *IAMService) GetPlatformAdmin(ctx context.Context, req *v1.GetPlatformAdminRequest) (*v1.PlatformAdminResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformAdminRead); err != nil {
+		return nil, err
+	}
+	admin, err := s.uc.GetPlatformAdmin(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	return &v1.PlatformAdminResponse{Admin: toPlatformAdmin(admin)}, nil
+}
+
 func (s *IAMService) CreatePlatformRole(ctx context.Context, req *v1.CreatePlatformRoleRequest) (*v1.PlatformRoleResponse, error) {
 	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleWrite); err != nil {
 		return nil, err
@@ -183,11 +194,47 @@ func (s *IAMService) ListPlatformRoles(ctx context.Context, req *v1.ListPlatform
 	return resp, nil
 }
 
+func (s *IAMService) GetPlatformRole(ctx context.Context, req *v1.GetPlatformRoleRequest) (*v1.PlatformRoleResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleRead); err != nil {
+		return nil, err
+	}
+	role, err := s.uc.GetPlatformRole(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	return &v1.PlatformRoleResponse{Role: toPlatformRole(role)}, nil
+}
+
 func (s *IAMService) AssignPlatformAdminRole(ctx context.Context, req *v1.AssignPlatformAdminRoleRequest) (*emptypb.Empty, error) {
 	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleAssign); err != nil {
 		return nil, err
 	}
 	if err := s.uc.AssignPlatformAdminRole(ctx, req.GetAdminId(), req.GetRoleId()); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (s *IAMService) ListPlatformAdminRoles(ctx context.Context, req *v1.ListPlatformAdminRolesRequest) (*v1.ListPlatformRolesResponse, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleRead); err != nil {
+		return nil, err
+	}
+	roles, err := s.uc.ListPlatformAdminRoles(ctx, req.GetAdminId())
+	if err != nil {
+		return nil, err
+	}
+	resp := &v1.ListPlatformRolesResponse{Items: make([]*v1.PlatformRole, 0, len(roles))}
+	for _, item := range roles {
+		resp.Items = append(resp.Items, toPlatformRole(item))
+	}
+	return resp, nil
+}
+
+func (s *IAMService) RemovePlatformAdminRole(ctx context.Context, req *v1.RemovePlatformAdminRoleRequest) (*emptypb.Empty, error) {
+	if err := s.uc.RequirePermission(ctx, biz.PermissionPlatformRoleAssign); err != nil {
+		return nil, err
+	}
+	if err := s.uc.RemovePlatformAdminRole(ctx, req.GetAdminId(), req.GetRoleId()); err != nil {
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil

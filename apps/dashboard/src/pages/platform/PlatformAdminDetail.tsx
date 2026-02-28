@@ -1,4 +1,4 @@
-import { Button, Card, Descriptions, Empty, Modal, Select, Space, Tag, Skeleton, Typography } from 'antd'
+import { Button, Card, Descriptions, Empty, Modal, Popconfirm, Select, Space, Tag, Skeleton, Typography } from 'antd'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -6,6 +6,7 @@ import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
+import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
 export function PlatformAdminDetail() {
@@ -14,9 +15,21 @@ export function PlatformAdminDetail() {
   const [assignOpen, setAssignOpen] = useState(false)
   const [selectedRole, setSelectedRole] = useState('')
 
-  const { data, loading, error } = useRequest(() => platformApi.listAdmins(), { items: [] })
-  const admin = data.items.find((item) => item.id === adminId)
+  const adminRequest = useRequest(
+    () => platformApi.getAdmin(adminId),
+    { admin: { id: '', email: '', name: '', status: '', created_at: '' } },
+    { enabled: Boolean(adminId), deps: [adminId] },
+  )
+  const { data, loading } = adminRequest
+  const admin = data.admin
   const { data: roleData } = useRequest(() => platformApi.listRoles(), { items: [] })
+  const adminRolesRequest = useRequest(
+    () => platformApi.listAdminRoles(adminId),
+    { items: [] },
+    { enabled: Boolean(adminId), deps: [adminId] },
+  )
+  const assignedRoles = adminRolesRequest.data.items
+  const requestError = adminRequest.error || adminRolesRequest.error
 
   const handleAssign = async () => {
     if (!selectedRole) {
@@ -28,6 +41,17 @@ export function PlatformAdminDetail() {
       uiMessage.success('已分配角色')
       setAssignOpen(false)
       setSelectedRole('')
+      adminRolesRequest.reload()
+    } catch (err) {
+      if (err instanceof Error) uiMessage.error(err.message)
+    }
+  }
+
+  const handleRemoveRole = async (roleId: string, roleName: string) => {
+    try {
+      await platformApi.removeAdminRole(adminId, roleId)
+      uiMessage.success(`已移除角色：${roleName}`)
+      adminRolesRequest.reload()
     } catch (err) {
       if (err instanceof Error) uiMessage.error(err.message)
     }
@@ -46,51 +70,52 @@ export function PlatformAdminDetail() {
           </Space>
         }
       />
-      <RequestBanner error={error} />
+      <RequestBanner error={requestError} />
       <Card>
         {loading ? (
           <Skeleton active paragraph={{ rows: 3 }} />
-        ) : !admin ? (
+        ) : !admin?.id ? (
           <Empty description="未找到该管理员" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Descriptions column={1} bordered size="middle">
             <Descriptions.Item label="姓名">{admin.name}</Descriptions.Item>
+            <Descriptions.Item label="邮箱">{admin.email || '-'}</Descriptions.Item>
             <Descriptions.Item label="状态">
               <Tag color={admin.status === 'active' ? 'green' : 'red'}>
                 {admin.status === 'active' ? '启用' : '停用'}
               </Tag>
             </Descriptions.Item>
+            <Descriptions.Item label="创建时间">{formatDateTime(admin.created_at)}</Descriptions.Item>
           </Descriptions>
         )}
       </Card>
       <Card>
-        <TechnicalMeta items={[{ key: 'admin-id', label: 'Admin ID', value: admin?.id || adminId }]} />
+        <TechnicalMeta items={[{ key: 'admin-id', label: 'Admin ID', value: admin.id || adminId }]} />
       </Card>
-      <Card title="可分配角色">
-        {roleData.items.length === 0 ? (
-          <Empty description="暂无可分配角色" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+      <Card title={`已分配角色（${assignedRoles.length}）`}>
+        {assignedRoles.length === 0 ? (
+          <Empty description="该管理员暂未分配角色" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <Space wrap>
-            {roleData.items.map((role) => (
-              <Button
-                key={role.id}
-                size="small"
-                onClick={async () => {
-                  try {
-                    await platformApi.assignAdminRole(adminId, role.id)
-                    uiMessage.success(`已为管理员分配角色：${role.name}`)
-                  } catch (err) {
-                    if (err instanceof Error) uiMessage.error(err.message)
-                  }
-                }}
-              >
-                添加：{role.name}
-              </Button>
+            {assignedRoles.map((role) => (
+              <Space key={role.id} size={4}>
+                <Tag color="blue">{role.name}</Tag>
+                <Popconfirm
+                  title={`移除角色「${role.name}」?`}
+                  okText="移除"
+                  cancelText="取消"
+                  onConfirm={() => handleRemoveRole(role.id, role.name)}
+                >
+                  <Button type="link" danger size="small">
+                    移除
+                  </Button>
+                </Popconfirm>
+              </Space>
             ))}
           </Space>
         )}
         <Typography.Paragraph className="muted" style={{ marginTop: 12, marginBottom: 0 }}>
-          当前后端未提供“已分配角色列表”查询接口，此处提供快速分配入口。
+          可在右上角“分配角色”继续添加角色，或在此处移除已有角色。
         </Typography.Paragraph>
       </Card>
 
@@ -106,7 +131,9 @@ export function PlatformAdminDetail() {
           value={selectedRole || undefined}
           onChange={setSelectedRole}
           style={{ width: '100%' }}
-          options={roleData.items.map((role) => ({ value: role.id, label: role.name }))}
+          options={roleData.items
+            .filter((role) => !assignedRoles.some((assigned) => assigned.id === role.id))
+            .map((role) => ({ value: role.id, label: role.name }))}
         />
       </Modal>
     </div>

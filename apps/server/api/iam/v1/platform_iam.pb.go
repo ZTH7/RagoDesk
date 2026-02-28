@@ -27,7 +27,7 @@ var File_api_iam_v1_platform_iam_proto protoreflect.FileDescriptor
 const file_api_iam_v1_platform_iam_proto_rawDesc = "" +
 	"\n" +
 	"\x1dapi/iam/v1/platform_iam.proto\x12\n" +
-	"api.iam.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x14api/iam/v1/iam.proto2\xaa\f\n" +
+	"api.iam.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x14api/iam/v1/iam.proto2\xd5\x10\n" +
 	"\vPlatformIAM\x12l\n" +
 	"\fCreateTenant\x12\x1f.api.iam.v1.CreateTenantRequest\x1a\x1a.api.iam.v1.TenantResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/platform/v1/tenants\x12h\n" +
 	"\tGetTenant\x12\x1c.api.iam.v1.GetTenantRequest\x1a\x1a.api.iam.v1.TenantResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/platform/v1/tenants/{id}\x12l\n" +
@@ -36,9 +36,13 @@ const file_api_iam_v1_platform_iam_proto_rawDesc = "" +
 	"\x0fListPermissions\x12\".api.iam.v1.ListPermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/platform/v1/permissions\x12\x80\x01\n" +
 	"\x13CreatePlatformAdmin\x12&.api.iam.v1.CreatePlatformAdminRequest\x1a!.api.iam.v1.PlatformAdminResponse\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/platform/v1/admins\x12\x80\x01\n" +
 	"\x12ListPlatformAdmins\x12%.api.iam.v1.ListPlatformAdminsRequest\x1a&.api.iam.v1.ListPlatformAdminsResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/platform/v1/admins\x12|\n" +
+	"\x10GetPlatformAdmin\x12#.api.iam.v1.GetPlatformAdminRequest\x1a!.api.iam.v1.PlatformAdminResponse\" \x82\xd3\xe4\x93\x02\x1a\x12\x18/platform/v1/admins/{id}\x12|\n" +
 	"\x12CreatePlatformRole\x12%.api.iam.v1.CreatePlatformRoleRequest\x1a .api.iam.v1.PlatformRoleResponse\"\x1d\x82\xd3\xe4\x93\x02\x17:\x01*\"\x12/platform/v1/roles\x12|\n" +
-	"\x11ListPlatformRoles\x12$.api.iam.v1.ListPlatformRolesRequest\x1a%.api.iam.v1.ListPlatformRolesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/platform/v1/roles\x12\x8e\x01\n" +
-	"\x17AssignPlatformAdminRole\x12*.api.iam.v1.AssignPlatformAdminRoleRequest\x1a\x16.google.protobuf.Empty\"/\x82\xd3\xe4\x93\x02):\x01*\"$/platform/v1/admins/{admin_id}/roles\x12\x9e\x01\n" +
+	"\x11ListPlatformRoles\x12$.api.iam.v1.ListPlatformRolesRequest\x1a%.api.iam.v1.ListPlatformRolesResponse\"\x1a\x82\xd3\xe4\x93\x02\x14\x12\x12/platform/v1/roles\x12x\n" +
+	"\x0fGetPlatformRole\x12\".api.iam.v1.GetPlatformRoleRequest\x1a .api.iam.v1.PlatformRoleResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/platform/v1/roles/{id}\x12\x8e\x01\n" +
+	"\x17AssignPlatformAdminRole\x12*.api.iam.v1.AssignPlatformAdminRoleRequest\x1a\x16.google.protobuf.Empty\"/\x82\xd3\xe4\x93\x02):\x01*\"$/platform/v1/admins/{admin_id}/roles\x12\x98\x01\n" +
+	"\x16ListPlatformAdminRoles\x12).api.iam.v1.ListPlatformAdminRolesRequest\x1a%.api.iam.v1.ListPlatformRolesResponse\",\x82\xd3\xe4\x93\x02&\x12$/platform/v1/admins/{admin_id}/roles\x12\x95\x01\n" +
+	"\x17RemovePlatformAdminRole\x12*.api.iam.v1.RemovePlatformAdminRoleRequest\x1a\x16.google.protobuf.Empty\"6\x82\xd3\xe4\x93\x020*./platform/v1/admins/{admin_id}/roles/{role_id}\x12\x9e\x01\n" +
 	"\x1dAssignPlatformRolePermissions\x120.api.iam.v1.AssignPlatformRolePermissionsRequest\x1a\x16.google.protobuf.Empty\"3\x82\xd3\xe4\x93\x02-:\x01*\"(/platform/v1/roles/{role_id}/permissions\x12\xa4\x01\n" +
 	"\x1bListPlatformRolePermissions\x12..api.iam.v1.ListPlatformRolePermissionsRequest\x1a#.api.iam.v1.ListPermissionsResponse\"0\x82\xd3\xe4\x93\x02*\x12(/platform/v1/roles/{role_id}/permissionsB4Z2github.com/ZTH7/RagoDesk/apps/server/api/iam/v1;v1b\x06proto3"
 
@@ -50,20 +54,24 @@ var file_api_iam_v1_platform_iam_proto_goTypes = []any{
 	(*ListPermissionsRequest)(nil),               // 4: api.iam.v1.ListPermissionsRequest
 	(*CreatePlatformAdminRequest)(nil),           // 5: api.iam.v1.CreatePlatformAdminRequest
 	(*ListPlatformAdminsRequest)(nil),            // 6: api.iam.v1.ListPlatformAdminsRequest
-	(*CreatePlatformRoleRequest)(nil),            // 7: api.iam.v1.CreatePlatformRoleRequest
-	(*ListPlatformRolesRequest)(nil),             // 8: api.iam.v1.ListPlatformRolesRequest
-	(*AssignPlatformAdminRoleRequest)(nil),       // 9: api.iam.v1.AssignPlatformAdminRoleRequest
-	(*AssignPlatformRolePermissionsRequest)(nil), // 10: api.iam.v1.AssignPlatformRolePermissionsRequest
-	(*ListPlatformRolePermissionsRequest)(nil),   // 11: api.iam.v1.ListPlatformRolePermissionsRequest
-	(*TenantResponse)(nil),                       // 12: api.iam.v1.TenantResponse
-	(*ListTenantsResponse)(nil),                  // 13: api.iam.v1.ListTenantsResponse
-	(*PermissionResponse)(nil),                   // 14: api.iam.v1.PermissionResponse
-	(*ListPermissionsResponse)(nil),              // 15: api.iam.v1.ListPermissionsResponse
-	(*PlatformAdminResponse)(nil),                // 16: api.iam.v1.PlatformAdminResponse
-	(*ListPlatformAdminsResponse)(nil),           // 17: api.iam.v1.ListPlatformAdminsResponse
-	(*PlatformRoleResponse)(nil),                 // 18: api.iam.v1.PlatformRoleResponse
-	(*ListPlatformRolesResponse)(nil),            // 19: api.iam.v1.ListPlatformRolesResponse
-	(*emptypb.Empty)(nil),                        // 20: google.protobuf.Empty
+	(*GetPlatformAdminRequest)(nil),              // 7: api.iam.v1.GetPlatformAdminRequest
+	(*CreatePlatformRoleRequest)(nil),            // 8: api.iam.v1.CreatePlatformRoleRequest
+	(*ListPlatformRolesRequest)(nil),             // 9: api.iam.v1.ListPlatformRolesRequest
+	(*GetPlatformRoleRequest)(nil),               // 10: api.iam.v1.GetPlatformRoleRequest
+	(*AssignPlatformAdminRoleRequest)(nil),       // 11: api.iam.v1.AssignPlatformAdminRoleRequest
+	(*ListPlatformAdminRolesRequest)(nil),        // 12: api.iam.v1.ListPlatformAdminRolesRequest
+	(*RemovePlatformAdminRoleRequest)(nil),       // 13: api.iam.v1.RemovePlatformAdminRoleRequest
+	(*AssignPlatformRolePermissionsRequest)(nil), // 14: api.iam.v1.AssignPlatformRolePermissionsRequest
+	(*ListPlatformRolePermissionsRequest)(nil),   // 15: api.iam.v1.ListPlatformRolePermissionsRequest
+	(*TenantResponse)(nil),                       // 16: api.iam.v1.TenantResponse
+	(*ListTenantsResponse)(nil),                  // 17: api.iam.v1.ListTenantsResponse
+	(*PermissionResponse)(nil),                   // 18: api.iam.v1.PermissionResponse
+	(*ListPermissionsResponse)(nil),              // 19: api.iam.v1.ListPermissionsResponse
+	(*PlatformAdminResponse)(nil),                // 20: api.iam.v1.PlatformAdminResponse
+	(*ListPlatformAdminsResponse)(nil),           // 21: api.iam.v1.ListPlatformAdminsResponse
+	(*PlatformRoleResponse)(nil),                 // 22: api.iam.v1.PlatformRoleResponse
+	(*ListPlatformRolesResponse)(nil),            // 23: api.iam.v1.ListPlatformRolesResponse
+	(*emptypb.Empty)(nil),                        // 24: google.protobuf.Empty
 }
 var file_api_iam_v1_platform_iam_proto_depIdxs = []int32{
 	0,  // 0: api.iam.v1.PlatformIAM.CreateTenant:input_type -> api.iam.v1.CreateTenantRequest
@@ -73,25 +81,33 @@ var file_api_iam_v1_platform_iam_proto_depIdxs = []int32{
 	4,  // 4: api.iam.v1.PlatformIAM.ListPermissions:input_type -> api.iam.v1.ListPermissionsRequest
 	5,  // 5: api.iam.v1.PlatformIAM.CreatePlatformAdmin:input_type -> api.iam.v1.CreatePlatformAdminRequest
 	6,  // 6: api.iam.v1.PlatformIAM.ListPlatformAdmins:input_type -> api.iam.v1.ListPlatformAdminsRequest
-	7,  // 7: api.iam.v1.PlatformIAM.CreatePlatformRole:input_type -> api.iam.v1.CreatePlatformRoleRequest
-	8,  // 8: api.iam.v1.PlatformIAM.ListPlatformRoles:input_type -> api.iam.v1.ListPlatformRolesRequest
-	9,  // 9: api.iam.v1.PlatformIAM.AssignPlatformAdminRole:input_type -> api.iam.v1.AssignPlatformAdminRoleRequest
-	10, // 10: api.iam.v1.PlatformIAM.AssignPlatformRolePermissions:input_type -> api.iam.v1.AssignPlatformRolePermissionsRequest
-	11, // 11: api.iam.v1.PlatformIAM.ListPlatformRolePermissions:input_type -> api.iam.v1.ListPlatformRolePermissionsRequest
-	12, // 12: api.iam.v1.PlatformIAM.CreateTenant:output_type -> api.iam.v1.TenantResponse
-	12, // 13: api.iam.v1.PlatformIAM.GetTenant:output_type -> api.iam.v1.TenantResponse
-	13, // 14: api.iam.v1.PlatformIAM.ListTenants:output_type -> api.iam.v1.ListTenantsResponse
-	14, // 15: api.iam.v1.PlatformIAM.CreatePermission:output_type -> api.iam.v1.PermissionResponse
-	15, // 16: api.iam.v1.PlatformIAM.ListPermissions:output_type -> api.iam.v1.ListPermissionsResponse
-	16, // 17: api.iam.v1.PlatformIAM.CreatePlatformAdmin:output_type -> api.iam.v1.PlatformAdminResponse
-	17, // 18: api.iam.v1.PlatformIAM.ListPlatformAdmins:output_type -> api.iam.v1.ListPlatformAdminsResponse
-	18, // 19: api.iam.v1.PlatformIAM.CreatePlatformRole:output_type -> api.iam.v1.PlatformRoleResponse
-	19, // 20: api.iam.v1.PlatformIAM.ListPlatformRoles:output_type -> api.iam.v1.ListPlatformRolesResponse
-	20, // 21: api.iam.v1.PlatformIAM.AssignPlatformAdminRole:output_type -> google.protobuf.Empty
-	20, // 22: api.iam.v1.PlatformIAM.AssignPlatformRolePermissions:output_type -> google.protobuf.Empty
-	15, // 23: api.iam.v1.PlatformIAM.ListPlatformRolePermissions:output_type -> api.iam.v1.ListPermissionsResponse
-	12, // [12:24] is the sub-list for method output_type
-	0,  // [0:12] is the sub-list for method input_type
+	7,  // 7: api.iam.v1.PlatformIAM.GetPlatformAdmin:input_type -> api.iam.v1.GetPlatformAdminRequest
+	8,  // 8: api.iam.v1.PlatformIAM.CreatePlatformRole:input_type -> api.iam.v1.CreatePlatformRoleRequest
+	9,  // 9: api.iam.v1.PlatformIAM.ListPlatformRoles:input_type -> api.iam.v1.ListPlatformRolesRequest
+	10, // 10: api.iam.v1.PlatformIAM.GetPlatformRole:input_type -> api.iam.v1.GetPlatformRoleRequest
+	11, // 11: api.iam.v1.PlatformIAM.AssignPlatformAdminRole:input_type -> api.iam.v1.AssignPlatformAdminRoleRequest
+	12, // 12: api.iam.v1.PlatformIAM.ListPlatformAdminRoles:input_type -> api.iam.v1.ListPlatformAdminRolesRequest
+	13, // 13: api.iam.v1.PlatformIAM.RemovePlatformAdminRole:input_type -> api.iam.v1.RemovePlatformAdminRoleRequest
+	14, // 14: api.iam.v1.PlatformIAM.AssignPlatformRolePermissions:input_type -> api.iam.v1.AssignPlatformRolePermissionsRequest
+	15, // 15: api.iam.v1.PlatformIAM.ListPlatformRolePermissions:input_type -> api.iam.v1.ListPlatformRolePermissionsRequest
+	16, // 16: api.iam.v1.PlatformIAM.CreateTenant:output_type -> api.iam.v1.TenantResponse
+	16, // 17: api.iam.v1.PlatformIAM.GetTenant:output_type -> api.iam.v1.TenantResponse
+	17, // 18: api.iam.v1.PlatformIAM.ListTenants:output_type -> api.iam.v1.ListTenantsResponse
+	18, // 19: api.iam.v1.PlatformIAM.CreatePermission:output_type -> api.iam.v1.PermissionResponse
+	19, // 20: api.iam.v1.PlatformIAM.ListPermissions:output_type -> api.iam.v1.ListPermissionsResponse
+	20, // 21: api.iam.v1.PlatformIAM.CreatePlatformAdmin:output_type -> api.iam.v1.PlatformAdminResponse
+	21, // 22: api.iam.v1.PlatformIAM.ListPlatformAdmins:output_type -> api.iam.v1.ListPlatformAdminsResponse
+	20, // 23: api.iam.v1.PlatformIAM.GetPlatformAdmin:output_type -> api.iam.v1.PlatformAdminResponse
+	22, // 24: api.iam.v1.PlatformIAM.CreatePlatformRole:output_type -> api.iam.v1.PlatformRoleResponse
+	23, // 25: api.iam.v1.PlatformIAM.ListPlatformRoles:output_type -> api.iam.v1.ListPlatformRolesResponse
+	22, // 26: api.iam.v1.PlatformIAM.GetPlatformRole:output_type -> api.iam.v1.PlatformRoleResponse
+	24, // 27: api.iam.v1.PlatformIAM.AssignPlatformAdminRole:output_type -> google.protobuf.Empty
+	23, // 28: api.iam.v1.PlatformIAM.ListPlatformAdminRoles:output_type -> api.iam.v1.ListPlatformRolesResponse
+	24, // 29: api.iam.v1.PlatformIAM.RemovePlatformAdminRole:output_type -> google.protobuf.Empty
+	24, // 30: api.iam.v1.PlatformIAM.AssignPlatformRolePermissions:output_type -> google.protobuf.Empty
+	19, // 31: api.iam.v1.PlatformIAM.ListPlatformRolePermissions:output_type -> api.iam.v1.ListPermissionsResponse
+	16, // [16:32] is the sub-list for method output_type
+	0,  // [0:16] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

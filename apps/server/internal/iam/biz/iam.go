@@ -111,9 +111,13 @@ type IAMRepo interface {
 
 	CreatePlatformAdmin(ctx context.Context, admin PlatformAdmin) (PlatformAdmin, error)
 	ListPlatformAdmins(ctx context.Context) ([]PlatformAdmin, error)
+	GetPlatformAdmin(ctx context.Context, id string) (PlatformAdmin, error)
 	CreatePlatformRole(ctx context.Context, role PlatformRole) (PlatformRole, error)
 	ListPlatformRoles(ctx context.Context) ([]PlatformRole, error)
+	GetPlatformRole(ctx context.Context, id string) (PlatformRole, error)
 	AssignPlatformAdminRole(ctx context.Context, adminID string, roleID string) error
+	ListPlatformAdminRoles(ctx context.Context, adminID string) ([]PlatformRole, error)
+	RemovePlatformAdminRole(ctx context.Context, adminID string, roleID string) error
 	ListPlatformAdminPermissions(ctx context.Context, adminID string) ([]Permission, error)
 	AssignPlatformRolePermissions(ctx context.Context, roleID string, permissionCodes []string) error
 	ListPlatformRolePermissions(ctx context.Context, roleID string) ([]Permission, error)
@@ -171,6 +175,11 @@ func (uc *IAMUsecase) ListPlatformAdmins(ctx context.Context) ([]PlatformAdmin, 
 	return uc.repo.ListPlatformAdmins(ctx)
 }
 
+// GetPlatformAdmin returns platform admin by id.
+func (uc *IAMUsecase) GetPlatformAdmin(ctx context.Context, id string) (PlatformAdmin, error) {
+	return uc.repo.GetPlatformAdmin(ctx, id)
+}
+
 // CreatePlatformRole creates a platform role.
 func (uc *IAMUsecase) CreatePlatformRole(ctx context.Context, role PlatformRole) (PlatformRole, error) {
 	return uc.repo.CreatePlatformRole(ctx, role)
@@ -181,9 +190,24 @@ func (uc *IAMUsecase) ListPlatformRoles(ctx context.Context) ([]PlatformRole, er
 	return uc.repo.ListPlatformRoles(ctx)
 }
 
+// GetPlatformRole returns platform role by id.
+func (uc *IAMUsecase) GetPlatformRole(ctx context.Context, id string) (PlatformRole, error) {
+	return uc.repo.GetPlatformRole(ctx, id)
+}
+
 // AssignPlatformAdminRole assigns a role to a platform admin.
 func (uc *IAMUsecase) AssignPlatformAdminRole(ctx context.Context, adminID string, roleID string) error {
 	return uc.repo.AssignPlatformAdminRole(ctx, adminID, roleID)
+}
+
+// ListPlatformAdminRoles lists assigned roles for a platform admin.
+func (uc *IAMUsecase) ListPlatformAdminRoles(ctx context.Context, adminID string) ([]PlatformRole, error) {
+	return uc.repo.ListPlatformAdminRoles(ctx, adminID)
+}
+
+// RemovePlatformAdminRole removes an assigned role from platform admin.
+func (uc *IAMUsecase) RemovePlatformAdminRole(ctx context.Context, adminID string, roleID string) error {
+	return uc.repo.RemovePlatformAdminRole(ctx, adminID, roleID)
 }
 
 // AssignPlatformRolePermissions assigns permissions to a platform role.

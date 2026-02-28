@@ -27,9 +27,13 @@ const (
 	PlatformIAM_ListPermissions_FullMethodName               = "/api.iam.v1.PlatformIAM/ListPermissions"
 	PlatformIAM_CreatePlatformAdmin_FullMethodName           = "/api.iam.v1.PlatformIAM/CreatePlatformAdmin"
 	PlatformIAM_ListPlatformAdmins_FullMethodName            = "/api.iam.v1.PlatformIAM/ListPlatformAdmins"
+	PlatformIAM_GetPlatformAdmin_FullMethodName              = "/api.iam.v1.PlatformIAM/GetPlatformAdmin"
 	PlatformIAM_CreatePlatformRole_FullMethodName            = "/api.iam.v1.PlatformIAM/CreatePlatformRole"
 	PlatformIAM_ListPlatformRoles_FullMethodName             = "/api.iam.v1.PlatformIAM/ListPlatformRoles"
+	PlatformIAM_GetPlatformRole_FullMethodName               = "/api.iam.v1.PlatformIAM/GetPlatformRole"
 	PlatformIAM_AssignPlatformAdminRole_FullMethodName       = "/api.iam.v1.PlatformIAM/AssignPlatformAdminRole"
+	PlatformIAM_ListPlatformAdminRoles_FullMethodName        = "/api.iam.v1.PlatformIAM/ListPlatformAdminRoles"
+	PlatformIAM_RemovePlatformAdminRole_FullMethodName       = "/api.iam.v1.PlatformIAM/RemovePlatformAdminRole"
 	PlatformIAM_AssignPlatformRolePermissions_FullMethodName = "/api.iam.v1.PlatformIAM/AssignPlatformRolePermissions"
 	PlatformIAM_ListPlatformRolePermissions_FullMethodName   = "/api.iam.v1.PlatformIAM/ListPlatformRolePermissions"
 )
@@ -45,9 +49,13 @@ type PlatformIAMClient interface {
 	ListPermissions(ctx context.Context, in *ListPermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
 	CreatePlatformAdmin(ctx context.Context, in *CreatePlatformAdminRequest, opts ...grpc.CallOption) (*PlatformAdminResponse, error)
 	ListPlatformAdmins(ctx context.Context, in *ListPlatformAdminsRequest, opts ...grpc.CallOption) (*ListPlatformAdminsResponse, error)
+	GetPlatformAdmin(ctx context.Context, in *GetPlatformAdminRequest, opts ...grpc.CallOption) (*PlatformAdminResponse, error)
 	CreatePlatformRole(ctx context.Context, in *CreatePlatformRoleRequest, opts ...grpc.CallOption) (*PlatformRoleResponse, error)
 	ListPlatformRoles(ctx context.Context, in *ListPlatformRolesRequest, opts ...grpc.CallOption) (*ListPlatformRolesResponse, error)
+	GetPlatformRole(ctx context.Context, in *GetPlatformRoleRequest, opts ...grpc.CallOption) (*PlatformRoleResponse, error)
 	AssignPlatformAdminRole(ctx context.Context, in *AssignPlatformAdminRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListPlatformAdminRoles(ctx context.Context, in *ListPlatformAdminRolesRequest, opts ...grpc.CallOption) (*ListPlatformRolesResponse, error)
+	RemovePlatformAdminRole(ctx context.Context, in *RemovePlatformAdminRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AssignPlatformRolePermissions(ctx context.Context, in *AssignPlatformRolePermissionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListPlatformRolePermissions(ctx context.Context, in *ListPlatformRolePermissionsRequest, opts ...grpc.CallOption) (*ListPermissionsResponse, error)
 }
@@ -130,6 +138,16 @@ func (c *platformIAMClient) ListPlatformAdmins(ctx context.Context, in *ListPlat
 	return out, nil
 }
 
+func (c *platformIAMClient) GetPlatformAdmin(ctx context.Context, in *GetPlatformAdminRequest, opts ...grpc.CallOption) (*PlatformAdminResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlatformAdminResponse)
+	err := c.cc.Invoke(ctx, PlatformIAM_GetPlatformAdmin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *platformIAMClient) CreatePlatformRole(ctx context.Context, in *CreatePlatformRoleRequest, opts ...grpc.CallOption) (*PlatformRoleResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(PlatformRoleResponse)
@@ -150,10 +168,40 @@ func (c *platformIAMClient) ListPlatformRoles(ctx context.Context, in *ListPlatf
 	return out, nil
 }
 
+func (c *platformIAMClient) GetPlatformRole(ctx context.Context, in *GetPlatformRoleRequest, opts ...grpc.CallOption) (*PlatformRoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlatformRoleResponse)
+	err := c.cc.Invoke(ctx, PlatformIAM_GetPlatformRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *platformIAMClient) AssignPlatformAdminRole(ctx context.Context, in *AssignPlatformAdminRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, PlatformIAM_AssignPlatformAdminRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformIAMClient) ListPlatformAdminRoles(ctx context.Context, in *ListPlatformAdminRolesRequest, opts ...grpc.CallOption) (*ListPlatformRolesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPlatformRolesResponse)
+	err := c.cc.Invoke(ctx, PlatformIAM_ListPlatformAdminRoles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformIAMClient) RemovePlatformAdminRole(ctx context.Context, in *RemovePlatformAdminRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PlatformIAM_RemovePlatformAdminRole_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -191,9 +239,13 @@ type PlatformIAMServer interface {
 	ListPermissions(context.Context, *ListPermissionsRequest) (*ListPermissionsResponse, error)
 	CreatePlatformAdmin(context.Context, *CreatePlatformAdminRequest) (*PlatformAdminResponse, error)
 	ListPlatformAdmins(context.Context, *ListPlatformAdminsRequest) (*ListPlatformAdminsResponse, error)
+	GetPlatformAdmin(context.Context, *GetPlatformAdminRequest) (*PlatformAdminResponse, error)
 	CreatePlatformRole(context.Context, *CreatePlatformRoleRequest) (*PlatformRoleResponse, error)
 	ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error)
+	GetPlatformRole(context.Context, *GetPlatformRoleRequest) (*PlatformRoleResponse, error)
 	AssignPlatformAdminRole(context.Context, *AssignPlatformAdminRoleRequest) (*emptypb.Empty, error)
+	ListPlatformAdminRoles(context.Context, *ListPlatformAdminRolesRequest) (*ListPlatformRolesResponse, error)
+	RemovePlatformAdminRole(context.Context, *RemovePlatformAdminRoleRequest) (*emptypb.Empty, error)
 	AssignPlatformRolePermissions(context.Context, *AssignPlatformRolePermissionsRequest) (*emptypb.Empty, error)
 	ListPlatformRolePermissions(context.Context, *ListPlatformRolePermissionsRequest) (*ListPermissionsResponse, error)
 	mustEmbedUnimplementedPlatformIAMServer()
@@ -227,14 +279,26 @@ func (UnimplementedPlatformIAMServer) CreatePlatformAdmin(context.Context, *Crea
 func (UnimplementedPlatformIAMServer) ListPlatformAdmins(context.Context, *ListPlatformAdminsRequest) (*ListPlatformAdminsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPlatformAdmins not implemented")
 }
+func (UnimplementedPlatformIAMServer) GetPlatformAdmin(context.Context, *GetPlatformAdminRequest) (*PlatformAdminResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPlatformAdmin not implemented")
+}
 func (UnimplementedPlatformIAMServer) CreatePlatformRole(context.Context, *CreatePlatformRoleRequest) (*PlatformRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreatePlatformRole not implemented")
 }
 func (UnimplementedPlatformIAMServer) ListPlatformRoles(context.Context, *ListPlatformRolesRequest) (*ListPlatformRolesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPlatformRoles not implemented")
 }
+func (UnimplementedPlatformIAMServer) GetPlatformRole(context.Context, *GetPlatformRoleRequest) (*PlatformRoleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetPlatformRole not implemented")
+}
 func (UnimplementedPlatformIAMServer) AssignPlatformAdminRole(context.Context, *AssignPlatformAdminRoleRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method AssignPlatformAdminRole not implemented")
+}
+func (UnimplementedPlatformIAMServer) ListPlatformAdminRoles(context.Context, *ListPlatformAdminRolesRequest) (*ListPlatformRolesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlatformAdminRoles not implemented")
+}
+func (UnimplementedPlatformIAMServer) RemovePlatformAdminRole(context.Context, *RemovePlatformAdminRoleRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method RemovePlatformAdminRole not implemented")
 }
 func (UnimplementedPlatformIAMServer) AssignPlatformRolePermissions(context.Context, *AssignPlatformRolePermissionsRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method AssignPlatformRolePermissions not implemented")
@@ -389,6 +453,24 @@ func _PlatformIAM_ListPlatformAdmins_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PlatformIAM_GetPlatformAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPlatformAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).GetPlatformAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_GetPlatformAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).GetPlatformAdmin(ctx, req.(*GetPlatformAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PlatformIAM_CreatePlatformRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreatePlatformRoleRequest)
 	if err := dec(in); err != nil {
@@ -425,6 +507,24 @@ func _PlatformIAM_ListPlatformRoles_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PlatformIAM_GetPlatformRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPlatformRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).GetPlatformRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_GetPlatformRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).GetPlatformRole(ctx, req.(*GetPlatformRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PlatformIAM_AssignPlatformAdminRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AssignPlatformAdminRoleRequest)
 	if err := dec(in); err != nil {
@@ -439,6 +539,42 @@ func _PlatformIAM_AssignPlatformAdminRole_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PlatformIAMServer).AssignPlatformAdminRole(ctx, req.(*AssignPlatformAdminRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_ListPlatformAdminRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlatformAdminRolesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).ListPlatformAdminRoles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_ListPlatformAdminRoles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).ListPlatformAdminRoles(ctx, req.(*ListPlatformAdminRolesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformIAM_RemovePlatformAdminRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemovePlatformAdminRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformIAMServer).RemovePlatformAdminRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformIAM_RemovePlatformAdminRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformIAMServer).RemovePlatformAdminRole(ctx, req.(*RemovePlatformAdminRoleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -515,6 +651,10 @@ var PlatformIAM_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PlatformIAM_ListPlatformAdmins_Handler,
 		},
 		{
+			MethodName: "GetPlatformAdmin",
+			Handler:    _PlatformIAM_GetPlatformAdmin_Handler,
+		},
+		{
 			MethodName: "CreatePlatformRole",
 			Handler:    _PlatformIAM_CreatePlatformRole_Handler,
 		},
@@ -523,8 +663,20 @@ var PlatformIAM_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PlatformIAM_ListPlatformRoles_Handler,
 		},
 		{
+			MethodName: "GetPlatformRole",
+			Handler:    _PlatformIAM_GetPlatformRole_Handler,
+		},
+		{
 			MethodName: "AssignPlatformAdminRole",
 			Handler:    _PlatformIAM_AssignPlatformAdminRole_Handler,
+		},
+		{
+			MethodName: "ListPlatformAdminRoles",
+			Handler:    _PlatformIAM_ListPlatformAdminRoles_Handler,
+		},
+		{
+			MethodName: "RemovePlatformAdminRole",
+			Handler:    _PlatformIAM_RemovePlatformAdminRole_Handler,
 		},
 		{
 			MethodName: "AssignPlatformRolePermissions",

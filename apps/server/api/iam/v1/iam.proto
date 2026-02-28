@@ -137,6 +137,10 @@ message ListPlatformAdminsResponse {
   repeated PlatformAdmin items = 1;
 }
 
+message GetPlatformAdminRequest {
+  string id = 1;
+}
+
 message CreatePlatformRoleRequest {
   string name = 1;
 }
@@ -147,7 +151,20 @@ message ListPlatformRolesResponse {
   repeated PlatformRole items = 1;
 }
 
+message GetPlatformRoleRequest {
+  string id = 1;
+}
+
 message AssignPlatformAdminRoleRequest {
+  string admin_id = 1;
+  string role_id = 2;
+}
+
+message ListPlatformAdminRolesRequest {
+  string admin_id = 1;
+}
+
+message RemovePlatformAdminRoleRequest {
   string admin_id = 1;
   string role_id = 2;
 }

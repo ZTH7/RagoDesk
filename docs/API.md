@@ -183,7 +183,10 @@
 ### 3.3 平台管理员
 - `POST /platform/v1/admins`
 - `GET /platform/v1/admins`
+- `GET /platform/v1/admins/{id}`
 - `POST /platform/v1/admins/{id}/roles`
+- `GET /platform/v1/admins/{id}/roles`
+- `DELETE /platform/v1/admins/{id}/roles/{role_id}`
 
 **Create**
 `POST /platform/v1/admins`
@@ -210,6 +213,7 @@
 ### 3.4 平台角色
 - `POST /platform/v1/roles`
 - `GET /platform/v1/roles`
+- `GET /platform/v1/roles/{id}`
 - `POST /platform/v1/roles/{id}/permissions`
 - `GET /platform/v1/roles/{id}/permissions`
 

@@ -49,6 +49,11 @@ service PlatformIAM {
       get: "/platform/v1/admins"
     };
   }
+  rpc GetPlatformAdmin(GetPlatformAdminRequest) returns (PlatformAdminResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/admins/{id}"
+    };
+  }
 
   rpc CreatePlatformRole(CreatePlatformRoleRequest) returns (PlatformRoleResponse) {
     option (google.api.http) = {
@@ -61,11 +66,26 @@ service PlatformIAM {
       get: "/platform/v1/roles"
     };
   }
+  rpc GetPlatformRole(GetPlatformRoleRequest) returns (PlatformRoleResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/roles/{id}"
+    };
+  }
 
   rpc AssignPlatformAdminRole(AssignPlatformAdminRoleRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/platform/v1/admins/{admin_id}/roles"
       body: "*"
+    };
+  }
+  rpc ListPlatformAdminRoles(ListPlatformAdminRolesRequest) returns (ListPlatformRolesResponse) {
+    option (google.api.http) = {
+      get: "/platform/v1/admins/{admin_id}/roles"
+    };
+  }
+  rpc RemovePlatformAdminRole(RemovePlatformAdminRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/platform/v1/admins/{admin_id}/roles/{role_id}"
     };
   }
   rpc AssignPlatformRolePermissions(AssignPlatformRolePermissionsRequest) returns (google.protobuf.Empty) {
