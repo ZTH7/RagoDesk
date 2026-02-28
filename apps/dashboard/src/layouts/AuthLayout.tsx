@@ -1,5 +1,6 @@
 import { Card, Layout, Typography } from 'antd'
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { ThemeModeToggle } from '../components/ThemeModeToggle'
 
 const { Content } = Layout
@@ -18,7 +19,11 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
           <div className="auth-theme-toggle">
             <ThemeModeToggle />
           </div>
-          <div className="auth-brand">RagoDesk</div>
+          <div className="auth-brand">
+            <Link to="/" className="app-logo-link">
+              RagoDesk
+            </Link>
+          </div>
           <Typography.Title level={3} style={{ marginBottom: 4 }}>
             {title}
           </Typography.Title>

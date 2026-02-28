@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, Modal, Select, Tag } from 'antd'
+import { Button, Card, Descriptions, Form, Input, Modal, Select, Space, Switch, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -17,6 +17,7 @@ const statusColors: Record<string, string> = {
 
 export function Tenants() {
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [form] = Form.useForm()
   const { data, loading, source, error, reload } = useRequest(() => platformApi.listTenants(), { items: [] })
@@ -55,12 +56,18 @@ export function Tenants() {
             </Button>
           }
           right={
-            <Button
-              onClick={() => setStatusFilter(statusFilter === 'active' ? '' : 'active')}
-              type={statusFilter === 'active' ? 'primary' : 'default'}
-            >
-              仅显示 Active
-            </Button>
+            <Space>
+              <Button
+                onClick={() => setStatusFilter(statusFilter === 'active' ? '' : 'active')}
+                type={statusFilter === 'active' ? 'primary' : 'default'}
+              >
+                仅显示 Active
+              </Button>
+              <Space size={6}>
+                <Typography.Text className="muted">高级列</Typography.Text>
+                <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+              </Space>
+            </Space>
           }
         />
       </Card>
@@ -70,13 +77,22 @@ export function Tenants() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Tenant ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
             {
-              title: 'ID',
-              dataIndex: 'id',
-              render: (value: string) => <Link to={`/platform/tenants/${value}`}>{value}</Link>,
+              title: '名称',
+              dataIndex: 'name',
+              render: (_: string, record) => <Link to={`/platform/tenants/${record.id}`}>{record.name}</Link>,
             },
-            { title: '名称', dataIndex: 'name' },
             { title: '类型', dataIndex: 'type' },
             { title: '套餐', dataIndex: 'plan' },
             {

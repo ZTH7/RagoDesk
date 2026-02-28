@@ -80,7 +80,7 @@ export function ApiUsageSummary() {
             style={{ width: 200 }}
             onChange={setBotId}
             options={[{ label: '全部 Bot', value: 'all' }].concat(
-              botsData.items.map((bot) => ({ label: `${bot.name} (${bot.id})`, value: bot.id })),
+              botsData.items.map((bot) => ({ label: bot.name, value: bot.id })),
             )}
             showSearch
             optionFilterProp="label"
@@ -90,7 +90,7 @@ export function ApiUsageSummary() {
             style={{ width: 220 }}
             onChange={setApiKeyId}
             options={[{ label: '全部 API Key', value: 'all' }].concat(
-              apiKeysData.items.map((key) => ({ label: `${key.name} (${key.id})`, value: key.id })),
+              apiKeysData.items.map((key) => ({ label: key.name, value: key.id })),
             )}
             showSearch
             optionFilterProp="label"

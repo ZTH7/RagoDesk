@@ -13,9 +13,10 @@ import {
   Tag,
   Skeleton,
 } from 'antd'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
@@ -52,6 +53,11 @@ export function BotDetail() {
     { enabled: Boolean(botId), deps: [botId] },
   )
   const { data: allKBs } = useRequest(() => consoleApi.listKnowledgeBases(), { items: [] })
+  const kbNameMap = useMemo(() => {
+    const map = new Map<string, string>()
+    allKBs.items.forEach((kb) => map.set(kb.id, kb.name))
+    return map
+  }, [allKBs.items])
 
   const handleBind = async () => {
     try {
@@ -118,7 +124,6 @@ export function BotDetail() {
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="Bot ID">{bot?.id || botId}</Descriptions.Item>
             <Descriptions.Item label="状态">
               <Tag color={bot?.status === 'active' ? 'green' : 'red'}>{bot?.status || 'unknown'}</Tag>
             </Descriptions.Item>
@@ -128,14 +133,24 @@ export function BotDetail() {
           </Descriptions>
         )}
       </Card>
+      <Card>
+        <TechnicalMeta
+          items={[
+            { key: 'bot-id', label: 'Bot ID', value: bot?.id || botId },
+          ]}
+        />
+      </Card>
       <Card title="关联知识库">
         <Table
           rowKey="id"
           dataSource={kbData.items}
           pagination={false}
           columns={[
-            { title: 'ID', dataIndex: 'id' },
-            { title: 'KB ID', dataIndex: 'kb_id' },
+            {
+              title: '知识库',
+              dataIndex: 'kb_id',
+              render: (value: string) => kbNameMap.get(value) || value,
+            },
             { title: 'Weight', dataIndex: 'weight' },
             {
               title: '操作',

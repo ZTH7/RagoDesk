@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Space, Tag } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Select, Space, Switch, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { FilterBar } from '../../components/FilterBar'
@@ -7,16 +7,17 @@ import { DataSourceTag } from '../../components/DataSourceTag'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
-import { getTenantId } from '../../auth/storage'
+import { getCurrentTenantId } from '../../auth/storage'
 
 import { uiMessage } from '../../services/uiMessage'
 export function Users() {
-  const tenantId = getTenantId() ?? ''
+  const tenantId = getCurrentTenantId() ?? ''
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
   const [inviteOpen, setInviteOpen] = useState(false)
   const [assignOpen, setAssignOpen] = useState(false)
   const [assigningUserId, setAssigningUserId] = useState('')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [inviteForm] = Form.useForm()
   const [assignForm] = Form.useForm()
 
@@ -85,6 +86,10 @@ export function Users() {
             <Button type="primary" onClick={() => setInviteOpen(true)}>
               邀请成员
             </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
           </>
         }
       />
@@ -94,8 +99,17 @@ export function Users() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="User ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
-            { title: 'ID', dataIndex: 'id' },
             { title: '姓名', dataIndex: 'name' },
             { title: '邮箱', dataIndex: 'email' },
             {

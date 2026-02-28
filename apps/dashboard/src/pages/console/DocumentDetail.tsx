@@ -14,6 +14,7 @@ import {
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
@@ -115,7 +116,6 @@ export function DocumentDetail() {
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="Document ID">{data.document.id || docId}</Descriptions.Item>
             <Descriptions.Item label="标题">{data.document.title || '-'}</Descriptions.Item>
             <Descriptions.Item label="状态">
               <Tag color={data.document.status === 'ready' ? 'green' : 'gold'}>
@@ -127,6 +127,13 @@ export function DocumentDetail() {
             <Descriptions.Item label="最近更新">{data.document.updated_at || '-'}</Descriptions.Item>
           </Descriptions>
         )}
+      </Card>
+      <Card>
+        <TechnicalMeta
+          items={[
+            { key: 'doc-id', label: 'Document ID', value: data.document.id || docId },
+          ]}
+        />
       </Card>
       <Card title="版本历史">
         <Table

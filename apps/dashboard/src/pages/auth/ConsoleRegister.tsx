@@ -22,6 +22,8 @@ export function ConsoleRegister() {
       setToken(res.token)
       setScope('console')
       setProfile({
+        subject_id: res.profile?.subject_id,
+        tenant_id: res.profile?.tenant_id,
         name: res.profile?.name,
         account: res.profile?.account,
         roles: res.profile?.roles,

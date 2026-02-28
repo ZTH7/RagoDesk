@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Space } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Select, Space, Switch, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { FilterBar } from '../../components/FilterBar'
@@ -16,6 +16,7 @@ export function Roles() {
   const [activeRoleId, setActiveRoleId] = useState('')
   const [permissionCodes, setPermissionCodes] = useState<string[]>([])
   const [permLoading, setPermLoading] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [form] = Form.useForm()
 
   const { data, loading, source, error, reload } = useRequest(() => consoleApi.listRoles(), { items: [] })
@@ -70,9 +71,15 @@ export function Roles() {
       <FilterBar
         left={<Input.Search placeholder="搜索角色" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
-          <Button type="primary" onClick={() => setCreateOpen(true)}>
-            新建角色
-          </Button>
+          <>
+            <Button type="primary" onClick={() => setCreateOpen(true)}>
+              新建角色
+            </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
+          </>
         }
       />
       <TableCard
@@ -81,8 +88,17 @@ export function Roles() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Role ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
-            { title: 'ID', dataIndex: 'id' },
             { title: '名称', dataIndex: 'name' },
             { title: '创建时间', dataIndex: 'created_at' },
             {

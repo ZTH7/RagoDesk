@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Tag } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Popconfirm, Select, Space, Switch, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -18,6 +18,7 @@ const statusColors: Record<string, string> = {
 export function Bots() {
   const [keyword, setKeyword] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form] = Form.useForm()
@@ -96,6 +97,10 @@ export function Bots() {
             <Button type="primary" onClick={openCreate}>
               新建机器人
             </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
           </Space>
         }
       />
@@ -105,13 +110,22 @@ export function Bots() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Bot ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
             {
-              title: 'ID',
-              dataIndex: 'id',
-              render: (value: string) => <Link to={`/console/bots/${value}`}>{value}</Link>,
+              title: '名称',
+              dataIndex: 'name',
+              render: (_: string, record) => <Link to={`/console/bots/${record.id}`}>{record.name}</Link>,
             },
-            { title: '名称', dataIndex: 'name' },
             { title: '描述', dataIndex: 'description', render: (v: string) => v || '-' },
             {
               title: '状态',

@@ -2,6 +2,7 @@ import { Card, Descriptions, Table, Tag, Space, Button, Modal, Select, Skeleton 
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
@@ -60,10 +61,12 @@ export function PlatformRoleDetail() {
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="Role ID">{role?.id || roleId}</Descriptions.Item>
             <Descriptions.Item label="名称">{role?.name || '-'}</Descriptions.Item>
           </Descriptions>
         )}
+      </Card>
+      <Card>
+        <TechnicalMeta items={[{ key: 'role-id', label: 'Role ID', value: role?.id || roleId }]} />
       </Card>
       <Card title="权限列表">
         <Table

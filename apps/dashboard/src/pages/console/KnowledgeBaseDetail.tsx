@@ -14,8 +14,9 @@ import {
 } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
@@ -169,11 +170,17 @@ export function KnowledgeBaseDetail() {
           <Tag>Loading...</Tag>
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="KB ID">{kbData.knowledge_base.id || kbId}</Descriptions.Item>
             <Descriptions.Item label="名称">{kbData.knowledge_base.name || '-'}</Descriptions.Item>
             <Descriptions.Item label="描述">{kbData.knowledge_base.description || '-'}</Descriptions.Item>
           </Descriptions>
         )}
+      </Card>
+      <Card>
+        <TechnicalMeta
+          items={[
+            { key: 'kb-id', label: 'Knowledge Base ID', value: kbData.knowledge_base.id || kbId },
+          ]}
+        />
       </Card>
       <Card
         title="关联文档"
@@ -189,8 +196,11 @@ export function KnowledgeBaseDetail() {
           loading={docLoading}
           pagination={false}
           columns={[
-            { title: 'ID', dataIndex: 'id' },
-            { title: '标题', dataIndex: 'title' },
+            {
+              title: '标题',
+              dataIndex: 'title',
+              render: (_: string, record) => <Link to={`/console/documents/${record.id}`}>{record.title}</Link>,
+            },
             {
               title: '状态',
               dataIndex: 'status',
@@ -263,7 +273,7 @@ export function KnowledgeBaseDetail() {
                 value: doc.id,
                 label: `${doc.title}${
                   doc.kb_id
-                    ? ` · 当前：${kbNameMap.get(doc.kb_id) ?? doc.kb_id}`
+                    ? ` · 当前：${kbNameMap.get(doc.kb_id) ?? '其他知识库'}`
                     : ' · 未绑定'
                 }`,
               }))}

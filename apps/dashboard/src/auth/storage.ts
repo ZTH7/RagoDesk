@@ -4,6 +4,8 @@ const PROFILE_KEY = 'ragodesk_profile'
 const SCOPE_KEY = 'ragodesk_scope'
 
 export type StoredProfile = {
+  subject_id?: string
+  tenant_id?: string
   name?: string
   account?: string
   roles?: string[]
@@ -36,6 +38,9 @@ export function clearTenantId() {
 
 export function setProfile(profile: StoredProfile) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
+  if (profile.tenant_id) {
+    setTenantId(profile.tenant_id)
+  }
 }
 
 export function getProfile(): StoredProfile | null {
@@ -66,4 +71,10 @@ export function getScope() {
 
 export function clearScope() {
   localStorage.removeItem(SCOPE_KEY)
+}
+
+export function getCurrentTenantId() {
+  const profile = getProfile()
+  if (profile?.tenant_id) return profile.tenant_id
+  return getTenantId()
 }

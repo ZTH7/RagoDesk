@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Radio, Select, Space, Tag, Typography } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Radio, Select, Space, Switch, Tag, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -24,6 +24,7 @@ export function PlatformAdmins() {
   const [createMode, setCreateMode] = useState<'password' | 'invite'>('password')
   const [inviteLink, setInviteLink] = useState('')
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [createForm] = Form.useForm()
   const [assignForm] = Form.useForm()
 
@@ -104,6 +105,10 @@ export function PlatformAdmins() {
             <Button type="primary" onClick={() => setCreateOpen(true)}>
               新建管理员
             </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
           </>
         }
       />
@@ -113,13 +118,22 @@ export function PlatformAdmins() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Admin ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
             {
-              title: 'ID',
-              dataIndex: 'id',
-              render: (value: string) => <Link to={`/platform/admins/${value}`}>{value}</Link>,
+              title: '姓名',
+              dataIndex: 'name',
+              render: (_: string, record) => <Link to={`/platform/admins/${record.id}`}>{record.name}</Link>,
             },
-            { title: '姓名', dataIndex: 'name' },
             { title: '邮箱', dataIndex: 'email' },
             {
               title: '状态',

@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Popconfirm, Select, Space, Upload } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Popconfirm, Select, Space, Switch, Typography, Upload } from 'antd'
 import type { UploadFile } from 'antd/es/upload/interface'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -15,6 +15,7 @@ export function KnowledgeBases() {
   const [keyword, setKeyword] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
   const [form] = Form.useForm()
   const { data, loading, source, error, reload } = useRequest(() => consoleApi.listKnowledgeBases(), { items: [] })
@@ -94,6 +95,10 @@ export function KnowledgeBases() {
             <Button type="primary" onClick={openCreate}>
               新建知识库
             </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
           </>
         }
       />
@@ -103,13 +108,22 @@ export function KnowledgeBases() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Knowledge Base ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
             {
-              title: 'ID',
-              dataIndex: 'id',
-              render: (value: string) => <Link to={`/console/knowledge-bases/${value}`}>{value}</Link>,
+              title: '名称',
+              dataIndex: 'name',
+              render: (_: string, record) => <Link to={`/console/knowledge-bases/${record.id}`}>{record.name}</Link>,
             },
-            { title: '名称', dataIndex: 'name' },
             { title: '描述', dataIndex: 'description' },
             { title: '文档数量', dataIndex: 'document_count', render: (v) => v ?? '-' },
             { title: '创建时间', dataIndex: 'created_at' },

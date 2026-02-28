@@ -1,6 +1,6 @@
 import { Layout, Menu, Avatar, Dropdown, Space, Typography, Tag } from 'antd'
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { platformNavItems, platformMenuKeys } from '../routes/platform'
 import { buildMenuItems, resolveSelectedKey } from '../routes/utils'
 import { usePermissions } from '../auth/PermissionContext'
@@ -26,7 +26,11 @@ export function PlatformLayout() {
   return (
     <Layout className="app-shell">
       <Sider width={240} theme={siderTheme}>
-        <div className="app-logo">RagoDesk</div>
+        <div className="app-logo">
+          <Link to="/" className="app-logo-link">
+            RagoDesk
+          </Link>
+        </div>
         <Menu
           theme={siderTheme}
           mode="inline"

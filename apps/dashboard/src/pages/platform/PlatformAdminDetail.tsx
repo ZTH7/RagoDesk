@@ -2,6 +2,7 @@ import { Alert, Button, Card, Descriptions, Modal, Select, Space, Tag, Skeleton 
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { platformApi } from '../../services/platform'
@@ -51,13 +52,15 @@ export function PlatformAdminDetail() {
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="Admin ID">{admin?.id || adminId}</Descriptions.Item>
             <Descriptions.Item label="姓名">{admin?.name || '-'}</Descriptions.Item>
             <Descriptions.Item label="状态">
               <Tag color={admin?.status === 'active' ? 'green' : 'red'}>{admin?.status || 'unknown'}</Tag>
             </Descriptions.Item>
           </Descriptions>
         )}
+      </Card>
+      <Card>
+        <TechnicalMeta items={[{ key: 'admin-id', label: 'Admin ID', value: admin?.id || adminId }]} />
       </Card>
       <Card title="角色列表">
         <Alert type="info" title="当前接口未提供管理员已分配角色列表" showIcon />

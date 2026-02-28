@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal, Select, Space } from 'antd'
+import { Button, Descriptions, Form, Input, Modal, Select, Space, Switch, Typography } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -17,6 +17,7 @@ export function PlatformRoles() {
   const [activeRoleId, setActiveRoleId] = useState('')
   const [permissionCodes, setPermissionCodes] = useState<string[]>([])
   const [permLoading, setPermLoading] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [form] = Form.useForm()
 
   const { data, loading, source, error, reload } = useRequest(() => platformApi.listRoles(), { items: [] })
@@ -71,9 +72,15 @@ export function PlatformRoles() {
       <FilterBar
         left={<Input.Search placeholder="搜索角色" onSearch={setKeyword} allowClear style={{ width: 220 }} />}
         right={
-          <Button type="primary" onClick={() => setCreateOpen(true)}>
-            新建角色
-          </Button>
+          <>
+            <Button type="primary" onClick={() => setCreateOpen(true)}>
+              新建角色
+            </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
+          </>
         }
       />
       <TableCard
@@ -82,13 +89,22 @@ export function PlatformRoles() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Role ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
             {
-              title: 'ID',
-              dataIndex: 'id',
-              render: (value: string) => <Link to={`/platform/roles/${value}`}>{value}</Link>,
+              title: '名称',
+              dataIndex: 'name',
+              render: (_: string, record) => <Link to={`/platform/roles/${record.id}`}>{record.name}</Link>,
             },
-            { title: '名称', dataIndex: 'name' },
             { title: '创建时间', dataIndex: 'created_at' },
             {
               title: '操作',

@@ -1,5 +1,6 @@
 import {
   Button,
+  Descriptions,
   Form,
   Input,
   InputNumber,
@@ -7,7 +8,9 @@ import {
   Popconfirm,
   Select,
   Space,
+  Switch,
   Tag,
+  Typography,
 } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -33,6 +36,7 @@ export function ApiKeys() {
   const [rawKeyOpen, setRawKeyOpen] = useState(false)
   const [rawKey, setRawKey] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [createForm] = Form.useForm()
   const [editForm] = Form.useForm()
 
@@ -50,7 +54,7 @@ export function ApiKeys() {
   const botOptions = useMemo(
     () =>
       botData.items.map((bot) => ({
-        label: `${bot.name} (${bot.id})`,
+        label: bot.name,
         value: bot.id,
       })),
     [botData.items],
@@ -149,6 +153,10 @@ export function ApiKeys() {
             <Button type="primary" onClick={() => setCreateOpen(true)}>
               创建 Key
             </Button>
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
           </>
         }
       />
@@ -158,6 +166,18 @@ export function ApiKeys() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 8 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="API Key ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="Bot ID">{record.bot_id}</Descriptions.Item>
+                    <Descriptions.Item label="创建时间">{record.created_at || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="最近使用">{record.last_used_at || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+              }
+            : undefined,
           columns: [
             {
               title: '名称',

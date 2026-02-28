@@ -1,4 +1,4 @@
-import { Button, Form, Input, Space, Typography } from 'antd'
+import { Button, Collapse, Form, Input, Space, Typography } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { clearTenantId, setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
@@ -19,7 +19,10 @@ export function ConsoleLogin() {
       if (values.token) {
         setToken(values.token)
         setScope('console')
-        setProfile({ scope: 'console' })
+        setProfile({
+          scope: 'console',
+          tenant_id: values.tenant_id || undefined,
+        })
         if (values.tenant_id) {
           setTenantId(values.tenant_id)
         } else {
@@ -37,6 +40,8 @@ export function ConsoleLogin() {
       setToken(res.token)
       setScope('console')
       setProfile({
+        subject_id: res.profile?.subject_id,
+        tenant_id: res.profile?.tenant_id,
         name: res.profile?.name,
         account: res.profile?.account,
         roles: res.profile?.roles,
@@ -63,12 +68,25 @@ export function ConsoleLogin() {
         <Form.Item label="密码" name="password" rules={[{ required: true }]}>
           <Input.Password placeholder="请输入密码" />
         </Form.Item>
-        <Form.Item label="Tenant ID（可选）" name="tenant_id">
-          <Input placeholder="当账号跨租户时需指定" />
-        </Form.Item>
-        <Form.Item label="Access Token（可选）" name="token">
-          <Input placeholder="粘贴 JWT 用于调试联调" />
-        </Form.Item>
+        <Collapse
+          size="small"
+          items={[
+            {
+              key: 'advanced',
+              label: '高级登录选项（一般无需填写）',
+              children: (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Form.Item label="Tenant ID（可选）" name="tenant_id" style={{ marginBottom: 0 }}>
+                    <Input placeholder="仅账号跨租户时填写" />
+                  </Form.Item>
+                  <Form.Item label="Access Token（可选）" name="token" style={{ marginBottom: 0 }}>
+                    <Input placeholder="仅联调时粘贴 JWT" />
+                  </Form.Item>
+                </Space>
+              ),
+            },
+          ]}
+        />
         <Space direction="vertical" style={{ width: '100%' }}>
           <Button type="primary" htmlType="submit" block>
             登录

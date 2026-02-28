@@ -1,11 +1,19 @@
 import { Layout, Menu, Avatar, Dropdown, Space, Typography, Tag } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { consoleNavItems, consoleMenuKeys } from '../routes/console'
 import { buildMenuItems, resolveSelectedKey } from '../routes/utils'
 import { usePermissions } from '../auth/PermissionContext'
-import { clearProfile, clearScope, clearTenantId, clearToken, getProfile, getTenantId, getToken } from '../auth/storage'
+import {
+  clearProfile,
+  clearScope,
+  clearTenantId,
+  clearToken,
+  getCurrentTenantId,
+  getProfile,
+  getToken,
+} from '../auth/storage'
 import { ThemeModeToggle, ThemeStatusDot } from '../components/ThemeModeToggle'
 import { useThemeMode } from '../theme/mode'
 
@@ -17,7 +25,7 @@ export function ConsoleLayout() {
   const { permissions } = usePermissions()
   const selectedKey = resolveSelectedKey(location.pathname, consoleMenuKeys)
   const [openKeys, setOpenKeys] = useState<string[]>([])
-  const tenantId = getTenantId()
+  const tenantId = getCurrentTenantId()
   const token = getToken()
   const profile = getProfile()
   const displayName = profile?.name || profile?.account || (token ? '已登录' : '未登录')
@@ -37,7 +45,11 @@ export function ConsoleLayout() {
   return (
     <Layout className="app-shell">
       <Sider width={240} theme={siderTheme}>
-        <div className="app-logo">RagoDesk</div>
+        <div className="app-logo">
+          <Link to="/" className="app-logo-link">
+            RagoDesk
+          </Link>
+        </div>
         <Menu
           theme={siderTheme}
           mode="inline"

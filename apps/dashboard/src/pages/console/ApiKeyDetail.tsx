@@ -2,6 +2,7 @@ import { Button, Card, Descriptions, Input, Modal, Space, Tag, Popconfirm, Skele
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
@@ -62,7 +63,6 @@ export function ApiKeyDetail() {
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : (
           <Descriptions column={1} bordered size="middle">
-            <Descriptions.Item label="Key ID">{key?.id || keyId}</Descriptions.Item>
             <Descriptions.Item label="状态">
               <Tag color={key?.status === 'active' ? 'green' : 'red'}>{key?.status || 'unknown'}</Tag>
             </Descriptions.Item>
@@ -72,6 +72,14 @@ export function ApiKeyDetail() {
             <Descriptions.Item label="QPS Limit">{key?.qps_limit ?? '-'}</Descriptions.Item>
           </Descriptions>
         )}
+      </Card>
+      <Card>
+        <TechnicalMeta
+          items={[
+            { key: 'api-key-id', label: 'API Key ID', value: key?.id || keyId },
+            { key: 'bot-id', label: 'Bot ID', value: key?.bot_id },
+          ]}
+        />
       </Card>
 
       <Modal

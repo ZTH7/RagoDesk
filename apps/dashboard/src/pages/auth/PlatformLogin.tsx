@@ -1,4 +1,4 @@
-import { Button, Form, Input, Space, Typography } from 'antd'
+import { Button, Collapse, Form, Input, Space, Typography } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { setProfile, setScope, setToken } from '../../auth/storage'
@@ -26,6 +26,7 @@ export function PlatformLogin() {
       setToken(res.token)
       setScope('platform')
       setProfile({
+        subject_id: res.profile?.subject_id,
         name: res.profile?.name,
         account: res.profile?.account,
         roles: res.profile?.roles,
@@ -49,9 +50,20 @@ export function PlatformLogin() {
         <Form.Item label="密码" name="password" rules={[{ required: true }]}>
           <Input.Password placeholder="请输入密码" />
         </Form.Item>
-        <Form.Item label="Access Token（可选）" name="token">
-          <Input placeholder="粘贴 JWT 用于调试联调" />
-        </Form.Item>
+        <Collapse
+          size="small"
+          items={[
+            {
+              key: 'advanced',
+              label: '高级登录选项（一般无需填写）',
+              children: (
+                <Form.Item label="Access Token（可选）" name="token" style={{ marginBottom: 0 }}>
+                  <Input placeholder="仅联调时粘贴 JWT" />
+                </Form.Item>
+              ),
+            },
+          ]}
+        />
         <Space direction="vertical" style={{ width: '100%' }}>
           <Button type="primary" htmlType="submit" block>
             登录

@@ -1,6 +1,7 @@
 import { Card, Collapse, List, Tag, Typography, Skeleton, Table } from 'antd'
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
+import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
@@ -19,7 +20,11 @@ export function SessionDetail() {
       <PageHeader title="会话详情" description="消息记录与引用" />
       <RequestBanner error={error} />
       <Card>
-        <Typography.Text className="muted">Session ID: {sessionId}</Typography.Text>
+        <TechnicalMeta
+          items={[
+            { key: 'session-id', label: 'Session ID', value: sessionId },
+          ]}
+        />
       </Card>
       <Card title="消息记录">
         {loading ? (
@@ -33,7 +38,9 @@ export function SessionDetail() {
                   title={
                     <span>
                       <Tag color={item.role === 'assistant' ? 'blue' : 'default'}>{item.role}</Tag>
-                      {item.id}
+                      <Typography.Text type="secondary" style={{ marginLeft: 8 }}>
+                        {item.created_at}
+                      </Typography.Text>
                       {typeof item.confidence === 'number' && (
                         <Tag color="geekblue" style={{ marginLeft: 8 }}>
                           confidence: {(item.confidence * 100).toFixed(1)}%

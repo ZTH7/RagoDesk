@@ -1,4 +1,4 @@
-import { Button, DatePicker, Input, Select, Tag, Space } from 'antd'
+import { Button, DatePicker, Descriptions, Input, Select, Space, Switch, Tag, Typography } from 'antd'
 import type { Dayjs } from 'dayjs'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -11,6 +11,16 @@ import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
 
 import { uiMessage } from '../../services/uiMessage'
+
+const PATH_LABELS: Record<string, string> = {
+  '/api/v1/session': '创建会话',
+  '/api/v1/message': '发送消息',
+}
+
+function resolvePathLabel(path: string) {
+  return PATH_LABELS[path] || path || '-'
+}
+
 export function ApiUsage() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
@@ -19,6 +29,7 @@ export function ApiUsage() {
   const [apiVersion, setApiVersion] = useState('')
   const [model, setModel] = useState('')
   const [range, setRange] = useState<[Dayjs | null, Dayjs | null] | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [query, setQuery] = useState<{
     bot_id?: string
     api_key_id?: string
@@ -41,7 +52,8 @@ export function ApiUsage() {
   const filtered = useMemo(() => {
     return data.items.filter((item) => {
       if (status !== 'all' && String(item.status_code) !== status) return false
-      if (keyword && !item.path.toLowerCase().includes(keyword.toLowerCase())) return false
+      const searchable = `${item.path || ''} ${item.model || ''} ${item.api_version || ''}`.toLowerCase()
+      if (keyword && !searchable.includes(keyword.toLowerCase())) return false
       return true
     })
   }, [data.items, keyword, status])
@@ -125,7 +137,7 @@ export function ApiUsage() {
               style={{ width: 200 }}
               onChange={setBotId}
               options={[{ label: '全部 Bot', value: 'all' }].concat(
-                botsData.items.map((bot) => ({ label: `${bot.name} (${bot.id})`, value: bot.id })),
+                botsData.items.map((bot) => ({ label: bot.name, value: bot.id })),
               )}
               showSearch
               optionFilterProp="label"
@@ -135,29 +147,29 @@ export function ApiUsage() {
               style={{ width: 220 }}
               onChange={setApiKeyId}
               options={[{ label: '全部 API Key', value: 'all' }].concat(
-                apiKeysData.items.map((key) => ({ label: `${key.name} (${key.id})`, value: key.id })),
+                apiKeysData.items.map((key) => ({ label: key.name, value: key.id })),
               )}
               showSearch
               optionFilterProp="label"
             />
             <Input
-              placeholder="API Version"
+              placeholder="接口版本"
               value={apiVersion}
               onChange={(e) => setApiVersion(e.target.value)}
               style={{ width: 140 }}
             />
             <Input
-              placeholder="Model"
+              placeholder="模型"
               value={model}
               onChange={(e) => setModel(e.target.value)}
               style={{ width: 140 }}
             />
             <DatePicker.RangePicker value={range} onChange={(value) => setRange(value)} />
             <Input.Search
-              placeholder="搜索路径"
+              placeholder="搜索接口/模型"
               onSearch={setKeyword}
               allowClear
-              style={{ width: 200 }}
+              style={{ width: 220 }}
             />
           </Space>
         }
@@ -169,11 +181,15 @@ export function ApiUsage() {
               onChange={setStatus}
               options={[
                 { value: 'all', label: '全部状态' },
-                { value: '200', label: '200' },
-                { value: '429', label: '429' },
-                { value: '500', label: '500' },
+                { value: '200', label: '成功(200)' },
+                { value: '429', label: '限流(429)' },
+                { value: '500', label: '错误(500)' },
               ]}
             />
+            <Space size={6}>
+              <Typography.Text className="muted">高级列</Typography.Text>
+              <Switch checked={showAdvanced} onChange={setShowAdvanced} />
+            </Space>
             <Button onClick={applyFilters}>应用筛选</Button>
             <Button onClick={resetFilters}>重置</Button>
             <Button type="primary" onClick={handleExport}>
@@ -188,23 +204,41 @@ export function ApiUsage() {
           dataSource: filtered,
           loading,
           pagination: { pageSize: 10 },
+          expandable: showAdvanced
+            ? {
+                expandedRowRender: (record) => (
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Log ID">{record.id}</Descriptions.Item>
+                    <Descriptions.Item label="Path">{record.path || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="API Version">{record.api_version || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="Model">{record.model || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="Client IP">{record.client_ip || '-'}</Descriptions.Item>
+                    <Descriptions.Item label="User Agent">{record.user_agent || '-'}</Descriptions.Item>
+                  </Descriptions>
+                ),
+                rowExpandable: () => true,
+              }
+            : undefined,
           columns: [
-            { title: 'Path', dataIndex: 'path' },
             {
-              title: 'Status',
-              dataIndex: 'status_code',
-              render: (status: number) => <Tag color={status >= 400 ? 'red' : 'green'}>{status}</Tag>,
+              title: '调用类型',
+              dataIndex: 'path',
+              render: (value: string) => resolvePathLabel(value),
             },
-            { title: 'Latency (ms)', dataIndex: 'latency_ms' },
-            { title: 'Total Tokens', dataIndex: 'total_tokens' },
-            { title: 'API Version', dataIndex: 'api_version' },
-            { title: 'Model', dataIndex: 'model' },
-            { title: 'Client IP', dataIndex: 'client_ip' },
-            { title: 'Created At', dataIndex: 'created_at' },
+            {
+              title: '结果',
+              dataIndex: 'status_code',
+              render: (code: number) => {
+                const ok = code < 400
+                return <Tag color={ok ? 'green' : 'red'}>{ok ? `成功 (${code})` : `失败 (${code})`}</Tag>
+              },
+            },
+            { title: '响应耗时', dataIndex: 'latency_ms', render: (v: number) => `${v} ms` },
+            { title: 'Token 消耗', dataIndex: 'total_tokens' },
+            { title: '时间', dataIndex: 'created_at' },
           ],
         }}
       />
     </div>
   )
 }
-
