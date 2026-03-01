@@ -67,8 +67,6 @@ docker compose up -d
 ### 2) Required Initialization
 - **MinIO**: create bucket `ragodesk` (or the name in `apps/server/configs/config.yaml` → `data.object_storage.bucket`).
 - **MySQL**: no manual setup required; backend auto-creates schema and seeds permissions on startup.
-- **Qdrant**: collection created on first indexing (upload a document to trigger).
-- **Redis/RabbitMQ**: no manual setup required.
 
 ### 3) Backend (Kratos)
 ```bash
@@ -95,9 +93,15 @@ Key sections:
 - `data.database`: MySQL connection string
 - `data.object_storage`: MinIO/S3 endpoint + bucket
 - `data.vectordb`: Qdrant endpoint + collection
-- `data.provider`: LLM/embedding provider + model + API key
+- `data.provider`: LLM/embedding provider + model
 - `data.proxy`: outbound proxy for LLM/embedding
 - `data.knowledge.ingestion`: async ingestion + retries
+
+Sensitive keys:
+- supported env vars: `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`, `RAGODESK_API_KEY`
+- optional local override file: `apps/server/configs/config.local.yaml`
+- local template: `apps/server/configs/config.local.yaml.example`
+- when `-conf` points to a directory, only `.yaml/.yml` files are loaded, and `config.local.yaml` overrides `config.yaml`
 
 Dashboard config: `apps/dashboard/.env`
 

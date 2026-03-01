@@ -25,6 +25,8 @@ profile.cov
 
 # env file
 .env
+apps/server/configs/*.local.yaml
+apps/server/configs/config.local.yaml
 
 # Editor/IDE
 # .idea/

@@ -1,0 +1,8 @@
+data:
+  proxy: "http://127.0.0.1:10808"
+  knowledge:
+    embedding:
+      api_key: "your-openai-or-provider-api-key"
+  rag:
+    llm:
+      api_key: "your-openai-or-provider-api-key"

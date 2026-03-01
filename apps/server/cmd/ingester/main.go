@@ -5,6 +5,9 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"sort"
+	"strings"
 	"syscall"
 
 	"github.com/ZTH7/RagoDesk/apps/server/internal/conf"
@@ -48,11 +51,11 @@ func main() {
 	)
 	helper := log.NewHelper(logger)
 
-	c := config.New(
-		config.WithSource(
-			file.NewSource(flagconf),
-		),
-	)
+	sources, err := loadConfigSources(flagconf)
+	if err != nil {
+		panic(err)
+	}
+	c := config.New(config.WithSource(sources...))
 	defer c.Close()
 
 	if err := c.Load(); err != nil {
@@ -99,4 +102,55 @@ func main() {
 	helper.Info("ingestion worker started")
 	<-ctx.Done()
 	helper.Info("ingestion worker stopped")
+}
+
+func loadConfigSources(confPath string) ([]config.Source, error) {
+	info, err := os.Stat(confPath)
+	if err != nil {
+		return nil, err
+	}
+	if !info.IsDir() {
+		return []config.Source{file.NewSource(confPath)}, nil
+	}
+	entries, err := os.ReadDir(confPath)
+	if err != nil {
+		return nil, err
+	}
+	files := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		ext := strings.ToLower(filepath.Ext(name))
+		if ext != ".yaml" && ext != ".yml" {
+			continue
+		}
+		files = append(files, filepath.Join(confPath, name))
+	}
+	sort.Slice(files, func(i, j int) bool {
+		pi := configPriority(files[i])
+		pj := configPriority(files[j])
+		if pi == pj {
+			return strings.ToLower(filepath.Base(files[i])) < strings.ToLower(filepath.Base(files[j]))
+		}
+		return pi < pj
+	})
+	sources := make([]config.Source, 0, len(files))
+	for _, f := range files {
+		sources = append(sources, file.NewSource(f))
+	}
+	return sources, nil
+}
+
+func configPriority(path string) int {
+	base := strings.ToLower(filepath.Base(path))
+	switch {
+	case strings.Contains(base, ".local."):
+		return 2
+	case base == "config.yaml" || base == "config.yml":
+		return 0
+	default:
+		return 1
+	}
 }

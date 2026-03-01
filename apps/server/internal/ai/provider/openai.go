@@ -51,7 +51,7 @@ func newOpenAIProvider(cfg Config) Provider {
 	}
 	return &openAIProvider{
 		endpoint: strings.TrimRight(endpoint, "/"),
-		apiKey:   strings.TrimSpace(cfg.APIKey),
+		apiKey:   resolveAPIKey("openai", cfg.APIKey),
 		model:    cfg.Model,
 		dim:      cfg.Dim,
 		proxy:    cfg.Proxy,
@@ -164,7 +164,7 @@ func newOpenAIChatProvider(cfg LLMConfig) LLMProvider {
 	}
 	return &openAIChatProvider{
 		endpoint: strings.TrimRight(endpoint, "/"),
-		apiKey:   strings.TrimSpace(cfg.APIKey),
+		apiKey:   resolveAPIKey("openai", cfg.APIKey),
 		model:    strings.TrimSpace(cfg.Model),
 		proxy:    cfg.Proxy,
 		client:   newHTTPClient(timeout, cfg.Proxy),

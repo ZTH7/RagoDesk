@@ -37,7 +37,7 @@ func newDeepSeekChatProvider(cfg LLMConfig) LLMProvider {
 	}
 	return &deepSeekChatProvider{
 		endpoint: strings.TrimRight(endpoint, "/"),
-		apiKey:   strings.TrimSpace(cfg.APIKey),
+		apiKey:   resolveAPIKey("deepseek", cfg.APIKey),
 		model:    strings.TrimSpace(cfg.Model),
 		proxy:    cfg.Proxy,
 		client:   newHTTPClient(timeout, cfg.Proxy),
