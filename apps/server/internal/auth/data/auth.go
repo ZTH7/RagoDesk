@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	stderrors "errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -136,6 +137,14 @@ func (r *authRepo) CreateTenantWithAdmin(ctx context.Context, tenant biz.Tenant,
 	if roleName == "" {
 		roleName = "tenant_admin"
 	}
+	if existingTenantID, err := r.findExistingTenantByAccount(ctx, admin.Email, admin.Phone); err != nil {
+		return biz.Tenant{}, biz.TenantAccount{}, err
+	} else if existingTenantID != "" {
+		return biz.Tenant{}, biz.TenantAccount{}, kerrors.Conflict(
+			"ACCOUNT_ALREADY_BOUND",
+			fmt.Sprintf("account already bound to tenant %s", existingTenantID),
+		)
+	}
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return biz.Tenant{}, biz.TenantAccount{}, err
@@ -227,6 +236,36 @@ func emptyToNull(value string) any {
 		return nil
 	}
 	return value
+}
+
+func (r *authRepo) findExistingTenantByAccount(ctx context.Context, email string, phone string) (string, error) {
+	email = strings.TrimSpace(email)
+	phone = strings.TrimSpace(phone)
+	if email == "" && phone == "" {
+		return "", nil
+	}
+	query := "SELECT tenant_id FROM `user` WHERE "
+	args := make([]any, 0, 2)
+	if email != "" && phone != "" {
+		query += "(email = ? OR phone = ?)"
+		args = append(args, email, phone)
+	} else if email != "" {
+		query += "email = ?"
+		args = append(args, email)
+	} else {
+		query += "phone = ?"
+		args = append(args, phone)
+	}
+	query += " LIMIT 1"
+
+	var tenantID string
+	if err := r.db.QueryRowContext(ctx, query, args...).Scan(&tenantID); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return "", nil
+		}
+		return "", err
+	}
+	return tenantID, nil
 }
 
 // ProviderSet is auth data providers.

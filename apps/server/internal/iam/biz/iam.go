@@ -28,13 +28,14 @@ type Tenant struct {
 
 // User represents a tenant user.
 type User struct {
-	ID        string
-	TenantID  string
-	Email     string
-	Phone     string
-	Name      string
-	Status    string
-	CreatedAt time.Time
+	ID           string
+	TenantID     string
+	Email        string
+	Phone        string
+	Name         string
+	Status       string
+	PasswordHash string
+	CreatedAt    time.Time
 }
 
 // Role represents a tenant role.

@@ -36,8 +36,11 @@ export function Users() {
   const [assignOpen, setAssignOpen] = useState(false)
   const [assigningUserId, setAssigningUserId] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [inviteLinkOpen, setInviteLinkOpen] = useState(false)
+  const [inviteLink, setInviteLink] = useState('')
   const [inviteForm] = Form.useForm()
   const [assignForm] = Form.useForm()
+  const sendInvite = Form.useWatch('send_invite', inviteForm) ?? true
 
   const { data, loading, source, error, reload } = useRequest(
     () => consoleApi.listUsers(tenantId),
@@ -69,13 +72,20 @@ export function Users() {
     try {
       const values = await inviteForm.validateFields()
       const account = normalizeAccount(values.account)
-      await consoleApi.createUser(tenantId, {
+      const res = await consoleApi.createUser(tenantId, {
         name: values.name,
         status: values.status,
         email: looksLikeEmail(account) ? account : undefined,
         phone: looksLikeEmail(account) ? undefined : normalizePhone(account),
+        send_invite: values.send_invite,
+        invite_base_url: values.send_invite ? values.invite_base_url?.trim() || window.location.origin : undefined,
+        password: values.send_invite ? undefined : values.password,
       })
       uiMessage.success('已邀请成员')
+      if (res.invite_link) {
+        setInviteLink(res.invite_link)
+        setInviteLinkOpen(true)
+      }
       inviteForm.resetFields()
       setInviteOpen(false)
       reload()
@@ -180,7 +190,7 @@ export function Users() {
         onOk={handleInvite}
         okText="发送邀请"
       >
-        <Form form={inviteForm} layout="vertical" initialValues={{ status: 'active' }}>
+        <Form form={inviteForm} layout="vertical" initialValues={{ status: 'invited', send_invite: true }}>
           <Form.Item label="姓名" name="name" rules={[{ required: true, message: '请输入姓名' }]}>
             <Input placeholder="成员姓名" />
           </Form.Item>
@@ -204,6 +214,25 @@ export function Users() {
           >
             <Input placeholder="name@company.com 或 +86 13800000000" allowClear />
           </Form.Item>
+          <Form.Item label="发送邀请链接" name="send_invite" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+          {sendInvite ? (
+            <Form.Item label="邀请链接基地址" name="invite_base_url" extra="默认使用当前站点地址">
+              <Input placeholder="例如：http://localhost:5173" allowClear />
+            </Form.Item>
+          ) : (
+            <Form.Item
+              label="初始密码"
+              name="password"
+              rules={[
+                { required: true, message: '请输入初始密码' },
+                { min: 6, message: '密码至少 6 位' },
+              ]}
+            >
+              <Input.Password placeholder="至少 6 位" />
+            </Form.Item>
+          )}
           <Form.Item label="状态" name="status">
             <Select
               options={[
@@ -214,6 +243,30 @@ export function Users() {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="成员邀请链接"
+        open={inviteLinkOpen}
+        onCancel={() => setInviteLinkOpen(false)}
+        footer={<Button onClick={() => setInviteLinkOpen(false)}>关闭</Button>}
+      >
+        <Typography.Text className="muted">请将该链接发送给成员完成首次登录。</Typography.Text>
+        <Input.Group compact style={{ marginTop: 12 }}>
+          <Input readOnly value={inviteLink} style={{ width: 'calc(100% - 84px)' }} />
+          <Button
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(inviteLink)
+                uiMessage.success('邀请链接已复制')
+              } catch {
+                uiMessage.error('复制失败，请手动复制')
+              }
+            }}
+          >
+            复制
+          </Button>
+        </Input.Group>
       </Modal>
 
       <Modal

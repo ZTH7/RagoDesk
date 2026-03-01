@@ -278,6 +278,13 @@
 - `GET /console/v1/roles`
 - `POST /console/v1/users/{id}/roles`（分配角色）
 
+成员创建请求支持两种模式：
+- 邀请模式：`send_invite=true`（可选 `invite_base_url`），服务端生成临时密码并返回 `invite_link`
+- 直建模式：`send_invite=false` 且必须传 `password`
+
+账号唯一性策略：
+- `email` / `phone` 全局唯一（一个账号只能绑定一个租户）
+
 ### 4.2 权限分配
 - `GET /console/v1/permissions`（仅租户可见权限）
 - `POST /console/v1/roles/{id}/permissions`（分配权限）

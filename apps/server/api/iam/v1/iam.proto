@@ -75,6 +75,9 @@ message CreateUserRequest {
   string phone = 3;
   string name = 4;
   string status = 5;
+  string password = 6;
+  bool send_invite = 7;
+  string invite_base_url = 8;
 }
 
 message ListUsersRequest {
@@ -184,6 +187,7 @@ message TenantResponse {
 
 message UserResponse {
   User user = 1;
+  string invite_link = 2;
 }
 
 message RoleResponse {

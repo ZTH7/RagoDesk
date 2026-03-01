@@ -1,17 +1,19 @@
 import {
   Button,
   Descriptions,
+  Dropdown,
   Form,
   Input,
   InputNumber,
   Modal,
-  Popconfirm,
   Select,
   Space,
   Switch,
   Tag,
   Typography,
 } from 'antd'
+import { DeleteOutlined, EditOutlined, LinkOutlined, MoreOutlined, ReloadOutlined, RetweetOutlined } from '@ant-design/icons'
+import type { MenuProps } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../../components/PageHeader'
@@ -34,37 +36,6 @@ const statusLabels: Record<string, string> = {
   disabled: '停用',
 }
 
-type KeyResponseShape = {
-  api_key?: {
-    id?: string
-    public_chat_id?: string
-    publicChatId?: string
-  }
-  apiKey?: {
-    id?: string
-    public_chat_id?: string
-    publicChatId?: string
-  }
-  raw_key?: string
-  rawKey?: string
-}
-
-function parseRawKeyAndChatID(input: KeyResponseShape, fallbackKeyID = '') {
-  const raw = input.raw_key ?? input.rawKey ?? ''
-  const keyID = input.api_key?.id ?? input.apiKey?.id ?? fallbackKeyID
-  const chatID =
-    input.api_key?.public_chat_id ??
-    input.apiKey?.public_chat_id ??
-    input.api_key?.publicChatId ??
-    input.apiKey?.publicChatId ??
-    ''
-  return {
-    rawKey: raw,
-    keyID,
-    publicChatID: chatID || keyID,
-  }
-}
-
 export function ApiKeys() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
@@ -73,6 +44,7 @@ export function ApiKeys() {
   const [rawKeyOpen, setRawKeyOpen] = useState(false)
   const [rawKey, setRawKey] = useState('')
   const [publicChatID, setPublicChatID] = useState('')
+  const [publicChatEnabledInModal, setPublicChatEnabledInModal] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [createForm] = Form.useForm()
@@ -80,6 +52,7 @@ export function ApiKeys() {
 
   const { data, loading, source, error, reload } = useRequest(() => consoleApi.listApiKeys(), { items: [] })
   const { data: botData } = useRequest(() => consoleApi.listBots(), { items: [] })
+  type RowItem = (typeof data.items)[number]
 
   const filtered = useMemo(() => {
     return data.items.filter((item) => {
@@ -109,9 +82,9 @@ export function ApiKeys() {
       const values = await createForm.validateFields()
       const res = await consoleApi.createApiKey(values)
       uiMessage.success('已创建 API Key')
-      const parsed = parseRawKeyAndChatID(res)
-      setRawKey(parsed.rawKey)
-      setPublicChatID(parsed.publicChatID)
+      setRawKey(res.raw_key || '')
+      setPublicChatID(res.api_key?.public_chat_id || '')
+      setPublicChatEnabledInModal(res.api_key?.public_chat_enabled !== false)
       setRawKeyOpen(true)
       setCreateOpen(false)
       createForm.resetFields()
@@ -134,6 +107,20 @@ export function ApiKeys() {
     }
   }
 
+  const openEditModal = (record: RowItem) => {
+    setEditingId(record.id)
+    editForm.setFieldsValue({
+      name: record.name,
+      status: record.status,
+      public_chat_enabled: record.public_chat_enabled !== false,
+      scopes: record.scopes,
+      api_versions: record.api_versions,
+      quota_daily: record.quota_daily,
+      qps_limit: record.qps_limit,
+    })
+    setEditOpen(true)
+  }
+
   const handleToggleStatus = async (id: string, nextStatus: string) => {
     try {
       await consoleApi.updateApiKey(id, { status: nextStatus })
@@ -148,9 +135,9 @@ export function ApiKeys() {
     try {
       const res = await consoleApi.rotateApiKey(id)
       uiMessage.success('已轮换 API Key')
-      const parsed = parseRawKeyAndChatID(res, id)
-      setRawKey(parsed.rawKey)
-      setPublicChatID(parsed.publicChatID)
+      setRawKey(res.raw_key || '')
+      setPublicChatID(res.api_key?.public_chat_id || '')
+      setPublicChatEnabledInModal(res.api_key?.public_chat_enabled !== false)
       setRawKeyOpen(true)
       reload()
     } catch (err) {
@@ -161,8 +148,7 @@ export function ApiKeys() {
   const handleRegenerateChatLink = async (id: string) => {
     try {
       const res = await consoleApi.regenerateApiKeyPublicChatID(id)
-      const nextChatID =
-        res.api_key?.public_chat_id ?? (res.api_key as any)?.publicChatId ?? ''
+      const nextChatID = res.api_key?.public_chat_id || ''
       uiMessage.success('已重置公开聊天链接')
       if (nextChatID) {
         await handleCopyChatLink(nextChatID)
@@ -201,6 +187,51 @@ export function ApiKeys() {
   }
 
   const chatLink = buildChatLink(publicChatID)
+
+  const buildActionMenu = (record: RowItem): MenuProps['items'] => [
+    {
+      key: 'edit',
+      icon: <EditOutlined />,
+      label: '编辑',
+      onClick: () => openEditModal(record),
+    },
+    {
+      key: 'rotate',
+      icon: <RetweetOutlined />,
+      label: '轮换密钥',
+      onClick: () => handleRotate(record.id),
+    },
+    {
+      key: 'regenerate',
+      icon: <ReloadOutlined />,
+      label: '重置聊天链接',
+      disabled: record.public_chat_enabled === false,
+      onClick: () => handleRegenerateChatLink(record.id),
+    },
+    {
+      key: 'toggle',
+      label: record.status === 'active' ? '禁用密钥' : '启用密钥',
+      onClick: () => handleToggleStatus(record.id, record.status === 'active' ? 'disabled' : 'active'),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'delete',
+      icon: <DeleteOutlined />,
+      danger: true,
+      label: '删除',
+      onClick: () => {
+        Modal.confirm({
+          title: '确认删除该 Key？',
+          okButtonProps: { danger: true },
+          okText: '删除',
+          cancelText: '取消',
+          onOk: () => handleDelete(record.id),
+        })
+      },
+    },
+  ]
 
   return (
     <div className="page">
@@ -308,48 +339,26 @@ export function ApiKeys() {
               title: '操作',
               key: 'actions',
               render: (_: unknown, record) => (
-                <Space>
+                <Space.Compact>
                   <Button
                     size="small"
-                    onClick={() => {
-                      setEditingId(record.id)
-                      editForm.setFieldsValue({
-                        name: record.name,
-                        status: record.status,
-                        public_chat_enabled: record.public_chat_enabled !== false,
-                        scopes: record.scopes,
-                        api_versions: record.api_versions,
-                        quota_daily: record.quota_daily,
-                        qps_limit: record.qps_limit,
-                      })
-                      setEditOpen(true)
+                    icon={<LinkOutlined />}
+                    disabled={record.public_chat_enabled === false || !record.public_chat_id}
+                    onClick={() => handleCopyChatLink(record.public_chat_id)}
+                  >
+                    复制链接
+                  </Button>
+                  <Dropdown
+                    trigger={['click']}
+                    menu={{
+                      items: buildActionMenu(record),
                     }}
                   >
-                    编辑
-                  </Button>
-                  <Button size="small" onClick={() => handleRotate(record.id)}>
-                    轮换
-                  </Button>
-                  <Button size="small" onClick={() => handleRegenerateChatLink(record.id)}>
-                    重置链接
-                  </Button>
-                  <Button size="small" onClick={() => handleCopyChatLink(record.public_chat_id)}>
-                    复制聊天链接
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={() =>
-                      handleToggleStatus(record.id, record.status === 'active' ? 'disabled' : 'active')
-                    }
-                  >
-                    {record.status === 'active' ? '禁用' : '启用'}
-                  </Button>
-                  <Popconfirm title="确认删除该 Key？" onConfirm={() => handleDelete(record.id)}>
-                    <Button size="small" danger>
-                      删除
+                    <Button size="small" icon={<MoreOutlined />}>
+                      更多
                     </Button>
-                  </Popconfirm>
-                </Space>
+                  </Dropdown>
+                </Space.Compact>
               ),
             },
           ],
@@ -437,13 +446,25 @@ export function ApiKeys() {
       >
         <p>这是唯一一次展示原始 Key，请妥善保存。</p>
         <Input.TextArea value={rawKey} readOnly rows={3} />
-        <p style={{ marginTop: 12, marginBottom: 8 }}>面向客户的聊天链接：</p>
-        <Input.Group compact>
-          <Input value={chatLink} readOnly style={{ width: 'calc(100% - 84px)' }} />
-          <Button onClick={() => handleCopyChatLink(publicChatID)}>
-            复制链接
-          </Button>
-        </Input.Group>
+        {publicChatEnabledInModal && publicChatID ? (
+          <>
+            <p style={{ marginTop: 12, marginBottom: 8 }}>面向客户的聊天链接：</p>
+            <Space.Compact block>
+              <Input value={chatLink} readOnly />
+              <Button style={{ whiteSpace: 'nowrap' }} onClick={() => handleCopyChatLink(publicChatID)}>
+                复制链接
+              </Button>
+            </Space.Compact>
+          </>
+        ) : publicChatEnabledInModal ? (
+          <Typography.Text className="muted" style={{ display: 'block', marginTop: 12 }}>
+            当前 Key 开启了公开聊天，但尚未生成可用链接，请在列表中点击「重置聊天链接」。
+          </Typography.Text>
+        ) : (
+          <Typography.Text className="muted" style={{ display: 'block', marginTop: 12 }}>
+            当前 Key 已关闭公开聊天。如需分享链接，请先在列表中开启「公开聊天」。
+          </Typography.Text>
+        )}
         <Typography.Text className="muted" style={{ display: 'block', marginTop: 8 }}>
           建议仅用于公开客服场景，并配置合理的 QPS 与日配额。
         </Typography.Text>

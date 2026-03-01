@@ -273,17 +273,61 @@ func (s *IAMService) CreateUser(ctx context.Context, req *v1.CreateUserRequest) 
 	if err := s.uc.RequirePermission(ctx, biz.PermissionUserWrite); err != nil {
 		return nil, err
 	}
+	email := strings.TrimSpace(req.GetEmail())
+	phone := strings.TrimSpace(req.GetPhone())
+	if email == "" && phone == "" {
+		return nil, errors.BadRequest("USER_ACCOUNT_REQUIRED", "email or phone required")
+	}
+	password := strings.TrimSpace(req.GetPassword())
+	sendInvite := req.GetSendInvite()
+	if sendInvite && password == "" {
+		password = generateTempPassword()
+	}
+	if !sendInvite && password == "" {
+		return nil, errors.BadRequest("USER_PASSWORD_REQUIRED", "password required when invite disabled")
+	}
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.InternalServer("PASSWORD_HASH_FAILED", "password hash failed")
+	}
+	status := strings.TrimSpace(req.GetStatus())
+	if status == "" {
+		if sendInvite {
+			status = "invited"
+		} else {
+			status = "active"
+		}
+	}
 	userModel := biz.User{
-		Email:  req.GetEmail(),
-		Phone:  req.GetPhone(),
-		Name:   req.GetName(),
-		Status: req.GetStatus(),
+		Email:        email,
+		Phone:        phone,
+		Name:         req.GetName(),
+		Status:       status,
+		PasswordHash: string(passwordHash),
 	}
 	created, err := s.uc.CreateUser(ctx, userModel)
 	if err != nil {
 		return nil, err
 	}
-	return &v1.UserResponse{User: toUser(created)}, nil
+	inviteLink := ""
+	if sendInvite {
+		base := strings.TrimSpace(req.GetInviteBaseUrl())
+		if base == "" {
+			base = "http://localhost:5173"
+		}
+		account := email
+		if account == "" {
+			account = phone
+		}
+		inviteLink = fmt.Sprintf(
+			"%s/console/login?account=%s&tenant_id=%s&temp_password=%s",
+			strings.TrimRight(base, "/"),
+			url.QueryEscape(account),
+			url.QueryEscape(created.TenantID),
+			url.QueryEscape(password),
+		)
+	}
+	return &v1.UserResponse{User: toUser(created), InviteLink: inviteLink}, nil
 }
 
 func (s *IAMService) ListUsers(ctx context.Context, req *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {

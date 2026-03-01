@@ -661,6 +661,9 @@ type CreateUserRequest struct {
 	Phone         string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
 	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
 	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	Password      string                 `protobuf:"bytes,6,opt,name=password,proto3" json:"password,omitempty"`
+	SendInvite    bool                   `protobuf:"varint,7,opt,name=send_invite,json=sendInvite,proto3" json:"send_invite,omitempty"`
+	InviteBaseUrl string                 `protobuf:"bytes,8,opt,name=invite_base_url,json=inviteBaseUrl,proto3" json:"invite_base_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -726,6 +729,27 @@ func (x *CreateUserRequest) GetName() string {
 func (x *CreateUserRequest) GetStatus() string {
 	if x != nil {
 		return x.Status
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetSendInvite() bool {
+	if x != nil {
+		return x.SendInvite
+	}
+	return false
+}
+
+func (x *CreateUserRequest) GetInviteBaseUrl() string {
+	if x != nil {
+		return x.InviteBaseUrl
 	}
 	return ""
 }
@@ -1905,6 +1929,7 @@ func (x *TenantResponse) GetTenant() *Tenant {
 type UserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	InviteLink    string                 `protobuf:"bytes,2,opt,name=invite_link,json=inviteLink,proto3" json:"invite_link,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1944,6 +1969,13 @@ func (x *UserResponse) GetUser() *User {
 		return x.User
 	}
 	return nil
+}
+
+func (x *UserResponse) GetInviteLink() string {
+	if x != nil {
+		return x.InviteLink
+	}
+	return ""
 }
 
 type RoleResponse struct {
@@ -2183,13 +2215,17 @@ const file_api_iam_v1_iam_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x14\n" +
 	"\x12ListTenantsRequest\"?\n" +
 	"\x13ListTenantsResponse\x12(\n" +
-	"\x05items\x18\x01 \x03(\v2\x12.api.iam.v1.TenantR\x05items\"\x88\x01\n" +
+	"\x05items\x18\x01 \x03(\v2\x12.api.iam.v1.TenantR\x05items\"\xed\x01\n" +
 	"\x11CreateUserRequest\x12\x1b\n" +
 	"\ttenant_id\x18\x01 \x01(\tR\btenantId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x14\n" +
 	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x12\n" +
 	"\x04name\x18\x04 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\tR\x06status\"/\n" +
+	"\x06status\x18\x05 \x01(\tR\x06status\x12\x1a\n" +
+	"\bpassword\x18\x06 \x01(\tR\bpassword\x12\x1f\n" +
+	"\vsend_invite\x18\a \x01(\bR\n" +
+	"sendInvite\x12&\n" +
+	"\x0finvite_base_url\x18\b \x01(\tR\rinviteBaseUrl\"/\n" +
 	"\x10ListUsersRequest\x12\x1b\n" +
 	"\ttenant_id\x18\x01 \x01(\tR\btenantId\";\n" +
 	"\x11ListUsersResponse\x12&\n" +
@@ -2249,9 +2285,11 @@ const file_api_iam_v1_iam_proto_rawDesc = "" +
 	"\"ListPlatformRolePermissionsRequest\x12\x17\n" +
 	"\arole_id\x18\x01 \x01(\tR\x06roleId\"<\n" +
 	"\x0eTenantResponse\x12*\n" +
-	"\x06tenant\x18\x01 \x01(\v2\x12.api.iam.v1.TenantR\x06tenant\"4\n" +
+	"\x06tenant\x18\x01 \x01(\v2\x12.api.iam.v1.TenantR\x06tenant\"U\n" +
 	"\fUserResponse\x12$\n" +
-	"\x04user\x18\x01 \x01(\v2\x10.api.iam.v1.UserR\x04user\"4\n" +
+	"\x04user\x18\x01 \x01(\v2\x10.api.iam.v1.UserR\x04user\x12\x1f\n" +
+	"\vinvite_link\x18\x02 \x01(\tR\n" +
+	"inviteLink\"4\n" +
 	"\fRoleResponse\x12$\n" +
 	"\x04role\x18\x01 \x01(\v2\x10.api.iam.v1.RoleR\x04role\"L\n" +
 	"\x12PermissionResponse\x126\n" +

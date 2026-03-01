@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	stderrors "errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 // Data .
@@ -401,6 +402,18 @@ func ensureIAMSchema(ctx context.Context, db *sql.DB) error {
 	if _, err := db.ExecContext(ctx, "UPDATE permission SET scope = 'platform' WHERE scope IS NULL OR scope = ''"); err != nil {
 		return err
 	}
+	if _, err := db.ExecContext(ctx, "UPDATE `user` SET email = NULL WHERE email = ''"); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, "UPDATE `user` SET phone = NULL WHERE phone = ''"); err != nil {
+		return err
+	}
+	if err := ensureUniqueIndexSafe(ctx, db, "user", "uniq_user_email_global", "`email`"); err != nil {
+		return err
+	}
+	if err := ensureUniqueIndexSafe(ctx, db, "user", "uniq_user_phone_global", "`phone`"); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -695,6 +708,19 @@ func ensureUniqueIndex(ctx context.Context, db *sql.DB, table string, indexName 
 	}
 	query := fmt.Sprintf("CREATE UNIQUE INDEX `%s` ON `%s` (%s)", indexName, table, definition)
 	_, err = db.ExecContext(ctx, query)
+	return err
+}
+
+func ensureUniqueIndexSafe(ctx context.Context, db *sql.DB, table string, indexName string, definition string) error {
+	err := ensureUniqueIndex(ctx, db, table, indexName, definition)
+	if err == nil {
+		return nil
+	}
+	var mysqlErr *mysql.MySQLError
+	if stderrors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		log.Warnf("skip creating unique index %s on %s due existing duplicate data", indexName, table)
+		return nil
+	}
 	return err
 }
 

@@ -1,13 +1,16 @@
-import { Button, Card, Input, Space, Typography } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { RobotOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
+import { Avatar, Button, Card, Input, Space, Typography } from 'antd'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { publicChatApi } from '../../services/publicChat'
 import { uiMessage } from '../../services/uiMessage'
+import './PublicChat.css'
 
 type ChatMessage = {
   id: string
   role: 'user' | 'assistant'
   content: string
+  timestamp?: string
 }
 
 function getVisitorID() {
@@ -19,34 +22,78 @@ function getVisitorID() {
   return next
 }
 
+function formatNow() {
+  const now = new Date()
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+}
+
+function formatCreatedAt(ts?: { seconds?: number; nanos?: number }) {
+  if (!ts?.seconds) return undefined
+  const ms = ts.seconds * 1000 + Math.floor((ts.nanos ?? 0) / 1_000_000)
+  const dt = new Date(ms)
+  return `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`
+}
+
 export function PublicChat() {
   const { chatId = '', sessionId: routeSessionID = '' } = useParams()
   const navigate = useNavigate()
-  const resolvedChatID = (() => {
+  const resolvedChatID = useMemo(() => {
     try {
       return decodeURIComponent(chatId)
     } catch {
       return chatId
     }
-  })()
+  }, [chatId])
+
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [loading, setLoading] = useState(false)
   const [input, setInput] = useState('')
   const [sessionID, setSessionID] = useState(routeSessionID)
-  const [initialized, setInitialized] = useState(false)
+  const [hydrating, setHydrating] = useState(false)
+  const [sending, setSending] = useState(false)
+
+  const prevChatIDRef = useRef(resolvedChatID)
+  const skipHydrateForSessionRef = useRef('')
+  const hydratedSessionIDRef = useRef('')
+  const messageContainerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    if (prevChatIDRef.current === resolvedChatID) return
+    prevChatIDRef.current = resolvedChatID
+    skipHydrateForSessionRef.current = ''
+    hydratedSessionIDRef.current = ''
     setSessionID(routeSessionID || '')
     setMessages([])
-    setInitialized(false)
-  }, [routeSessionID, resolvedChatID])
+    setHydrating(false)
+    setSending(false)
+    setInput('')
+  }, [resolvedChatID, routeSessionID])
 
   useEffect(() => {
-    if (!resolvedChatID || !routeSessionID || initialized) return
+    if (!routeSessionID) {
+      if (!sessionID) return
+      setSessionID('')
+      hydratedSessionIDRef.current = ''
+      setMessages([])
+      return
+    }
+    if (routeSessionID === sessionID) return
+    setSessionID(routeSessionID)
+    if (skipHydrateForSessionRef.current === routeSessionID) {
+      skipHydrateForSessionRef.current = ''
+      hydratedSessionIDRef.current = routeSessionID
+      return
+    }
+    hydratedSessionIDRef.current = ''
+    setMessages([])
+  }, [routeSessionID, sessionID])
+
+  useEffect(() => {
+    if (!resolvedChatID || !sessionID) return
+    if (hydratedSessionIDRef.current === sessionID) return
     let active = true
-    setLoading(true)
+    setHydrating(true)
     publicChatApi
-      .getSession(resolvedChatID, routeSessionID)
+      .getSession(resolvedChatID, sessionID)
       .then((res) => {
         if (!active) return
         setMessages(
@@ -56,9 +103,10 @@ export function PublicChat() {
               id: m.id || `${m.role}_${Math.random().toString(36).slice(2, 8)}`,
               role: m.role as 'user' | 'assistant',
               content: m.content,
+              timestamp: formatCreatedAt(m.created_at),
             })),
         )
-        setInitialized(true)
+        hydratedSessionIDRef.current = sessionID
       })
       .catch((err: Error) => {
         if (!active) return
@@ -66,20 +114,31 @@ export function PublicChat() {
       })
       .finally(() => {
         if (!active) return
-        setLoading(false)
+        setHydrating(false)
       })
     return () => {
       active = false
     }
-  }, [resolvedChatID, routeSessionID, initialized])
+  }, [resolvedChatID, sessionID])
 
-  const canSend = useMemo(() => !!input.trim() && !!resolvedChatID && !loading, [input, resolvedChatID, loading])
+  useEffect(() => {
+    const el = messageContainerRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [messages, sending])
+
+  const canSend = useMemo(
+    () => !!input.trim() && !!resolvedChatID && !sending && !hydrating,
+    [hydrating, input, resolvedChatID, sending],
+  )
 
   const ensureSession = async () => {
     if (sessionID) return sessionID
     const res = await publicChatApi.createSession(resolvedChatID, getVisitorID())
     const created = res.session?.id
     if (!created) throw new Error('创建会话失败')
+    skipHydrateForSessionRef.current = created
+    hydratedSessionIDRef.current = created
     setSessionID(created)
     navigate(`/chat/${encodeURIComponent(resolvedChatID)}/${created}`, { replace: true })
     return created
@@ -92,94 +151,108 @@ export function PublicChat() {
       uiMessage.error('链接无效：缺少聊天标识')
       return
     }
+    const localUserMsg: ChatMessage = {
+      id: `local_user_${Date.now()}`,
+      role: 'user',
+      content: text,
+      timestamp: formatNow(),
+    }
+    setMessages((prev) => [...prev, localUserMsg])
+    setInput('')
     try {
-      setLoading(true)
-      setInput('')
-      const localUserMsg: ChatMessage = {
-        id: `local_user_${Date.now()}`,
-        role: 'user',
-        content: text,
-      }
-      setMessages((prev) => [...prev, localUserMsg])
+      setSending(true)
       const sid = await ensureSession()
       const res = await publicChatApi.sendMessage(resolvedChatID, sid, text)
       const reply: ChatMessage = {
         id: `local_assistant_${Date.now()}`,
         role: 'assistant',
         content: res.reply || '抱歉，暂时无法回答，请稍后再试。',
+        timestamp: formatNow(),
       }
       setMessages((prev) => [...prev, reply])
     } catch (err) {
       const msg = err instanceof Error ? err.message : '发送失败'
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `local_error_${Date.now()}`,
+          role: 'assistant',
+          content: `抱歉，当前服务繁忙：${msg}`,
+          timestamp: formatNow(),
+        },
+      ])
       uiMessage.error(msg)
     } finally {
-      setLoading(false)
+      setSending(false)
     }
   }
 
   return (
-    <div style={{ minHeight: '100vh', padding: 24, maxWidth: 960, margin: '0 auto' }}>
-      <Card>
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <Space style={{ justifyContent: 'space-between', width: '100%' }}>
-            <Space direction="vertical" size={0}>
-              <Typography.Title level={4} style={{ margin: 0 }}>
-                在线客服
-              </Typography.Title>
-              <Typography.Text className="muted">
-                输入问题后将自动创建会话，并应用当前链接对应的 API Key 限流与统计规则。
-              </Typography.Text>
-            </Space>
-            <Link to="/">返回首页</Link>
-          </Space>
-
-          {sessionID ? (
-            <Typography.Text className="muted">当前会话：{sessionID}</Typography.Text>
-          ) : (
-            <Typography.Text className="muted">当前会话：尚未开始（发送第一条消息后创建）</Typography.Text>
-          )}
-
-          <div
-            style={{
-              border: '1px solid var(--ant-color-border)',
-              borderRadius: 12,
-              padding: 16,
-              minHeight: 360,
-              maxHeight: 520,
-              overflowY: 'auto',
-              background: 'var(--ant-color-bg-layout)',
-            }}
-          >
-            {messages.length === 0 ? (
-              <Typography.Text className="muted">您好，请输入问题开始对话。</Typography.Text>
-            ) : null}
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              {messages.map((m) => (
-                <div
-                  key={m.id}
-                  style={{
-                    alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                    background:
-                      m.role === 'user'
-                        ? 'var(--ant-color-primary-bg)'
-                        : 'var(--ant-color-bg-container)',
-                    border: '1px solid var(--ant-color-border-secondary)',
-                    borderRadius: 10,
-                    padding: '8px 12px',
-                    maxWidth: '85%',
-                  }}
-                >
-                  <Typography.Text>{m.content}</Typography.Text>
-                </div>
-              ))}
-            </Space>
+    <div className="public-chat-page">
+      <Card className="public-chat-card" bordered={false}>
+        <div className="public-chat-header">
+          <div>
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              在线客服
+            </Typography.Title>
+            <Typography.Text className="muted">
+              你好，我是你的智能助手。请输入问题，我会尽快给你答案。
+            </Typography.Text>
           </div>
+          <Link to="/">返回首页</Link>
+        </div>
 
+        <Typography.Text className="muted" style={{ marginBottom: 12 }}>
+          {sessionID ? `会话编号：${sessionID}` : '会话状态：发送第一条消息后自动创建'}
+        </Typography.Text>
+
+        <div ref={messageContainerRef} className="public-chat-message-panel">
+          {messages.length === 0 && !hydrating ? (
+            <div className="public-chat-empty">
+              <RobotOutlined style={{ fontSize: 24 }} />
+              <Typography.Text>欢迎使用在线客服，请直接输入你的问题。</Typography.Text>
+            </div>
+          ) : null}
+
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              className={`public-chat-row ${m.role === 'user' ? 'is-user' : 'is-assistant'} public-chat-enter`}
+            >
+              <Avatar
+                size={32}
+                className={`public-chat-avatar ${m.role === 'user' ? 'is-user' : 'is-assistant'}`}
+                icon={m.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
+              />
+              <div className="public-chat-bubble-wrap">
+                <div className={`public-chat-bubble ${m.role === 'user' ? 'is-user' : 'is-assistant'}`}>
+                  {m.content}
+                </div>
+                {m.timestamp ? <span className="public-chat-time">{m.timestamp}</span> : null}
+              </div>
+            </div>
+          ))}
+
+          {sending ? (
+            <div className="public-chat-row is-assistant public-chat-enter">
+              <Avatar size={32} className="public-chat-avatar is-assistant" icon={<RobotOutlined />} />
+              <div className="public-chat-bubble-wrap">
+                <div className="public-chat-bubble is-assistant">
+                  <span className="public-chat-typing-dot" />
+                  <span className="public-chat-typing-dot" />
+                  <span className="public-chat-typing-dot" />
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="public-chat-input-box">
           <Input.TextArea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            rows={4}
-            placeholder="请输入您的问题..."
+            rows={3}
+            placeholder="请输入你的问题，按 Enter 发送（Shift + Enter 换行）"
             onPressEnter={(e) => {
               if (!e.shiftKey) {
                 e.preventDefault()
@@ -187,13 +260,15 @@ export function PublicChat() {
               }
             }}
           />
-          <Space style={{ justifyContent: 'space-between', width: '100%' }}>
-            <Typography.Text className="muted">回车发送，Shift + 回车换行</Typography.Text>
-            <Button type="primary" loading={loading} disabled={!canSend} onClick={handleSend}>
+          <Space style={{ justifyContent: 'space-between', width: '100%', marginTop: 10 }}>
+            <Typography.Text className="muted">
+              仅用于客服问答，不建议输入敏感信息。
+            </Typography.Text>
+            <Button type="primary" icon={<SendOutlined />} loading={sending} disabled={!canSend} onClick={handleSend}>
               发送
             </Button>
           </Space>
-        </Space>
+        </div>
       </Card>
     </div>
   )

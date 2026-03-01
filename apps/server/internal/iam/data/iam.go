@@ -415,6 +415,13 @@ func (r *iamRepo) CreateUser(ctx context.Context, user biz.User) (biz.User, erro
 	if err != nil {
 		return biz.User{}, err
 	}
+	if existingTenantID, err := r.findExistingTenantByAccount(ctx, user.Email, user.Phone); err != nil {
+		return biz.User{}, err
+	} else if existingTenantID != "" && existingTenantID != tenantID {
+		return biz.User{}, kerrors.Conflict("ACCOUNT_ALREADY_BOUND", "account already bound to another tenant")
+	} else if existingTenantID == tenantID {
+		return biz.User{}, kerrors.Conflict("ACCOUNT_EXISTS", "account already exists")
+	}
 	user.TenantID = tenantID
 	if user.ID == "" {
 		user.ID = uuid.NewString()
@@ -424,16 +431,21 @@ func (r *iamRepo) CreateUser(ctx context.Context, user biz.User) (biz.User, erro
 	}
 	_, err = r.db.ExecContext(
 		ctx,
-		"INSERT INTO `user` (id, tenant_id, email, phone, name, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		"INSERT INTO `user` (id, tenant_id, email, phone, name, status, password_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 		user.ID,
 		user.TenantID,
-		user.Email,
-		user.Phone,
-		user.Name,
+		emptyToNull(user.Email),
+		emptyToNull(user.Phone),
+		emptyToNull(user.Name),
 		user.Status,
+		emptyToNull(user.PasswordHash),
 		user.CreatedAt,
 	)
 	if err != nil {
+		var mysqlErr *mysql.MySQLError
+		if stderrors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return biz.User{}, kerrors.Conflict("ACCOUNT_EXISTS", "account already exists")
+		}
 		return biz.User{}, err
 	}
 	return user, nil
@@ -840,6 +852,43 @@ func missingPermissions(codes []string, existing map[string]biz.Permission) []st
 		}
 	}
 	return missing
+}
+
+func findAccountQuery(email string, phone string) (string, []any, bool) {
+	email = strings.TrimSpace(email)
+	phone = strings.TrimSpace(phone)
+	if email == "" && phone == "" {
+		return "", nil, false
+	}
+	if email != "" && phone != "" {
+		return "SELECT tenant_id FROM `user` WHERE email = ? OR phone = ? LIMIT 1", []any{email, phone}, true
+	}
+	if email != "" {
+		return "SELECT tenant_id FROM `user` WHERE email = ? LIMIT 1", []any{email}, true
+	}
+	return "SELECT tenant_id FROM `user` WHERE phone = ? LIMIT 1", []any{phone}, true
+}
+
+func (r *iamRepo) findExistingTenantByAccount(ctx context.Context, email string, phone string) (string, error) {
+	query, args, ok := findAccountQuery(email, phone)
+	if !ok {
+		return "", nil
+	}
+	var tenantID string
+	if err := r.db.QueryRowContext(ctx, query, args...).Scan(&tenantID); err != nil {
+		if stderrors.Is(err, sql.ErrNoRows) {
+			return "", nil
+		}
+		return "", err
+	}
+	return tenantID, nil
+}
+
+func emptyToNull(value string) any {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	return strings.TrimSpace(value)
 }
 
 // ProviderSet is iam data providers.

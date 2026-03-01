@@ -1,6 +1,6 @@
 import { Button, Form, Input, Space, Typography } from 'antd'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
 import { getTenantId, setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
@@ -10,7 +10,11 @@ import { uiMessage } from '../../services/uiMessage'
 export function ConsoleLogin() {
   const [form] = Form.useForm()
   const navigate = useNavigate()
+  const [search] = useSearchParams()
   const cachedTenantID = getTenantId() || ''
+  const presetAccount = search.get('account')?.trim() || ''
+  const presetPassword = search.get('temp_password')?.trim() || ''
+  const presetTenantID = search.get('tenant_id')?.trim() || cachedTenantID
   const [showTenantField, setShowTenantField] = useState(cachedTenantID !== '')
   const [submitting, setSubmitting] = useState(false)
 
@@ -66,7 +70,11 @@ export function ConsoleLogin() {
         requiredMark
         style={{ marginTop: 24 }}
         onFinish={onFinish}
-        initialValues={{ tenant_id: cachedTenantID || undefined }}
+        initialValues={{
+          account: presetAccount || undefined,
+          password: presetPassword || undefined,
+          tenant_id: presetTenantID || undefined,
+        }}
       >
         <Form.Item
           label="账号（邮箱/手机号）"
@@ -87,7 +95,7 @@ export function ConsoleLogin() {
         <Form.Item label="密码" name="password" rules={[{ required: true, message: '请输入密码' }]}>
           <Input.Password placeholder="请输入密码" autoComplete="current-password" />
         </Form.Item>
-        {showTenantField ? (
+        {showTenantField || presetTenantID ? (
           <Form.Item
             label="租户 ID（可选）"
             name="tenant_id"

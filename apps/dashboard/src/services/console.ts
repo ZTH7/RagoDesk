@@ -177,13 +177,68 @@ export type CreateUserInput = {
   email?: string
   phone?: string
   status: string
+  password?: string
+  send_invite?: boolean
+  invite_base_url?: string
 }
 
 export type CreateRoleInput = {
   name: string
 }
 
+type RawApiKeyItem = Partial<ApiKeyItem> & {
+  botId?: string
+  publicChatId?: string
+  publicChatEnabled?: boolean
+  apiVersions?: string[]
+  quotaDaily?: number
+  qpsLimit?: number
+  createdAt?: string
+  lastUsedAt?: string
+}
+
+type RawApiKeyEnvelope = {
+  api_key?: RawApiKeyItem
+  apiKey?: RawApiKeyItem
+  raw_key?: string
+  rawKey?: string
+}
+
 export const consoleApi = {
+  normalizeApiKey(input: RawApiKeyItem | null | undefined): ApiKeyItem {
+    if (!input) {
+      return {
+        id: '',
+        bot_id: '',
+        name: '',
+        status: '',
+        public_chat_id: '',
+        public_chat_enabled: false,
+        scopes: [],
+        api_versions: [],
+        quota_daily: 0,
+        qps_limit: 0,
+        created_at: '',
+        last_used_at: '',
+      }
+    }
+    const chatID = input.public_chat_id ?? input.publicChatId ?? ''
+    const enabledRaw = input.public_chat_enabled ?? input.publicChatEnabled
+    return {
+      id: input.id ?? '',
+      bot_id: input.bot_id ?? input.botId ?? '',
+      name: input.name ?? '',
+      status: input.status ?? '',
+      public_chat_id: chatID,
+      public_chat_enabled: enabledRaw ?? Boolean(chatID),
+      scopes: input.scopes ?? [],
+      api_versions: input.api_versions ?? input.apiVersions ?? [],
+      quota_daily: input.quota_daily ?? input.quotaDaily ?? 0,
+      qps_limit: input.qps_limit ?? input.qpsLimit ?? 0,
+      created_at: input.created_at ?? input.createdAt ?? '',
+      last_used_at: input.last_used_at ?? input.lastUsedAt ?? '',
+    }
+  },
   normalizeDocument(input: any): DocumentItem {
     if (!input) {
       return {
@@ -361,16 +416,23 @@ export const consoleApi = {
     if (params?.limit) query.set('limit', String(params.limit))
     if (params?.offset) query.set('offset', String(params.offset))
     const suffix = query.toString() ? `?${query.toString()}` : ''
-    return request<{ items: ApiKeyItem[] }>(`/console/v1/api_keys${suffix}`)
+    return request<{ items: RawApiKeyItem[] }>(`/console/v1/api_keys${suffix}`).then((res) => ({
+      items: (res.items ?? []).map(consoleApi.normalizeApiKey),
+    }))
   },
   getApiKey(id: string) {
-    return request<{ api_key: ApiKeyItem }>(`/console/v1/api_keys/${id}`)
+    return request<RawApiKeyEnvelope>(`/console/v1/api_keys/${id}`).then((res) => ({
+      api_key: consoleApi.normalizeApiKey(res.api_key ?? res.apiKey),
+    }))
   },
   createApiKey(payload: CreateApiKeyInput) {
-    return request<{ api_key: ApiKeyItem; raw_key: string }>('/console/v1/api_keys', {
+    return request<RawApiKeyEnvelope>('/console/v1/api_keys', {
       method: 'POST',
       body: JSON.stringify(payload),
-    })
+    }).then((res) => ({
+      api_key: consoleApi.normalizeApiKey(res.api_key ?? res.apiKey),
+      raw_key: res.raw_key ?? res.rawKey ?? '',
+    }))
   },
   updateApiKey(id: string, payload: UpdateApiKeyInput) {
     const body: Record<string, unknown> = { id }
@@ -382,10 +444,12 @@ export const consoleApi = {
     if (payload.quota_daily !== undefined) body.quota_daily = payload.quota_daily
     if (payload.qps_limit !== undefined) body.qps_limit = payload.qps_limit
 
-    return request<{ api_key: ApiKeyItem }>(`/console/v1/api_keys/${id}`, {
+    return request<RawApiKeyEnvelope>(`/console/v1/api_keys/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(body),
-    })
+    }).then((res) => ({
+      api_key: consoleApi.normalizeApiKey(res.api_key ?? res.apiKey),
+    }))
   },
   deleteApiKey(id: string) {
     return request<void>(`/console/v1/api_keys/${id}`, {
@@ -393,16 +457,21 @@ export const consoleApi = {
     })
   },
   rotateApiKey(id: string) {
-    return request<{ api_key: ApiKeyItem; raw_key: string }>(`/console/v1/api_keys/${id}/rotate`, {
+    return request<RawApiKeyEnvelope>(`/console/v1/api_keys/${id}/rotate`, {
       method: 'POST',
       body: JSON.stringify({ id }),
-    })
+    }).then((res) => ({
+      api_key: consoleApi.normalizeApiKey(res.api_key ?? res.apiKey),
+      raw_key: res.raw_key ?? res.rawKey ?? '',
+    }))
   },
   regenerateApiKeyPublicChatID(id: string) {
-    return request<{ api_key: ApiKeyItem }>(`/console/v1/api_keys/${id}/public_chat/regenerate`, {
+    return request<RawApiKeyEnvelope>(`/console/v1/api_keys/${id}/public_chat/regenerate`, {
       method: 'POST',
       body: JSON.stringify({ id }),
-    })
+    }).then((res) => ({
+      api_key: consoleApi.normalizeApiKey(res.api_key ?? res.apiKey),
+    }))
   },
   getUsageSummary(params?: {
     bot_id?: string
@@ -477,7 +546,7 @@ export const consoleApi = {
     )
   },
   createUser(tenantId: string, payload: CreateUserInput) {
-    return request<{ user: UserItem }>(`/console/v1/tenants/${tenantId}/users`, {
+    return request<{ user: UserItem; invite_link?: string }>(`/console/v1/tenants/${tenantId}/users`, {
       method: 'POST',
       body: JSON.stringify({ tenant_id: tenantId, ...payload }),
     })
