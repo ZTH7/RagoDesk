@@ -10,6 +10,7 @@
 
 ### 1.1 认证
 - Header: `X-API-Key: <key>`（API Key 绑定 bot，用于定位租户与机器人配置）
+- Header: `X-Chat-Key: <chat_id>`（公开聊天入口使用，映射到 API Key，复用同一套限流与统计）
 - 可选签名：`X-Timestamp`, `X-Nonce`, `X-Signature` (HMAC-SHA256)
 - 服务端校验时间窗口与 nonce 防重放
 - 管理后台使用 `Authorization: Bearer <JWT>`（通过登录接口获取）
@@ -39,6 +40,12 @@
 ---
 
 ## 2. 对外核心 API（租户调用）
+
+### 2.0 公开聊天链接（面向终端用户）
+- 前端路由：`/chat/{chat_id}`，发送首条消息后跳转为 `/chat/{chat_id}/{session_id}`
+- `chat_id` 为独立公开标识（不暴露 raw API Key）
+- 调用服务端时通过 `X-Chat-Key` 透传，复用 API Key 的 scope、QPS、日配额与调用统计
+- 当 `public_chat_enabled=false` 时，公开聊天调用会被拒绝
 
 ### 2.1 创建会话
 `POST /api/v1/session`
@@ -305,9 +312,11 @@
 ### 4.5 API Key 管理
 - `POST /console/v1/api_keys`
 - `GET /console/v1/api_keys`
+- `GET /console/v1/api_keys/{id}`
 - `PATCH /console/v1/api_keys/{id}`
 - `DELETE /console/v1/api_keys/{id}`
 - `POST /console/v1/api_keys/{id}/rotate`
+- `POST /console/v1/api_keys/{id}/public_chat/regenerate`
 - `GET /console/v1/api_usage`
 - `GET /console/v1/api_usage/summary`
 - `POST /console/v1/api_usage/export`
@@ -336,6 +345,7 @@
 {
   "name": "prod-key-v2",
   "status": "active",
+  "public_chat_enabled": true,
   "scopes": ["rag"],
   "api_versions": ["v1"],
   "quota_daily": 10000,
@@ -344,10 +354,19 @@
 ```
 > 未传字段保持不变，`quota_daily/qps_limit=0` 表示不限制。
 
+`APIKey` 返回结构新增：
+- `public_chat_id`：公开聊天路由标识（用于 `/chat/{chat_id}`）
+- `public_chat_enabled`：公开聊天开关
+
 **Rotate**
 `POST /console/v1/api_keys/{id}/rotate`
 返回：`api_key` + `raw_key`
 > 轮换后旧 Key 进入“过渡期”，默认 60 分钟（可通过配置调整）。
+
+**Regenerate Public Chat ID**
+`POST /console/v1/api_keys/{id}/public_chat/regenerate`
+返回：`api_key`（新的 `public_chat_id`）
+> 用于重置公开聊天链接，旧链接立即失效，不影响 raw API Key。
 
 **Usage Logs**
 `GET /console/v1/api_usage?api_key_id=...&bot_id=...&api_version=v1&model=...&start_time=...&end_time=...`

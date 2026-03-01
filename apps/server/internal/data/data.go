@@ -174,6 +174,8 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 			bot_id VARCHAR(36) NOT NULL,
 			name VARCHAR(128) NOT NULL,
 			key_hash VARCHAR(64) NOT NULL,
+			public_chat_id VARCHAR(64) NOT NULL,
+			public_chat_enabled TINYINT(1) NOT NULL DEFAULT 1,
 			scopes TEXT NULL,
 			api_versions TEXT NULL,
 			prev_key_hash VARCHAR(64) NULL,
@@ -185,6 +187,7 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 			last_used_at DATETIME NULL,
 			PRIMARY KEY (id),
 			UNIQUE KEY uniq_api_key_hash (key_hash),
+			UNIQUE KEY uniq_api_key_public_chat_id (public_chat_id),
 			KEY idx_api_key_tenant (tenant_id),
 			KEY idx_api_key_bot (tenant_id, bot_id)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
@@ -222,6 +225,12 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 	if err := ensureColumn(ctx, db, "api_key", "key_hash", "VARCHAR(64) NOT NULL"); err != nil {
 		return err
 	}
+	if err := ensureColumn(ctx, db, "api_key", "public_chat_id", "VARCHAR(64) NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	if err := ensureColumn(ctx, db, "api_key", "public_chat_enabled", "TINYINT(1) NOT NULL DEFAULT 1"); err != nil {
+		return err
+	}
 	if err := ensureColumn(ctx, db, "api_key", "scopes", "TEXT NULL"); err != nil {
 		return err
 	}
@@ -244,6 +253,12 @@ func ensureAPIMgmtSchema(ctx context.Context, db *sql.DB) error {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "api_key", "last_used_at", "DATETIME NULL"); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, "UPDATE api_key SET public_chat_id = CONCAT('chat_', REPLACE(UUID(), '-', '')) WHERE public_chat_id = '' OR public_chat_id IS NULL"); err != nil {
+		return err
+	}
+	if err := ensureUniqueIndex(ctx, db, "api_key", "uniq_api_key_public_chat_id", "`public_chat_id`"); err != nil {
 		return err
 	}
 	if err := ensureColumn(ctx, db, "api_usage_log", "tenant_id", "VARCHAR(36) NOT NULL DEFAULT ''"); err != nil {
@@ -655,6 +670,30 @@ func ensureIndex(ctx context.Context, db *sql.DB, table string, indexName string
 		return nil
 	}
 	query := fmt.Sprintf("CREATE INDEX `%s` ON `%s` (%s)", indexName, table, definition)
+	_, err = db.ExecContext(ctx, query)
+	return err
+}
+
+func ensureUniqueIndex(ctx context.Context, db *sql.DB, table string, indexName string, definition string) error {
+	if strings.TrimSpace(indexName) == "" || strings.TrimSpace(definition) == "" {
+		return nil
+	}
+	var count int
+	err := db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(*)
+		FROM INFORMATION_SCHEMA.STATISTICS
+		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
+		table,
+		indexName,
+	).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+	query := fmt.Sprintf("CREATE UNIQUE INDEX `%s` ON `%s` (%s)", indexName, table, definition)
 	_, err = db.ExecContext(ctx, query)
 	return err
 }

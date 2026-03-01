@@ -303,8 +303,21 @@ func (s *ConversationService) requireAPIKey(ctx context.Context, scope string, a
 	if !ok {
 		return ctx, apimgmtbiz.APIKey{}, errors.Unauthorized("API_KEY_MISSING", "api key missing")
 	}
-	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
-	key, err := s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope, apiVersion)
+	header := tr.RequestHeader()
+	rawKey := strings.TrimSpace(header.Get(apimgmtbiz.DefaultAPIKeyHeader))
+	chatKey := strings.TrimSpace(header.Get(apimgmtbiz.DefaultPublicChatHeader))
+	var (
+		key apimgmtbiz.APIKey
+		err error
+	)
+	switch {
+	case rawKey != "":
+		key, err = s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope, apiVersion)
+	case chatKey != "":
+		key, err = s.api.AuthorizePublicChatIDWithScope(ctx, chatKey, scope, apiVersion)
+	default:
+		err = errors.Unauthorized("API_KEY_MISSING", "api key missing")
+	}
 	if key.TenantID != "" {
 		ctx = tenant.WithTenantID(ctx, key.TenantID)
 	}

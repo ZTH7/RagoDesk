@@ -23,9 +23,11 @@ const _ = http.SupportPackageIsVersion1
 const OperationConsoleAPIMgmtCreateAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/CreateAPIKey"
 const OperationConsoleAPIMgmtDeleteAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/DeleteAPIKey"
 const OperationConsoleAPIMgmtExportUsageLogs = "/api.apimgmt.v1.ConsoleAPIMgmt/ExportUsageLogs"
+const OperationConsoleAPIMgmtGetAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/GetAPIKey"
 const OperationConsoleAPIMgmtGetUsageSummary = "/api.apimgmt.v1.ConsoleAPIMgmt/GetUsageSummary"
 const OperationConsoleAPIMgmtListAPIKeys = "/api.apimgmt.v1.ConsoleAPIMgmt/ListAPIKeys"
 const OperationConsoleAPIMgmtListUsageLogs = "/api.apimgmt.v1.ConsoleAPIMgmt/ListUsageLogs"
+const OperationConsoleAPIMgmtRegeneratePublicChatID = "/api.apimgmt.v1.ConsoleAPIMgmt/RegeneratePublicChatID"
 const OperationConsoleAPIMgmtRotateAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/RotateAPIKey"
 const OperationConsoleAPIMgmtUpdateAPIKey = "/api.apimgmt.v1.ConsoleAPIMgmt/UpdateAPIKey"
 
@@ -33,9 +35,11 @@ type ConsoleAPIMgmtHTTPServer interface {
 	CreateAPIKey(context.Context, *CreateAPIKeyRequest) (*CreateAPIKeyResponse, error)
 	DeleteAPIKey(context.Context, *DeleteAPIKeyRequest) (*emptypb.Empty, error)
 	ExportUsageLogs(context.Context, *ExportUsageLogsRequest) (*ExportUsageLogsResponse, error)
+	GetAPIKey(context.Context, *GetAPIKeyRequest) (*GetAPIKeyResponse, error)
 	GetUsageSummary(context.Context, *GetUsageSummaryRequest) (*GetUsageSummaryResponse, error)
 	ListAPIKeys(context.Context, *ListAPIKeysRequest) (*ListAPIKeysResponse, error)
 	ListUsageLogs(context.Context, *ListUsageLogsRequest) (*ListUsageLogsResponse, error)
+	RegeneratePublicChatID(context.Context, *RegeneratePublicChatIDRequest) (*RegeneratePublicChatIDResponse, error)
 	RotateAPIKey(context.Context, *RotateAPIKeyRequest) (*RotateAPIKeyResponse, error)
 	UpdateAPIKey(context.Context, *UpdateAPIKeyRequest) (*UpdateAPIKeyResponse, error)
 }
@@ -44,9 +48,11 @@ func RegisterConsoleAPIMgmtHTTPServer(s *http.Server, srv ConsoleAPIMgmtHTTPServ
 	r := s.Route("/")
 	r.POST("/console/v1/api_keys", _ConsoleAPIMgmt_CreateAPIKey0_HTTP_Handler(srv))
 	r.GET("/console/v1/api_keys", _ConsoleAPIMgmt_ListAPIKeys0_HTTP_Handler(srv))
+	r.GET("/console/v1/api_keys/{id}", _ConsoleAPIMgmt_GetAPIKey0_HTTP_Handler(srv))
 	r.PATCH("/console/v1/api_keys/{id}", _ConsoleAPIMgmt_UpdateAPIKey0_HTTP_Handler(srv))
 	r.DELETE("/console/v1/api_keys/{id}", _ConsoleAPIMgmt_DeleteAPIKey0_HTTP_Handler(srv))
 	r.POST("/console/v1/api_keys/{id}/rotate", _ConsoleAPIMgmt_RotateAPIKey0_HTTP_Handler(srv))
+	r.POST("/console/v1/api_keys/{id}/public_chat/regenerate", _ConsoleAPIMgmt_RegeneratePublicChatID0_HTTP_Handler(srv))
 	r.GET("/console/v1/api_usage", _ConsoleAPIMgmt_ListUsageLogs0_HTTP_Handler(srv))
 	r.GET("/console/v1/api_usage/summary", _ConsoleAPIMgmt_GetUsageSummary0_HTTP_Handler(srv))
 	r.POST("/console/v1/api_usage/export", _ConsoleAPIMgmt_ExportUsageLogs0_HTTP_Handler(srv))
@@ -89,6 +95,28 @@ func _ConsoleAPIMgmt_ListAPIKeys0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer) fun
 			return err
 		}
 		reply := out.(*ListAPIKeysResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _ConsoleAPIMgmt_GetAPIKey0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetAPIKeyRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationConsoleAPIMgmtGetAPIKey)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetAPIKey(ctx, req.(*GetAPIKeyRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetAPIKeyResponse)
 		return ctx.Result(200, reply)
 	}
 }
@@ -165,6 +193,31 @@ func _ConsoleAPIMgmt_RotateAPIKey0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer) fu
 	}
 }
 
+func _ConsoleAPIMgmt_RegeneratePublicChatID0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in RegeneratePublicChatIDRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationConsoleAPIMgmtRegeneratePublicChatID)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.RegeneratePublicChatID(ctx, req.(*RegeneratePublicChatIDRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*RegeneratePublicChatIDResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 func _ConsoleAPIMgmt_ListUsageLogs0_HTTP_Handler(srv ConsoleAPIMgmtHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ListUsageLogsRequest
@@ -229,9 +282,11 @@ type ConsoleAPIMgmtHTTPClient interface {
 	CreateAPIKey(ctx context.Context, req *CreateAPIKeyRequest, opts ...http.CallOption) (rsp *CreateAPIKeyResponse, err error)
 	DeleteAPIKey(ctx context.Context, req *DeleteAPIKeyRequest, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
 	ExportUsageLogs(ctx context.Context, req *ExportUsageLogsRequest, opts ...http.CallOption) (rsp *ExportUsageLogsResponse, err error)
+	GetAPIKey(ctx context.Context, req *GetAPIKeyRequest, opts ...http.CallOption) (rsp *GetAPIKeyResponse, err error)
 	GetUsageSummary(ctx context.Context, req *GetUsageSummaryRequest, opts ...http.CallOption) (rsp *GetUsageSummaryResponse, err error)
 	ListAPIKeys(ctx context.Context, req *ListAPIKeysRequest, opts ...http.CallOption) (rsp *ListAPIKeysResponse, err error)
 	ListUsageLogs(ctx context.Context, req *ListUsageLogsRequest, opts ...http.CallOption) (rsp *ListUsageLogsResponse, err error)
+	RegeneratePublicChatID(ctx context.Context, req *RegeneratePublicChatIDRequest, opts ...http.CallOption) (rsp *RegeneratePublicChatIDResponse, err error)
 	RotateAPIKey(ctx context.Context, req *RotateAPIKeyRequest, opts ...http.CallOption) (rsp *RotateAPIKeyResponse, err error)
 	UpdateAPIKey(ctx context.Context, req *UpdateAPIKeyRequest, opts ...http.CallOption) (rsp *UpdateAPIKeyResponse, err error)
 }
@@ -283,6 +338,19 @@ func (c *ConsoleAPIMgmtHTTPClientImpl) ExportUsageLogs(ctx context.Context, in *
 	return &out, nil
 }
 
+func (c *ConsoleAPIMgmtHTTPClientImpl) GetAPIKey(ctx context.Context, in *GetAPIKeyRequest, opts ...http.CallOption) (*GetAPIKeyResponse, error) {
+	var out GetAPIKeyResponse
+	pattern := "/console/v1/api_keys/{id}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationConsoleAPIMgmtGetAPIKey))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (c *ConsoleAPIMgmtHTTPClientImpl) GetUsageSummary(ctx context.Context, in *GetUsageSummaryRequest, opts ...http.CallOption) (*GetUsageSummaryResponse, error) {
 	var out GetUsageSummaryResponse
 	pattern := "/console/v1/api_usage/summary"
@@ -316,6 +384,19 @@ func (c *ConsoleAPIMgmtHTTPClientImpl) ListUsageLogs(ctx context.Context, in *Li
 	opts = append(opts, http.Operation(OperationConsoleAPIMgmtListUsageLogs))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *ConsoleAPIMgmtHTTPClientImpl) RegeneratePublicChatID(ctx context.Context, in *RegeneratePublicChatIDRequest, opts ...http.CallOption) (*RegeneratePublicChatIDResponse, error) {
+	var out RegeneratePublicChatIDResponse
+	pattern := "/console/v1/api_keys/{id}/public_chat/regenerate"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationConsoleAPIMgmtRegeneratePublicChatID))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

@@ -26,20 +26,22 @@ const (
 )
 
 type APIKey struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	TenantId      string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	BotId         string                 `protobuf:"bytes,3,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
-	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
-	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
-	Scopes        []string               `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	ApiVersions   []string               `protobuf:"bytes,7,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
-	QuotaDaily    int32                  `protobuf:"varint,8,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
-	QpsLimit      int32                  `protobuf:"varint,9,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	LastUsedAt    *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	TenantId          string                 `protobuf:"bytes,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
+	BotId             string                 `protobuf:"bytes,3,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	Name              string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Status            string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	Scopes            []string               `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	ApiVersions       []string               `protobuf:"bytes,7,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	QuotaDaily        int32                  `protobuf:"varint,8,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
+	QpsLimit          int32                  `protobuf:"varint,9,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
+	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	LastUsedAt        *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
+	PublicChatId      string                 `protobuf:"bytes,12,opt,name=public_chat_id,json=publicChatId,proto3" json:"public_chat_id,omitempty"`
+	PublicChatEnabled bool                   `protobuf:"varint,13,opt,name=public_chat_enabled,json=publicChatEnabled,proto3" json:"public_chat_enabled,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *APIKey) Reset() {
@@ -147,6 +149,20 @@ func (x *APIKey) GetLastUsedAt() *timestamppb.Timestamp {
 		return x.LastUsedAt
 	}
 	return nil
+}
+
+func (x *APIKey) GetPublicChatId() string {
+	if x != nil {
+		return x.PublicChatId
+	}
+	return ""
+}
+
+func (x *APIKey) GetPublicChatEnabled() bool {
+	if x != nil {
+		return x.PublicChatEnabled
+	}
+	return false
 }
 
 type UsageLog struct {
@@ -382,15 +398,16 @@ func (x *UsageSummary) GetTotalTokens() int64 {
 }
 
 type CreateAPIKeyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BotId         string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Scopes        []string               `protobuf:"bytes,3,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	ApiVersions   []string               `protobuf:"bytes,4,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
-	QuotaDaily    int32                  `protobuf:"varint,5,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
-	QpsLimit      int32                  `protobuf:"varint,6,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	BotId             string                 `protobuf:"bytes,1,opt,name=bot_id,json=botId,proto3" json:"bot_id,omitempty"`
+	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Scopes            []string               `protobuf:"bytes,3,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	ApiVersions       []string               `protobuf:"bytes,4,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	QuotaDaily        int32                  `protobuf:"varint,5,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
+	QpsLimit          int32                  `protobuf:"varint,6,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
+	PublicChatEnabled *wrapperspb.BoolValue  `protobuf:"bytes,7,opt,name=public_chat_enabled,json=publicChatEnabled,proto3" json:"public_chat_enabled,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *CreateAPIKeyRequest) Reset() {
@@ -463,6 +480,13 @@ func (x *CreateAPIKeyRequest) GetQpsLimit() int32 {
 		return x.QpsLimit
 	}
 	return 0
+}
+
+func (x *CreateAPIKeyRequest) GetPublicChatEnabled() *wrapperspb.BoolValue {
+	if x != nil {
+		return x.PublicChatEnabled
+	}
+	return nil
 }
 
 type CreateAPIKeyResponse struct {
@@ -621,22 +645,111 @@ func (x *ListAPIKeysResponse) GetItems() []*APIKey {
 	return nil
 }
 
-type UpdateAPIKeyRequest struct {
+type GetAPIKeyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	Scopes        []string               `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
-	ApiVersions   []string               `protobuf:"bytes,5,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
-	QuotaDaily    *wrapperspb.Int32Value `protobuf:"bytes,6,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
-	QpsLimit      *wrapperspb.Int32Value `protobuf:"bytes,7,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *GetAPIKeyRequest) Reset() {
+	*x = GetAPIKeyRequest{}
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAPIKeyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAPIKeyRequest) ProtoMessage() {}
+
+func (x *GetAPIKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAPIKeyRequest.ProtoReflect.Descriptor instead.
+func (*GetAPIKeyRequest) Descriptor() ([]byte, []int) {
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetAPIKeyRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetAPIKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApiKey        *APIKey                `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAPIKeyResponse) Reset() {
+	*x = GetAPIKeyResponse{}
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAPIKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAPIKeyResponse) ProtoMessage() {}
+
+func (x *GetAPIKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAPIKeyResponse.ProtoReflect.Descriptor instead.
+func (*GetAPIKeyResponse) Descriptor() ([]byte, []int) {
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetAPIKeyResponse) GetApiKey() *APIKey {
+	if x != nil {
+		return x.ApiKey
+	}
+	return nil
+}
+
+type UpdateAPIKeyRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Status            string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	Scopes            []string               `protobuf:"bytes,4,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	ApiVersions       []string               `protobuf:"bytes,5,rep,name=api_versions,json=apiVersions,proto3" json:"api_versions,omitempty"`
+	QuotaDaily        *wrapperspb.Int32Value `protobuf:"bytes,6,opt,name=quota_daily,json=quotaDaily,proto3" json:"quota_daily,omitempty"`
+	QpsLimit          *wrapperspb.Int32Value `protobuf:"bytes,7,opt,name=qps_limit,json=qpsLimit,proto3" json:"qps_limit,omitempty"`
+	PublicChatEnabled *wrapperspb.BoolValue  `protobuf:"bytes,8,opt,name=public_chat_enabled,json=publicChatEnabled,proto3" json:"public_chat_enabled,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
 func (x *UpdateAPIKeyRequest) Reset() {
 	*x = UpdateAPIKeyRequest{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[7]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -648,7 +761,7 @@ func (x *UpdateAPIKeyRequest) String() string {
 func (*UpdateAPIKeyRequest) ProtoMessage() {}
 
 func (x *UpdateAPIKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[7]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -661,7 +774,7 @@ func (x *UpdateAPIKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAPIKeyRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAPIKeyRequest) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{7}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateAPIKeyRequest) GetId() string {
@@ -713,6 +826,13 @@ func (x *UpdateAPIKeyRequest) GetQpsLimit() *wrapperspb.Int32Value {
 	return nil
 }
 
+func (x *UpdateAPIKeyRequest) GetPublicChatEnabled() *wrapperspb.BoolValue {
+	if x != nil {
+		return x.PublicChatEnabled
+	}
+	return nil
+}
+
 type UpdateAPIKeyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ApiKey        *APIKey                `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
@@ -722,7 +842,7 @@ type UpdateAPIKeyResponse struct {
 
 func (x *UpdateAPIKeyResponse) Reset() {
 	*x = UpdateAPIKeyResponse{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[8]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -734,7 +854,7 @@ func (x *UpdateAPIKeyResponse) String() string {
 func (*UpdateAPIKeyResponse) ProtoMessage() {}
 
 func (x *UpdateAPIKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[8]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -747,7 +867,7 @@ func (x *UpdateAPIKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAPIKeyResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAPIKeyResponse) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{8}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateAPIKeyResponse) GetApiKey() *APIKey {
@@ -766,7 +886,7 @@ type DeleteAPIKeyRequest struct {
 
 func (x *DeleteAPIKeyRequest) Reset() {
 	*x = DeleteAPIKeyRequest{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[9]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -778,7 +898,7 @@ func (x *DeleteAPIKeyRequest) String() string {
 func (*DeleteAPIKeyRequest) ProtoMessage() {}
 
 func (x *DeleteAPIKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[9]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -791,7 +911,7 @@ func (x *DeleteAPIKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAPIKeyRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAPIKeyRequest) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{9}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DeleteAPIKeyRequest) GetId() string {
@@ -810,7 +930,7 @@ type RotateAPIKeyRequest struct {
 
 func (x *RotateAPIKeyRequest) Reset() {
 	*x = RotateAPIKeyRequest{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[10]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -822,7 +942,7 @@ func (x *RotateAPIKeyRequest) String() string {
 func (*RotateAPIKeyRequest) ProtoMessage() {}
 
 func (x *RotateAPIKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[10]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -835,7 +955,7 @@ func (x *RotateAPIKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RotateAPIKeyRequest.ProtoReflect.Descriptor instead.
 func (*RotateAPIKeyRequest) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{10}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *RotateAPIKeyRequest) GetId() string {
@@ -855,7 +975,7 @@ type RotateAPIKeyResponse struct {
 
 func (x *RotateAPIKeyResponse) Reset() {
 	*x = RotateAPIKeyResponse{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[11]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -867,7 +987,7 @@ func (x *RotateAPIKeyResponse) String() string {
 func (*RotateAPIKeyResponse) ProtoMessage() {}
 
 func (x *RotateAPIKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[11]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -880,7 +1000,7 @@ func (x *RotateAPIKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RotateAPIKeyResponse.ProtoReflect.Descriptor instead.
 func (*RotateAPIKeyResponse) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{11}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *RotateAPIKeyResponse) GetApiKey() *APIKey {
@@ -895,6 +1015,94 @@ func (x *RotateAPIKeyResponse) GetRawKey() string {
 		return x.RawKey
 	}
 	return ""
+}
+
+type RegeneratePublicChatIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegeneratePublicChatIDRequest) Reset() {
+	*x = RegeneratePublicChatIDRequest{}
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegeneratePublicChatIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegeneratePublicChatIDRequest) ProtoMessage() {}
+
+func (x *RegeneratePublicChatIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegeneratePublicChatIDRequest.ProtoReflect.Descriptor instead.
+func (*RegeneratePublicChatIDRequest) Descriptor() ([]byte, []int) {
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *RegeneratePublicChatIDRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type RegeneratePublicChatIDResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApiKey        *APIKey                `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegeneratePublicChatIDResponse) Reset() {
+	*x = RegeneratePublicChatIDResponse{}
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegeneratePublicChatIDResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegeneratePublicChatIDResponse) ProtoMessage() {}
+
+func (x *RegeneratePublicChatIDResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegeneratePublicChatIDResponse.ProtoReflect.Descriptor instead.
+func (*RegeneratePublicChatIDResponse) Descriptor() ([]byte, []int) {
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *RegeneratePublicChatIDResponse) GetApiKey() *APIKey {
+	if x != nil {
+		return x.ApiKey
+	}
+	return nil
 }
 
 type ListUsageLogsRequest struct {
@@ -913,7 +1121,7 @@ type ListUsageLogsRequest struct {
 
 func (x *ListUsageLogsRequest) Reset() {
 	*x = ListUsageLogsRequest{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[12]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -925,7 +1133,7 @@ func (x *ListUsageLogsRequest) String() string {
 func (*ListUsageLogsRequest) ProtoMessage() {}
 
 func (x *ListUsageLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[12]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -938,7 +1146,7 @@ func (x *ListUsageLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsageLogsRequest.ProtoReflect.Descriptor instead.
 func (*ListUsageLogsRequest) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{12}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListUsageLogsRequest) GetApiKeyId() string {
@@ -1006,7 +1214,7 @@ type ListUsageLogsResponse struct {
 
 func (x *ListUsageLogsResponse) Reset() {
 	*x = ListUsageLogsResponse{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[13]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1018,7 +1226,7 @@ func (x *ListUsageLogsResponse) String() string {
 func (*ListUsageLogsResponse) ProtoMessage() {}
 
 func (x *ListUsageLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[13]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1031,7 +1239,7 @@ func (x *ListUsageLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsageLogsResponse.ProtoReflect.Descriptor instead.
 func (*ListUsageLogsResponse) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{13}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListUsageLogsResponse) GetItems() []*UsageLog {
@@ -1055,7 +1263,7 @@ type GetUsageSummaryRequest struct {
 
 func (x *GetUsageSummaryRequest) Reset() {
 	*x = GetUsageSummaryRequest{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[14]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1067,7 +1275,7 @@ func (x *GetUsageSummaryRequest) String() string {
 func (*GetUsageSummaryRequest) ProtoMessage() {}
 
 func (x *GetUsageSummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[14]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1080,7 +1288,7 @@ func (x *GetUsageSummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUsageSummaryRequest.ProtoReflect.Descriptor instead.
 func (*GetUsageSummaryRequest) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{14}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetUsageSummaryRequest) GetApiKeyId() string {
@@ -1134,7 +1342,7 @@ type GetUsageSummaryResponse struct {
 
 func (x *GetUsageSummaryResponse) Reset() {
 	*x = GetUsageSummaryResponse{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[15]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1146,7 +1354,7 @@ func (x *GetUsageSummaryResponse) String() string {
 func (*GetUsageSummaryResponse) ProtoMessage() {}
 
 func (x *GetUsageSummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[15]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1159,7 +1367,7 @@ func (x *GetUsageSummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUsageSummaryResponse.ProtoReflect.Descriptor instead.
 func (*GetUsageSummaryResponse) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{15}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetUsageSummaryResponse) GetSummary() *UsageSummary {
@@ -1186,7 +1394,7 @@ type ExportUsageLogsRequest struct {
 
 func (x *ExportUsageLogsRequest) Reset() {
 	*x = ExportUsageLogsRequest{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[16]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1198,7 +1406,7 @@ func (x *ExportUsageLogsRequest) String() string {
 func (*ExportUsageLogsRequest) ProtoMessage() {}
 
 func (x *ExportUsageLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[16]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1211,7 +1419,7 @@ func (x *ExportUsageLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportUsageLogsRequest.ProtoReflect.Descriptor instead.
 func (*ExportUsageLogsRequest) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{16}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ExportUsageLogsRequest) GetApiKeyId() string {
@@ -1290,7 +1498,7 @@ type ExportUsageLogsResponse struct {
 
 func (x *ExportUsageLogsResponse) Reset() {
 	*x = ExportUsageLogsResponse{}
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[17]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1302,7 +1510,7 @@ func (x *ExportUsageLogsResponse) String() string {
 func (*ExportUsageLogsResponse) ProtoMessage() {}
 
 func (x *ExportUsageLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[17]
+	mi := &file_api_apimgmt_v1_console_apimgmt_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1315,7 +1523,7 @@ func (x *ExportUsageLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportUsageLogsResponse.ProtoReflect.Descriptor instead.
 func (*ExportUsageLogsResponse) Descriptor() ([]byte, []int) {
-	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{17}
+	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ExportUsageLogsResponse) GetContent() string {
@@ -1357,7 +1565,7 @@ var File_api_apimgmt_v1_console_apimgmt_proto protoreflect.FileDescriptor
 
 const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\n" +
-	"$api/apimgmt/v1/console_apimgmt.proto\x12\x0eapi.apimgmt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"\xea\x02\n" +
+	"$api/apimgmt/v1/console_apimgmt.proto\x12\x0eapi.apimgmt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"\xc0\x03\n" +
 	"\x06APIKey\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\x02 \x01(\tR\btenantId\x12\x15\n" +
@@ -1373,7 +1581,9 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"created_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12<\n" +
 	"\flast_used_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"lastUsedAt\"\xc6\x03\n" +
+	"lastUsedAt\x12$\n" +
+	"\x0epublic_chat_id\x18\f \x01(\tR\fpublicChatId\x12.\n" +
+	"\x13public_chat_enabled\x18\r \x01(\bR\x11publicChatEnabled\"\xc6\x03\n" +
 	"\bUsageLog\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1c\n" +
 	"\n" +
@@ -1403,7 +1613,7 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\x0eavg_latency_ms\x18\x03 \x01(\x01R\favgLatencyMs\x12#\n" +
 	"\rprompt_tokens\x18\x04 \x01(\x03R\fpromptTokens\x12+\n" +
 	"\x11completion_tokens\x18\x05 \x01(\x03R\x10completionTokens\x12!\n" +
-	"\ftotal_tokens\x18\x06 \x01(\x03R\vtotalTokens\"\xb9\x01\n" +
+	"\ftotal_tokens\x18\x06 \x01(\x03R\vtotalTokens\"\x85\x02\n" +
 	"\x13CreateAPIKeyRequest\x12\x15\n" +
 	"\x06bot_id\x18\x01 \x01(\tR\x05botId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
@@ -1411,7 +1621,8 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\fapi_versions\x18\x04 \x03(\tR\vapiVersions\x12\x1f\n" +
 	"\vquota_daily\x18\x05 \x01(\x05R\n" +
 	"quotaDaily\x12\x1b\n" +
-	"\tqps_limit\x18\x06 \x01(\x05R\bqpsLimit\"`\n" +
+	"\tqps_limit\x18\x06 \x01(\x05R\bqpsLimit\x12J\n" +
+	"\x13public_chat_enabled\x18\a \x01(\v2\x1a.google.protobuf.BoolValueR\x11publicChatEnabled\"`\n" +
 	"\x14CreateAPIKeyResponse\x12/\n" +
 	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\x12\x17\n" +
 	"\araw_key\x18\x02 \x01(\tR\x06rawKey\"Y\n" +
@@ -1420,7 +1631,11 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x16\n" +
 	"\x06offset\x18\x03 \x01(\x05R\x06offset\"C\n" +
 	"\x13ListAPIKeysResponse\x12,\n" +
-	"\x05items\x18\x01 \x03(\v2\x16.api.apimgmt.v1.APIKeyR\x05items\"\x84\x02\n" +
+	"\x05items\x18\x01 \x03(\v2\x16.api.apimgmt.v1.APIKeyR\x05items\"\"\n" +
+	"\x10GetAPIKeyRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"D\n" +
+	"\x11GetAPIKeyResponse\x12/\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\"\xd0\x02\n" +
 	"\x13UpdateAPIKeyRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
@@ -1429,7 +1644,8 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\fapi_versions\x18\x05 \x03(\tR\vapiVersions\x12<\n" +
 	"\vquota_daily\x18\x06 \x01(\v2\x1b.google.protobuf.Int32ValueR\n" +
 	"quotaDaily\x128\n" +
-	"\tqps_limit\x18\a \x01(\v2\x1b.google.protobuf.Int32ValueR\bqpsLimit\"G\n" +
+	"\tqps_limit\x18\a \x01(\v2\x1b.google.protobuf.Int32ValueR\bqpsLimit\x12J\n" +
+	"\x13public_chat_enabled\x18\b \x01(\v2\x1a.google.protobuf.BoolValueR\x11publicChatEnabled\"G\n" +
 	"\x14UpdateAPIKeyResponse\x12/\n" +
 	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\"%\n" +
 	"\x13DeleteAPIKeyRequest\x12\x0e\n" +
@@ -1438,7 +1654,11 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"`\n" +
 	"\x14RotateAPIKeyResponse\x12/\n" +
 	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\x12\x17\n" +
-	"\araw_key\x18\x02 \x01(\tR\x06rawKey\"\xa2\x02\n" +
+	"\araw_key\x18\x02 \x01(\tR\x06rawKey\"/\n" +
+	"\x1dRegeneratePublicChatIDRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"Q\n" +
+	"\x1eRegeneratePublicChatIDResponse\x12/\n" +
+	"\aapi_key\x18\x01 \x01(\v2\x16.api.apimgmt.v1.APIKeyR\x06apiKey\"\xa2\x02\n" +
 	"\x14ListUsageLogsRequest\x12\x1c\n" +
 	"\n" +
 	"api_key_id\x18\x01 \x01(\tR\bapiKeyId\x12\x15\n" +
@@ -1484,13 +1704,16 @@ const file_api_apimgmt_v1_console_apimgmt_proto_rawDesc = "" +
 	"\bfilename\x18\x03 \x01(\tR\bfilename\x12!\n" +
 	"\fdownload_url\x18\x04 \x01(\tR\vdownloadUrl\x12\x1d\n" +
 	"\n" +
-	"object_uri\x18\x05 \x01(\tR\tobjectUri2\x93\b\n" +
+	"object_uri\x18\x05 \x01(\tR\tobjectUri2\xbf\n" +
+	"\n" +
 	"\x0eConsoleAPIMgmt\x12z\n" +
 	"\fCreateAPIKey\x12#.api.apimgmt.v1.CreateAPIKeyRequest\x1a$.api.apimgmt.v1.CreateAPIKeyResponse\"\x1f\x82\xd3\xe4\x93\x02\x19:\x01*\"\x14/console/v1/api_keys\x12t\n" +
-	"\vListAPIKeys\x12\".api.apimgmt.v1.ListAPIKeysRequest\x1a#.api.apimgmt.v1.ListAPIKeysResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/console/v1/api_keys\x12\x7f\n" +
+	"\vListAPIKeys\x12\".api.apimgmt.v1.ListAPIKeysRequest\x1a#.api.apimgmt.v1.ListAPIKeysResponse\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/console/v1/api_keys\x12s\n" +
+	"\tGetAPIKey\x12 .api.apimgmt.v1.GetAPIKeyRequest\x1a!.api.apimgmt.v1.GetAPIKeyResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/console/v1/api_keys/{id}\x12\x7f\n" +
 	"\fUpdateAPIKey\x12#.api.apimgmt.v1.UpdateAPIKeyRequest\x1a$.api.apimgmt.v1.UpdateAPIKeyResponse\"$\x82\xd3\xe4\x93\x02\x1e:\x01*2\x19/console/v1/api_keys/{id}\x12n\n" +
 	"\fDeleteAPIKey\x12#.api.apimgmt.v1.DeleteAPIKeyRequest\x1a\x16.google.protobuf.Empty\"!\x82\xd3\xe4\x93\x02\x1b*\x19/console/v1/api_keys/{id}\x12\x86\x01\n" +
-	"\fRotateAPIKey\x12#.api.apimgmt.v1.RotateAPIKeyRequest\x1a$.api.apimgmt.v1.RotateAPIKeyResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /console/v1/api_keys/{id}/rotate\x12{\n" +
+	"\fRotateAPIKey\x12#.api.apimgmt.v1.RotateAPIKeyRequest\x1a$.api.apimgmt.v1.RotateAPIKeyResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /console/v1/api_keys/{id}/rotate\x12\xb4\x01\n" +
+	"\x16RegeneratePublicChatID\x12-.api.apimgmt.v1.RegeneratePublicChatIDRequest\x1a..api.apimgmt.v1.RegeneratePublicChatIDResponse\";\x82\xd3\xe4\x93\x025:\x01*\"0/console/v1/api_keys/{id}/public_chat/regenerate\x12{\n" +
 	"\rListUsageLogs\x12$.api.apimgmt.v1.ListUsageLogsRequest\x1a%.api.apimgmt.v1.ListUsageLogsResponse\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/console/v1/api_usage\x12\x89\x01\n" +
 	"\x0fGetUsageSummary\x12&.api.apimgmt.v1.GetUsageSummaryRequest\x1a'.api.apimgmt.v1.GetUsageSummaryResponse\"%\x82\xd3\xe4\x93\x02\x1f\x12\x1d/console/v1/api_usage/summary\x12\x8b\x01\n" +
 	"\x0fExportUsageLogs\x12&.api.apimgmt.v1.ExportUsageLogsRequest\x1a'.api.apimgmt.v1.ExportUsageLogsResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/console/v1/api_usage/exportB8Z6github.com/ZTH7/RagoDesk/apps/server/api/apimgmt/v1;v1b\x06proto3"
@@ -1507,69 +1730,82 @@ func file_api_apimgmt_v1_console_apimgmt_proto_rawDescGZIP() []byte {
 	return file_api_apimgmt_v1_console_apimgmt_proto_rawDescData
 }
 
-var file_api_apimgmt_v1_console_apimgmt_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_api_apimgmt_v1_console_apimgmt_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_api_apimgmt_v1_console_apimgmt_proto_goTypes = []any{
-	(*APIKey)(nil),                  // 0: api.apimgmt.v1.APIKey
-	(*UsageLog)(nil),                // 1: api.apimgmt.v1.UsageLog
-	(*UsageSummary)(nil),            // 2: api.apimgmt.v1.UsageSummary
-	(*CreateAPIKeyRequest)(nil),     // 3: api.apimgmt.v1.CreateAPIKeyRequest
-	(*CreateAPIKeyResponse)(nil),    // 4: api.apimgmt.v1.CreateAPIKeyResponse
-	(*ListAPIKeysRequest)(nil),      // 5: api.apimgmt.v1.ListAPIKeysRequest
-	(*ListAPIKeysResponse)(nil),     // 6: api.apimgmt.v1.ListAPIKeysResponse
-	(*UpdateAPIKeyRequest)(nil),     // 7: api.apimgmt.v1.UpdateAPIKeyRequest
-	(*UpdateAPIKeyResponse)(nil),    // 8: api.apimgmt.v1.UpdateAPIKeyResponse
-	(*DeleteAPIKeyRequest)(nil),     // 9: api.apimgmt.v1.DeleteAPIKeyRequest
-	(*RotateAPIKeyRequest)(nil),     // 10: api.apimgmt.v1.RotateAPIKeyRequest
-	(*RotateAPIKeyResponse)(nil),    // 11: api.apimgmt.v1.RotateAPIKeyResponse
-	(*ListUsageLogsRequest)(nil),    // 12: api.apimgmt.v1.ListUsageLogsRequest
-	(*ListUsageLogsResponse)(nil),   // 13: api.apimgmt.v1.ListUsageLogsResponse
-	(*GetUsageSummaryRequest)(nil),  // 14: api.apimgmt.v1.GetUsageSummaryRequest
-	(*GetUsageSummaryResponse)(nil), // 15: api.apimgmt.v1.GetUsageSummaryResponse
-	(*ExportUsageLogsRequest)(nil),  // 16: api.apimgmt.v1.ExportUsageLogsRequest
-	(*ExportUsageLogsResponse)(nil), // 17: api.apimgmt.v1.ExportUsageLogsResponse
-	(*timestamppb.Timestamp)(nil),   // 18: google.protobuf.Timestamp
-	(*wrapperspb.Int32Value)(nil),   // 19: google.protobuf.Int32Value
-	(*emptypb.Empty)(nil),           // 20: google.protobuf.Empty
+	(*APIKey)(nil),                         // 0: api.apimgmt.v1.APIKey
+	(*UsageLog)(nil),                       // 1: api.apimgmt.v1.UsageLog
+	(*UsageSummary)(nil),                   // 2: api.apimgmt.v1.UsageSummary
+	(*CreateAPIKeyRequest)(nil),            // 3: api.apimgmt.v1.CreateAPIKeyRequest
+	(*CreateAPIKeyResponse)(nil),           // 4: api.apimgmt.v1.CreateAPIKeyResponse
+	(*ListAPIKeysRequest)(nil),             // 5: api.apimgmt.v1.ListAPIKeysRequest
+	(*ListAPIKeysResponse)(nil),            // 6: api.apimgmt.v1.ListAPIKeysResponse
+	(*GetAPIKeyRequest)(nil),               // 7: api.apimgmt.v1.GetAPIKeyRequest
+	(*GetAPIKeyResponse)(nil),              // 8: api.apimgmt.v1.GetAPIKeyResponse
+	(*UpdateAPIKeyRequest)(nil),            // 9: api.apimgmt.v1.UpdateAPIKeyRequest
+	(*UpdateAPIKeyResponse)(nil),           // 10: api.apimgmt.v1.UpdateAPIKeyResponse
+	(*DeleteAPIKeyRequest)(nil),            // 11: api.apimgmt.v1.DeleteAPIKeyRequest
+	(*RotateAPIKeyRequest)(nil),            // 12: api.apimgmt.v1.RotateAPIKeyRequest
+	(*RotateAPIKeyResponse)(nil),           // 13: api.apimgmt.v1.RotateAPIKeyResponse
+	(*RegeneratePublicChatIDRequest)(nil),  // 14: api.apimgmt.v1.RegeneratePublicChatIDRequest
+	(*RegeneratePublicChatIDResponse)(nil), // 15: api.apimgmt.v1.RegeneratePublicChatIDResponse
+	(*ListUsageLogsRequest)(nil),           // 16: api.apimgmt.v1.ListUsageLogsRequest
+	(*ListUsageLogsResponse)(nil),          // 17: api.apimgmt.v1.ListUsageLogsResponse
+	(*GetUsageSummaryRequest)(nil),         // 18: api.apimgmt.v1.GetUsageSummaryRequest
+	(*GetUsageSummaryResponse)(nil),        // 19: api.apimgmt.v1.GetUsageSummaryResponse
+	(*ExportUsageLogsRequest)(nil),         // 20: api.apimgmt.v1.ExportUsageLogsRequest
+	(*ExportUsageLogsResponse)(nil),        // 21: api.apimgmt.v1.ExportUsageLogsResponse
+	(*timestamppb.Timestamp)(nil),          // 22: google.protobuf.Timestamp
+	(*wrapperspb.BoolValue)(nil),           // 23: google.protobuf.BoolValue
+	(*wrapperspb.Int32Value)(nil),          // 24: google.protobuf.Int32Value
+	(*emptypb.Empty)(nil),                  // 25: google.protobuf.Empty
 }
 var file_api_apimgmt_v1_console_apimgmt_proto_depIdxs = []int32{
-	18, // 0: api.apimgmt.v1.APIKey.created_at:type_name -> google.protobuf.Timestamp
-	18, // 1: api.apimgmt.v1.APIKey.last_used_at:type_name -> google.protobuf.Timestamp
-	18, // 2: api.apimgmt.v1.UsageLog.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 3: api.apimgmt.v1.CreateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
-	0,  // 4: api.apimgmt.v1.ListAPIKeysResponse.items:type_name -> api.apimgmt.v1.APIKey
-	19, // 5: api.apimgmt.v1.UpdateAPIKeyRequest.quota_daily:type_name -> google.protobuf.Int32Value
-	19, // 6: api.apimgmt.v1.UpdateAPIKeyRequest.qps_limit:type_name -> google.protobuf.Int32Value
-	0,  // 7: api.apimgmt.v1.UpdateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
-	0,  // 8: api.apimgmt.v1.RotateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
-	18, // 9: api.apimgmt.v1.ListUsageLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	18, // 10: api.apimgmt.v1.ListUsageLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	1,  // 11: api.apimgmt.v1.ListUsageLogsResponse.items:type_name -> api.apimgmt.v1.UsageLog
-	18, // 12: api.apimgmt.v1.GetUsageSummaryRequest.start_time:type_name -> google.protobuf.Timestamp
-	18, // 13: api.apimgmt.v1.GetUsageSummaryRequest.end_time:type_name -> google.protobuf.Timestamp
-	2,  // 14: api.apimgmt.v1.GetUsageSummaryResponse.summary:type_name -> api.apimgmt.v1.UsageSummary
-	18, // 15: api.apimgmt.v1.ExportUsageLogsRequest.start_time:type_name -> google.protobuf.Timestamp
-	18, // 16: api.apimgmt.v1.ExportUsageLogsRequest.end_time:type_name -> google.protobuf.Timestamp
-	3,  // 17: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:input_type -> api.apimgmt.v1.CreateAPIKeyRequest
-	5,  // 18: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:input_type -> api.apimgmt.v1.ListAPIKeysRequest
-	7,  // 19: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:input_type -> api.apimgmt.v1.UpdateAPIKeyRequest
-	9,  // 20: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:input_type -> api.apimgmt.v1.DeleteAPIKeyRequest
-	10, // 21: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:input_type -> api.apimgmt.v1.RotateAPIKeyRequest
-	12, // 22: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:input_type -> api.apimgmt.v1.ListUsageLogsRequest
-	14, // 23: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:input_type -> api.apimgmt.v1.GetUsageSummaryRequest
-	16, // 24: api.apimgmt.v1.ConsoleAPIMgmt.ExportUsageLogs:input_type -> api.apimgmt.v1.ExportUsageLogsRequest
-	4,  // 25: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:output_type -> api.apimgmt.v1.CreateAPIKeyResponse
-	6,  // 26: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:output_type -> api.apimgmt.v1.ListAPIKeysResponse
-	8,  // 27: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:output_type -> api.apimgmt.v1.UpdateAPIKeyResponse
-	20, // 28: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:output_type -> google.protobuf.Empty
-	11, // 29: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:output_type -> api.apimgmt.v1.RotateAPIKeyResponse
-	13, // 30: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:output_type -> api.apimgmt.v1.ListUsageLogsResponse
-	15, // 31: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:output_type -> api.apimgmt.v1.GetUsageSummaryResponse
-	17, // 32: api.apimgmt.v1.ConsoleAPIMgmt.ExportUsageLogs:output_type -> api.apimgmt.v1.ExportUsageLogsResponse
-	25, // [25:33] is the sub-list for method output_type
-	17, // [17:25] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	22, // 0: api.apimgmt.v1.APIKey.created_at:type_name -> google.protobuf.Timestamp
+	22, // 1: api.apimgmt.v1.APIKey.last_used_at:type_name -> google.protobuf.Timestamp
+	22, // 2: api.apimgmt.v1.UsageLog.created_at:type_name -> google.protobuf.Timestamp
+	23, // 3: api.apimgmt.v1.CreateAPIKeyRequest.public_chat_enabled:type_name -> google.protobuf.BoolValue
+	0,  // 4: api.apimgmt.v1.CreateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
+	0,  // 5: api.apimgmt.v1.ListAPIKeysResponse.items:type_name -> api.apimgmt.v1.APIKey
+	0,  // 6: api.apimgmt.v1.GetAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
+	24, // 7: api.apimgmt.v1.UpdateAPIKeyRequest.quota_daily:type_name -> google.protobuf.Int32Value
+	24, // 8: api.apimgmt.v1.UpdateAPIKeyRequest.qps_limit:type_name -> google.protobuf.Int32Value
+	23, // 9: api.apimgmt.v1.UpdateAPIKeyRequest.public_chat_enabled:type_name -> google.protobuf.BoolValue
+	0,  // 10: api.apimgmt.v1.UpdateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
+	0,  // 11: api.apimgmt.v1.RotateAPIKeyResponse.api_key:type_name -> api.apimgmt.v1.APIKey
+	0,  // 12: api.apimgmt.v1.RegeneratePublicChatIDResponse.api_key:type_name -> api.apimgmt.v1.APIKey
+	22, // 13: api.apimgmt.v1.ListUsageLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	22, // 14: api.apimgmt.v1.ListUsageLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	1,  // 15: api.apimgmt.v1.ListUsageLogsResponse.items:type_name -> api.apimgmt.v1.UsageLog
+	22, // 16: api.apimgmt.v1.GetUsageSummaryRequest.start_time:type_name -> google.protobuf.Timestamp
+	22, // 17: api.apimgmt.v1.GetUsageSummaryRequest.end_time:type_name -> google.protobuf.Timestamp
+	2,  // 18: api.apimgmt.v1.GetUsageSummaryResponse.summary:type_name -> api.apimgmt.v1.UsageSummary
+	22, // 19: api.apimgmt.v1.ExportUsageLogsRequest.start_time:type_name -> google.protobuf.Timestamp
+	22, // 20: api.apimgmt.v1.ExportUsageLogsRequest.end_time:type_name -> google.protobuf.Timestamp
+	3,  // 21: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:input_type -> api.apimgmt.v1.CreateAPIKeyRequest
+	5,  // 22: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:input_type -> api.apimgmt.v1.ListAPIKeysRequest
+	7,  // 23: api.apimgmt.v1.ConsoleAPIMgmt.GetAPIKey:input_type -> api.apimgmt.v1.GetAPIKeyRequest
+	9,  // 24: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:input_type -> api.apimgmt.v1.UpdateAPIKeyRequest
+	11, // 25: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:input_type -> api.apimgmt.v1.DeleteAPIKeyRequest
+	12, // 26: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:input_type -> api.apimgmt.v1.RotateAPIKeyRequest
+	14, // 27: api.apimgmt.v1.ConsoleAPIMgmt.RegeneratePublicChatID:input_type -> api.apimgmt.v1.RegeneratePublicChatIDRequest
+	16, // 28: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:input_type -> api.apimgmt.v1.ListUsageLogsRequest
+	18, // 29: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:input_type -> api.apimgmt.v1.GetUsageSummaryRequest
+	20, // 30: api.apimgmt.v1.ConsoleAPIMgmt.ExportUsageLogs:input_type -> api.apimgmt.v1.ExportUsageLogsRequest
+	4,  // 31: api.apimgmt.v1.ConsoleAPIMgmt.CreateAPIKey:output_type -> api.apimgmt.v1.CreateAPIKeyResponse
+	6,  // 32: api.apimgmt.v1.ConsoleAPIMgmt.ListAPIKeys:output_type -> api.apimgmt.v1.ListAPIKeysResponse
+	8,  // 33: api.apimgmt.v1.ConsoleAPIMgmt.GetAPIKey:output_type -> api.apimgmt.v1.GetAPIKeyResponse
+	10, // 34: api.apimgmt.v1.ConsoleAPIMgmt.UpdateAPIKey:output_type -> api.apimgmt.v1.UpdateAPIKeyResponse
+	25, // 35: api.apimgmt.v1.ConsoleAPIMgmt.DeleteAPIKey:output_type -> google.protobuf.Empty
+	13, // 36: api.apimgmt.v1.ConsoleAPIMgmt.RotateAPIKey:output_type -> api.apimgmt.v1.RotateAPIKeyResponse
+	15, // 37: api.apimgmt.v1.ConsoleAPIMgmt.RegeneratePublicChatID:output_type -> api.apimgmt.v1.RegeneratePublicChatIDResponse
+	17, // 38: api.apimgmt.v1.ConsoleAPIMgmt.ListUsageLogs:output_type -> api.apimgmt.v1.ListUsageLogsResponse
+	19, // 39: api.apimgmt.v1.ConsoleAPIMgmt.GetUsageSummary:output_type -> api.apimgmt.v1.GetUsageSummaryResponse
+	21, // 40: api.apimgmt.v1.ConsoleAPIMgmt.ExportUsageLogs:output_type -> api.apimgmt.v1.ExportUsageLogsResponse
+	31, // [31:41] is the sub-list for method output_type
+	21, // [21:31] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_api_apimgmt_v1_console_apimgmt_proto_init() }
@@ -1583,7 +1819,7 @@ func file_api_apimgmt_v1_console_apimgmt_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_apimgmt_v1_console_apimgmt_proto_rawDesc), len(file_api_apimgmt_v1_console_apimgmt_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

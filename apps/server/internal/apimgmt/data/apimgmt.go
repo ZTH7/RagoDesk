@@ -36,7 +36,7 @@ func (r *apimgmtRepo) GetAPIKeyByHash(ctx context.Context, keyHash string) (biz.
 	var versionsRaw sql.NullString
 	err := r.db.QueryRowContext(
 		ctx,
-		`SELECT id, tenant_id, bot_id, status, scopes, api_versions, quota_daily, qps_limit
+		`SELECT id, tenant_id, bot_id, status, scopes, api_versions, quota_daily, qps_limit, public_chat_id, public_chat_enabled
 		FROM api_key
 		WHERE key_hash = ?
 			OR (prev_key_hash = ? AND prev_expires_at IS NOT NULL AND prev_expires_at > ?)
@@ -44,7 +44,7 @@ func (r *apimgmtRepo) GetAPIKeyByHash(ctx context.Context, keyHash string) (biz.
 		keyHash,
 		keyHash,
 		time.Now(),
-	).Scan(&key.ID, &key.TenantID, &key.BotID, &key.Status, &scopesRaw, &versionsRaw, &key.QuotaDaily, &key.QPSLimit)
+	).Scan(&key.ID, &key.TenantID, &key.BotID, &key.Status, &scopesRaw, &versionsRaw, &key.QuotaDaily, &key.QPSLimit, &key.PublicChatID, &key.PublicChatEnabled)
 	if err != nil {
 		return biz.APIKey{}, err
 	}
@@ -65,13 +65,15 @@ func (r *apimgmtRepo) CreateAPIKey(ctx context.Context, key biz.APIKey) (biz.API
 	_, err = r.db.ExecContext(
 		ctx,
 		`INSERT INTO api_key
-			(id, tenant_id, bot_id, name, key_hash, scopes, api_versions, status, quota_daily, qps_limit, created_at, last_used_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			(id, tenant_id, bot_id, name, key_hash, public_chat_id, public_chat_enabled, scopes, api_versions, status, quota_daily, qps_limit, created_at, last_used_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		key.ID,
 		key.TenantID,
 		key.BotID,
 		key.Name,
 		key.KeyHash,
+		key.PublicChatID,
+		key.PublicChatEnabled,
 		encodeStringList(key.Scopes),
 		encodeStringList(key.APIVersions),
 		key.Status,
@@ -81,7 +83,7 @@ func (r *apimgmtRepo) CreateAPIKey(ctx context.Context, key biz.APIKey) (biz.API
 		nullTime(key.LastUsedAt),
 	)
 	if err != nil {
-		return biz.APIKey{}, err
+		return biz.APIKey{}, normalizeWriteErr(err)
 	}
 	return key, nil
 }
@@ -89,7 +91,7 @@ func (r *apimgmtRepo) CreateAPIKey(ctx context.Context, key biz.APIKey) (biz.API
 func (r *apimgmtRepo) GetAPIKey(ctx context.Context, keyID string) (biz.APIKey, error) {
 	tenantID, err := tenant.RequireTenantID(ctx)
 	if err != nil {
-		return biz.APIKey{}, err
+		return biz.APIKey{}, normalizeWriteErr(err)
 	}
 	var key biz.APIKey
 	var scopesRaw sql.NullString
@@ -97,7 +99,7 @@ func (r *apimgmtRepo) GetAPIKey(ctx context.Context, keyID string) (biz.APIKey, 
 	var lastUsedAt sql.NullTime
 	err = r.db.QueryRowContext(
 		ctx,
-		`SELECT id, tenant_id, bot_id, name, key_hash, scopes, api_versions, status, quota_daily, qps_limit, created_at, last_used_at
+		`SELECT id, tenant_id, bot_id, name, key_hash, public_chat_id, public_chat_enabled, scopes, api_versions, status, quota_daily, qps_limit, created_at, last_used_at
 		FROM api_key WHERE tenant_id = ? AND id = ?`,
 		tenantID,
 		keyID,
@@ -107,6 +109,51 @@ func (r *apimgmtRepo) GetAPIKey(ctx context.Context, keyID string) (biz.APIKey, 
 		&key.BotID,
 		&key.Name,
 		&key.KeyHash,
+		&key.PublicChatID,
+		&key.PublicChatEnabled,
+		&scopesRaw,
+		&versionsRaw,
+		&key.Status,
+		&key.QuotaDaily,
+		&key.QPSLimit,
+		&key.CreatedAt,
+		&lastUsedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return biz.APIKey{}, errors.NotFound("API_KEY_NOT_FOUND", "api key not found")
+		}
+		return biz.APIKey{}, err
+	}
+	key.Scopes = decodeStringList(scopesRaw)
+	key.APIVersions = decodeStringList(versionsRaw)
+	if lastUsedAt.Valid {
+		key.LastUsedAt = lastUsedAt.Time
+	}
+	return key, nil
+}
+
+func (r *apimgmtRepo) GetAPIKeyByPublicChatID(ctx context.Context, chatID string) (biz.APIKey, error) {
+	var key biz.APIKey
+	if r.db == nil {
+		return biz.APIKey{}, sql.ErrConnDone
+	}
+	var scopesRaw sql.NullString
+	var versionsRaw sql.NullString
+	var lastUsedAt sql.NullTime
+	err := r.db.QueryRowContext(
+		ctx,
+		`SELECT id, tenant_id, bot_id, name, key_hash, public_chat_id, public_chat_enabled, scopes, api_versions, status, quota_daily, qps_limit, created_at, last_used_at
+		FROM api_key WHERE public_chat_id = ?`,
+		strings.TrimSpace(chatID),
+	).Scan(
+		&key.ID,
+		&key.TenantID,
+		&key.BotID,
+		&key.Name,
+		&key.KeyHash,
+		&key.PublicChatID,
+		&key.PublicChatEnabled,
 		&scopesRaw,
 		&versionsRaw,
 		&key.Status,
@@ -134,7 +181,7 @@ func (r *apimgmtRepo) ListAPIKeys(ctx context.Context, botID string, limit int, 
 	if err != nil {
 		return nil, err
 	}
-	query := `SELECT id, tenant_id, bot_id, name, key_hash, scopes, api_versions, status, quota_daily, qps_limit, created_at, last_used_at
+	query := `SELECT id, tenant_id, bot_id, name, key_hash, public_chat_id, public_chat_enabled, scopes, api_versions, status, quota_daily, qps_limit, created_at, last_used_at
 		FROM api_key WHERE tenant_id = ?`
 	args := []any{tenantID}
 	if strings.TrimSpace(botID) != "" {
@@ -161,6 +208,8 @@ func (r *apimgmtRepo) ListAPIKeys(ctx context.Context, botID string, limit int, 
 			&key.BotID,
 			&key.Name,
 			&key.KeyHash,
+			&key.PublicChatID,
+			&key.PublicChatEnabled,
 			&scopesRaw,
 			&versionsRaw,
 			&key.Status,
@@ -188,10 +237,11 @@ func (r *apimgmtRepo) UpdateAPIKey(ctx context.Context, key biz.APIKey) (biz.API
 	}
 	_, err = r.db.ExecContext(
 		ctx,
-		`UPDATE api_key SET name = ?, status = ?, scopes = ?, api_versions = ?, quota_daily = ?, qps_limit = ?
+		`UPDATE api_key SET name = ?, status = ?, public_chat_enabled = ?, scopes = ?, api_versions = ?, quota_daily = ?, qps_limit = ?
 		WHERE tenant_id = ? AND id = ?`,
 		key.Name,
 		key.Status,
+		key.PublicChatEnabled,
 		encodeStringList(key.Scopes),
 		encodeStringList(key.APIVersions),
 		key.QuotaDaily,
@@ -203,6 +253,28 @@ func (r *apimgmtRepo) UpdateAPIKey(ctx context.Context, key biz.APIKey) (biz.API
 		return biz.APIKey{}, err
 	}
 	return r.GetAPIKey(ctx, key.ID)
+}
+
+func (r *apimgmtRepo) RegeneratePublicChatID(ctx context.Context, keyID string, chatID string) (biz.APIKey, error) {
+	tenantID, err := tenant.RequireTenantID(ctx)
+	if err != nil {
+		return biz.APIKey{}, err
+	}
+	res, err := r.db.ExecContext(
+		ctx,
+		`UPDATE api_key SET public_chat_id = ? WHERE tenant_id = ? AND id = ?`,
+		strings.TrimSpace(chatID),
+		tenantID,
+		strings.TrimSpace(keyID),
+	)
+	if err != nil {
+		return biz.APIKey{}, err
+	}
+	rows, rowsErr := res.RowsAffected()
+	if rowsErr == nil && rows == 0 {
+		return biz.APIKey{}, errors.NotFound("API_KEY_NOT_FOUND", "api key not found")
+	}
+	return r.GetAPIKey(ctx, keyID)
 }
 
 func (r *apimgmtRepo) DeleteAPIKey(ctx context.Context, keyID string) error {
@@ -585,4 +657,15 @@ func decodeStringList(raw sql.NullString) []string {
 		}
 	}
 	return out
+}
+
+func normalizeWriteErr(err error) error {
+	if err == nil {
+		return nil
+	}
+	var mysqlErr *mysql.MySQLError
+	if stderrors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		return errors.Conflict("DUPLICATE_KEY", "duplicate key")
+	}
+	return err
 }

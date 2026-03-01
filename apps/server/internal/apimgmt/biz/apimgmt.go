@@ -58,19 +58,21 @@ const (
 
 // APIKey represents an API key with scope and rotation metadata.
 type APIKey struct {
-	ID          string
-	TenantID    string
-	BotID       string
-	Name        string
-	KeyHash     string
-	APIVersions []string
-	Scopes      []string
-	Status      APIKeyStatus
-	RotatedFrom string
-	QuotaDaily  int32
-	QPSLimit    int32
-	CreatedAt   time.Time
-	LastUsedAt  time.Time
+	ID                string
+	TenantID          string
+	BotID             string
+	Name              string
+	KeyHash           string
+	PublicChatID      string
+	PublicChatEnabled bool
+	APIVersions       []string
+	Scopes            []string
+	Status            APIKeyStatus
+	RotatedFrom       string
+	QuotaDaily        int32
+	QPSLimit          int32
+	CreatedAt         time.Time
+	LastUsedAt        time.Time
 }
 
 // UsageLog records API usage for analytics.
@@ -145,8 +147,10 @@ type UsageEvent struct {
 type APIMgmtRepo interface {
 	CreateAPIKey(ctx context.Context, key APIKey) (APIKey, error)
 	GetAPIKey(ctx context.Context, keyID string) (APIKey, error)
+	GetAPIKeyByPublicChatID(ctx context.Context, chatID string) (APIKey, error)
 	ListAPIKeys(ctx context.Context, botID string, limit int, offset int) ([]APIKey, error)
 	UpdateAPIKey(ctx context.Context, key APIKey) (APIKey, error)
+	RegeneratePublicChatID(ctx context.Context, keyID string, chatID string) (APIKey, error)
 	DeleteAPIKey(ctx context.Context, keyID string) error
 	RotateKey(ctx context.Context, keyID string, newHash string, graceUntil time.Time) (APIKey, error)
 	UpdateLastUsedAt(ctx context.Context, keyID string, lastUsedAt time.Time) error
@@ -209,8 +213,9 @@ func NewAPIMgmtUsecase(repo APIMgmtRepo, exporter UsageExporter, limiter RateLim
 }
 
 const DefaultAPIKeyHeader = "X-API-Key"
+const DefaultPublicChatHeader = "X-Chat-Key"
 
-func (uc *APIMgmtUsecase) CreateAPIKey(ctx context.Context, name string, botID string, scopes []string, apiVersions []string, quotaDaily int32, qpsLimit int32) (APIKey, string, error) {
+func (uc *APIMgmtUsecase) CreateAPIKey(ctx context.Context, name string, botID string, scopes []string, apiVersions []string, quotaDaily int32, qpsLimit int32, publicChatEnabled *bool) (APIKey, string, error) {
 	name = strings.TrimSpace(name)
 	botID = strings.TrimSpace(botID)
 	if name == "" {
@@ -233,25 +238,36 @@ func (uc *APIMgmtUsecase) CreateAPIKey(ctx context.Context, name string, botID s
 	if qpsLimit < 0 {
 		qpsLimit = 0
 	}
-	rawKey, keyHash := generateAPIKey()
-	now := time.Now()
-	key := APIKey{
-		ID:          uuid.NewString(),
-		BotID:       botID,
-		Name:        name,
-		KeyHash:     keyHash,
-		APIVersions: apiVersions,
-		Scopes:      scopes,
-		Status:      APIKeyStatusActive,
-		QuotaDaily:  quotaDaily,
-		QPSLimit:    qpsLimit,
-		CreatedAt:   now,
+	chatEnabled := true
+	if publicChatEnabled != nil {
+		chatEnabled = *publicChatEnabled
 	}
-	created, err := uc.repo.CreateAPIKey(ctx, key)
-	if err != nil {
-		return APIKey{}, "", err
+	for i := 0; i < 3; i++ {
+		rawKey, keyHash := generateAPIKey()
+		now := time.Now()
+		key := APIKey{
+			ID:                uuid.NewString(),
+			BotID:             botID,
+			Name:              name,
+			KeyHash:           keyHash,
+			PublicChatID:      generatePublicChatID(),
+			PublicChatEnabled: chatEnabled,
+			APIVersions:       apiVersions,
+			Scopes:            scopes,
+			Status:            APIKeyStatusActive,
+			QuotaDaily:        quotaDaily,
+			QPSLimit:          qpsLimit,
+			CreatedAt:         now,
+		}
+		created, err := uc.repo.CreateAPIKey(ctx, key)
+		if err == nil {
+			return created, rawKey, nil
+		}
+		if !isDuplicateKeyError(err) {
+			return APIKey{}, "", err
+		}
 	}
-	return created, rawKey, nil
+	return APIKey{}, "", errors.InternalServer("API_KEY_GENERATE_FAILED", "generate api key failed")
 }
 
 func (uc *APIMgmtUsecase) ListAPIKeys(ctx context.Context, botID string, limit int, offset int) ([]APIKey, error) {
@@ -259,12 +275,20 @@ func (uc *APIMgmtUsecase) ListAPIKeys(ctx context.Context, botID string, limit i
 	return uc.repo.ListAPIKeys(ctx, strings.TrimSpace(botID), limit, offset)
 }
 
-func (uc *APIMgmtUsecase) UpdateAPIKey(ctx context.Context, keyID string, name string, status string, scopes []string, apiVersions []string, quotaDaily *int32, qpsLimit *int32) (APIKey, error) {
+func (uc *APIMgmtUsecase) GetAPIKey(ctx context.Context, keyID string) (APIKey, error) {
 	keyID = strings.TrimSpace(keyID)
 	if keyID == "" {
 		return APIKey{}, errors.BadRequest("API_KEY_ID_MISSING", "api key id missing")
 	}
-	if strings.TrimSpace(name) == "" && strings.TrimSpace(status) == "" && len(scopes) == 0 && len(apiVersions) == 0 && quotaDaily == nil && qpsLimit == nil {
+	return uc.repo.GetAPIKey(ctx, keyID)
+}
+
+func (uc *APIMgmtUsecase) UpdateAPIKey(ctx context.Context, keyID string, name string, status string, scopes []string, apiVersions []string, quotaDaily *int32, qpsLimit *int32, publicChatEnabled *bool) (APIKey, error) {
+	keyID = strings.TrimSpace(keyID)
+	if keyID == "" {
+		return APIKey{}, errors.BadRequest("API_KEY_ID_MISSING", "api key id missing")
+	}
+	if strings.TrimSpace(name) == "" && strings.TrimSpace(status) == "" && len(scopes) == 0 && len(apiVersions) == 0 && quotaDaily == nil && qpsLimit == nil && publicChatEnabled == nil {
 		return APIKey{}, errors.BadRequest("API_KEY_UPDATE_EMPTY", "api key update empty")
 	}
 	current, err := uc.repo.GetAPIKey(ctx, keyID)
@@ -297,6 +321,9 @@ func (uc *APIMgmtUsecase) UpdateAPIKey(ctx context.Context, keyID string, name s
 			current.QPSLimit = *qpsLimit
 		}
 	}
+	if publicChatEnabled != nil {
+		current.PublicChatEnabled = *publicChatEnabled
+	}
 	return uc.repo.UpdateAPIKey(ctx, current)
 }
 
@@ -320,6 +347,23 @@ func (uc *APIMgmtUsecase) RotateAPIKey(ctx context.Context, keyID string) (APIKe
 		return APIKey{}, "", err
 	}
 	return updated, rawKey, nil
+}
+
+func (uc *APIMgmtUsecase) RegeneratePublicChatID(ctx context.Context, keyID string) (APIKey, error) {
+	keyID = strings.TrimSpace(keyID)
+	if keyID == "" {
+		return APIKey{}, errors.BadRequest("API_KEY_ID_MISSING", "api key id missing")
+	}
+	for i := 0; i < 3; i++ {
+		updated, err := uc.repo.RegeneratePublicChatID(ctx, keyID, generatePublicChatID())
+		if err == nil {
+			return updated, nil
+		}
+		if !isDuplicateKeyError(err) {
+			return APIKey{}, err
+		}
+	}
+	return APIKey{}, errors.InternalServer("PUBLIC_CHAT_ID_GENERATE_FAILED", "generate public chat id failed")
 }
 
 func (uc *APIMgmtUsecase) ResolveAPIKey(ctx context.Context, rawKey string) (APIKey, error) {
@@ -356,6 +400,36 @@ func (uc *APIMgmtUsecase) AuthorizeAPIKeyWithScope(ctx context.Context, rawKey s
 	if err != nil {
 		return key, err
 	}
+	if requiredScope != "" && !scopeAllowed(key.Scopes, requiredScope) {
+		return key, errors.Forbidden("API_SCOPE_FORBIDDEN", "api key scope forbidden")
+	}
+	if requiredVersion != "" && !versionAllowed(key.APIVersions, requiredVersion) {
+		return key, errors.Forbidden("API_VERSION_FORBIDDEN", "api version forbidden")
+	}
+	return key, nil
+}
+
+func (uc *APIMgmtUsecase) AuthorizePublicChatIDWithScope(ctx context.Context, chatID string, requiredScope string, requiredVersion string) (APIKey, error) {
+	chatID = strings.TrimSpace(chatID)
+	if chatID == "" {
+		return APIKey{}, errors.Unauthorized("CHAT_KEY_MISSING", "chat key missing")
+	}
+	key, err := uc.repo.GetAPIKeyByPublicChatID(ctx, chatID)
+	if err != nil {
+		return APIKey{}, errors.Unauthorized("CHAT_KEY_INVALID", "chat key invalid")
+	}
+	if key.Status != APIKeyStatusActive || key.TenantID == "" || key.BotID == "" {
+		return APIKey{}, errors.Unauthorized("CHAT_KEY_INVALID", "chat key invalid")
+	}
+	if !key.PublicChatEnabled {
+		return APIKey{}, errors.Forbidden("CHAT_KEY_DISABLED", "public chat disabled")
+	}
+	if uc.limiter != nil {
+		if err := uc.limiter.Check(ctx, key); err != nil {
+			return key, err
+		}
+	}
+	_ = uc.repo.UpdateLastUsedAt(ctx, key.ID, time.Now())
 	if requiredScope != "" && !scopeAllowed(key.Scopes, requiredScope) {
 		return key, errors.Forbidden("API_SCOPE_FORBIDDEN", "api key scope forbidden")
 	}
@@ -483,6 +557,22 @@ func generateAPIKey() (string, string) {
 	}
 	rawKey := base64.RawURLEncoding.EncodeToString(payload)
 	return rawKey, hashAPIKey(rawKey)
+}
+
+func generatePublicChatID() string {
+	payload := make([]byte, 24)
+	if _, err := rand.Read(payload); err != nil {
+		return "chat_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	}
+	return "chat_" + base64.RawURLEncoding.EncodeToString(payload)
+}
+
+func isDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	kratosErr := errors.FromError(err)
+	return kratosErr != nil && kratosErr.Reason == "DUPLICATE_KEY"
 }
 
 func normalizeStatus(status string) APIKeyStatus {

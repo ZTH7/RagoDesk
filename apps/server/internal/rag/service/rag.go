@@ -10,8 +10,8 @@ import (
 	analyticsbiz "github.com/ZTH7/RagoDesk/apps/server/internal/analytics/biz"
 	apimgmtbiz "github.com/ZTH7/RagoDesk/apps/server/internal/apimgmt/biz"
 	convbiz "github.com/ZTH7/RagoDesk/apps/server/internal/conversation/biz"
-	biz "github.com/ZTH7/RagoDesk/apps/server/internal/rag/biz"
 	"github.com/ZTH7/RagoDesk/apps/server/internal/kit/tenant"
+	biz "github.com/ZTH7/RagoDesk/apps/server/internal/rag/biz"
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport"
@@ -149,8 +149,21 @@ func (s *RAGService) requireAPIKey(ctx context.Context, scope string, apiVersion
 	if !ok {
 		return ctx, apimgmtbiz.APIKey{}, errors.Unauthorized("API_KEY_MISSING", "api key missing")
 	}
-	rawKey := strings.TrimSpace(tr.RequestHeader().Get(apimgmtbiz.DefaultAPIKeyHeader))
-	key, err := s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope, apiVersion)
+	header := tr.RequestHeader()
+	rawKey := strings.TrimSpace(header.Get(apimgmtbiz.DefaultAPIKeyHeader))
+	chatKey := strings.TrimSpace(header.Get(apimgmtbiz.DefaultPublicChatHeader))
+	var (
+		key apimgmtbiz.APIKey
+		err error
+	)
+	switch {
+	case rawKey != "":
+		key, err = s.api.AuthorizeAPIKeyWithScope(ctx, rawKey, scope, apiVersion)
+	case chatKey != "":
+		key, err = s.api.AuthorizePublicChatIDWithScope(ctx, chatKey, scope, apiVersion)
+	default:
+		err = errors.Unauthorized("API_KEY_MISSING", "api key missing")
+	}
 	if key.TenantID != "" {
 		ctx = tenant.WithTenantID(ctx, key.TenantID)
 	}

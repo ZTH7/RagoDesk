@@ -2,7 +2,7 @@ import { Button, Form, Input, Space, Typography } from 'antd'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../../layouts/AuthLayout'
-import { setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
+import { getTenantId, setProfile, setScope, setTenantId, setToken } from '../../auth/storage'
 import { authApi } from '../../services/auth'
 import { normalizeAccount, validateAccount } from './utils'
 
@@ -10,7 +10,8 @@ import { uiMessage } from '../../services/uiMessage'
 export function ConsoleLogin() {
   const [form] = Form.useForm()
   const navigate = useNavigate()
-  const [showTenantField, setShowTenantField] = useState(false)
+  const cachedTenantID = getTenantId() || ''
+  const [showTenantField, setShowTenantField] = useState(cachedTenantID !== '')
   const [submitting, setSubmitting] = useState(false)
 
   const onFinish = async (values: {
@@ -47,6 +48,9 @@ export function ConsoleLogin() {
       navigate('/console/analytics/overview', { replace: true })
     } catch (err) {
       if (err instanceof Error) {
+        if (err.message.includes('multiple tenants')) {
+          setShowTenantField(true)
+        }
         uiMessage.error(err.message)
       }
     } finally {
@@ -62,6 +66,7 @@ export function ConsoleLogin() {
         requiredMark
         style={{ marginTop: 24 }}
         onFinish={onFinish}
+        initialValues={{ tenant_id: cachedTenantID || undefined }}
       >
         <Form.Item
           label="账号（邮箱/手机号）"

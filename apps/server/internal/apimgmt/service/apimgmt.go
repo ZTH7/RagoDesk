@@ -40,7 +40,12 @@ func (s *APIMgmtService) CreateAPIKey(ctx context.Context, req *v1.CreateAPIKeyR
 	if err := s.iam.RequirePermission(ctx, biz.PermissionAPIKeyWrite); err != nil {
 		return nil, err
 	}
-	created, rawKey, err := s.uc.CreateAPIKey(ctx, req.GetName(), req.GetBotId(), req.GetScopes(), req.GetApiVersions(), req.GetQuotaDaily(), req.GetQpsLimit())
+	var publicChatEnabled *bool
+	if req.PublicChatEnabled != nil {
+		value := req.PublicChatEnabled.Value
+		publicChatEnabled = &value
+	}
+	created, rawKey, err := s.uc.CreateAPIKey(ctx, req.GetName(), req.GetBotId(), req.GetScopes(), req.GetApiVersions(), req.GetQuotaDaily(), req.GetQpsLimit(), publicChatEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +76,23 @@ func (s *APIMgmtService) ListAPIKeys(ctx context.Context, req *v1.ListAPIKeysReq
 	return resp, nil
 }
 
+func (s *APIMgmtService) GetAPIKey(ctx context.Context, req *v1.GetAPIKeyRequest) (*v1.GetAPIKeyResponse, error) {
+	if req == nil {
+		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
+	}
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iam.RequirePermission(ctx, biz.PermissionAPIKeyRead); err != nil {
+		return nil, err
+	}
+	item, err := s.uc.GetAPIKey(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	return &v1.GetAPIKeyResponse{ApiKey: toAPIKey(item)}, nil
+}
+
 func (s *APIMgmtService) UpdateAPIKey(ctx context.Context, req *v1.UpdateAPIKeyRequest) (*v1.UpdateAPIKeyResponse, error) {
 	if req == nil {
 		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
@@ -91,7 +113,12 @@ func (s *APIMgmtService) UpdateAPIKey(ctx context.Context, req *v1.UpdateAPIKeyR
 		value := req.QpsLimit.Value
 		qpsLimit = &value
 	}
-	updated, err := s.uc.UpdateAPIKey(ctx, req.GetId(), req.GetName(), req.GetStatus(), req.GetScopes(), req.GetApiVersions(), quotaDaily, qpsLimit)
+	var publicChatEnabled *bool
+	if req.PublicChatEnabled != nil {
+		value := req.PublicChatEnabled.Value
+		publicChatEnabled = &value
+	}
+	updated, err := s.uc.UpdateAPIKey(ctx, req.GetId(), req.GetName(), req.GetStatus(), req.GetScopes(), req.GetApiVersions(), quotaDaily, qpsLimit, publicChatEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +159,23 @@ func (s *APIMgmtService) RotateAPIKey(ctx context.Context, req *v1.RotateAPIKeyR
 		ApiKey: toAPIKey(updated),
 		RawKey: rawKey,
 	}, nil
+}
+
+func (s *APIMgmtService) RegeneratePublicChatID(ctx context.Context, req *v1.RegeneratePublicChatIDRequest) (*v1.RegeneratePublicChatIDResponse, error) {
+	if req == nil {
+		return nil, errors.BadRequest("REQUEST_EMPTY", "request empty")
+	}
+	if err := requireTenantContext(ctx); err != nil {
+		return nil, err
+	}
+	if err := s.iam.RequirePermission(ctx, biz.PermissionAPIKeyRotate); err != nil {
+		return nil, err
+	}
+	updated, err := s.uc.RegeneratePublicChatID(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	return &v1.RegeneratePublicChatIDResponse{ApiKey: toAPIKey(updated)}, nil
 }
 
 func (s *APIMgmtService) ListUsageLogs(ctx context.Context, req *v1.ListUsageLogsRequest) (*v1.ListUsageLogsResponse, error) {
@@ -251,17 +295,19 @@ func toAPIKey(key biz.APIKey) *v1.APIKey {
 		return nil
 	}
 	return &v1.APIKey{
-		Id:          key.ID,
-		TenantId:    key.TenantID,
-		BotId:       key.BotID,
-		Name:        key.Name,
-		Status:      string(key.Status),
-		Scopes:      key.Scopes,
-		ApiVersions: key.APIVersions,
-		QuotaDaily:  key.QuotaDaily,
-		QpsLimit:    key.QPSLimit,
-		CreatedAt:   toTimestamp(key.CreatedAt),
-		LastUsedAt:  toTimestamp(key.LastUsedAt),
+		Id:                key.ID,
+		TenantId:          key.TenantID,
+		BotId:             key.BotID,
+		Name:              key.Name,
+		Status:            string(key.Status),
+		Scopes:            key.Scopes,
+		ApiVersions:       key.APIVersions,
+		QuotaDaily:        key.QuotaDaily,
+		QpsLimit:          key.QPSLimit,
+		CreatedAt:         toTimestamp(key.CreatedAt),
+		LastUsedAt:        toTimestamp(key.LastUsedAt),
+		PublicChatId:      key.PublicChatID,
+		PublicChatEnabled: key.PublicChatEnabled,
 	}
 }
 

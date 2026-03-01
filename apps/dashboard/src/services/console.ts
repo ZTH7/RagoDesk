@@ -33,6 +33,8 @@ export type ApiKeyItem = {
   bot_id: string
   name: string
   status: string
+  public_chat_id?: string
+  public_chat_enabled?: boolean
   scopes: string[]
   api_versions: string[]
   quota_daily: number
@@ -153,6 +155,7 @@ export type UploadDocumentInput = {
 export type CreateApiKeyInput = {
   bot_id: string
   name: string
+  public_chat_enabled?: boolean
   scopes: string[]
   api_versions: string[]
   quota_daily: number
@@ -162,6 +165,7 @@ export type CreateApiKeyInput = {
 export type UpdateApiKeyInput = {
   name?: string
   status?: string
+  public_chat_enabled?: boolean
   scopes?: string[]
   api_versions?: string[]
   quota_daily?: number
@@ -359,6 +363,9 @@ export const consoleApi = {
     const suffix = query.toString() ? `?${query.toString()}` : ''
     return request<{ items: ApiKeyItem[] }>(`/console/v1/api_keys${suffix}`)
   },
+  getApiKey(id: string) {
+    return request<{ api_key: ApiKeyItem }>(`/console/v1/api_keys/${id}`)
+  },
   createApiKey(payload: CreateApiKeyInput) {
     return request<{ api_key: ApiKeyItem; raw_key: string }>('/console/v1/api_keys', {
       method: 'POST',
@@ -369,6 +376,7 @@ export const consoleApi = {
     const body: Record<string, unknown> = { id }
     if (payload.name !== undefined) body.name = payload.name
     if (payload.status !== undefined) body.status = payload.status
+    if (payload.public_chat_enabled !== undefined) body.public_chat_enabled = payload.public_chat_enabled
     if (payload.scopes !== undefined) body.scopes = payload.scopes
     if (payload.api_versions !== undefined) body.api_versions = payload.api_versions
     if (payload.quota_daily !== undefined) body.quota_daily = payload.quota_daily
@@ -386,6 +394,12 @@ export const consoleApi = {
   },
   rotateApiKey(id: string) {
     return request<{ api_key: ApiKeyItem; raw_key: string }>(`/console/v1/api_keys/${id}/rotate`, {
+      method: 'POST',
+      body: JSON.stringify({ id }),
+    })
+  },
+  regenerateApiKeyPublicChatID(id: string) {
+    return request<{ api_key: ApiKeyItem }>(`/console/v1/api_keys/${id}/public_chat/regenerate`, {
       method: 'POST',
       body: JSON.stringify({ id }),
     })

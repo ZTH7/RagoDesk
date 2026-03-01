@@ -20,14 +20,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ConsoleAPIMgmt_CreateAPIKey_FullMethodName    = "/api.apimgmt.v1.ConsoleAPIMgmt/CreateAPIKey"
-	ConsoleAPIMgmt_ListAPIKeys_FullMethodName     = "/api.apimgmt.v1.ConsoleAPIMgmt/ListAPIKeys"
-	ConsoleAPIMgmt_UpdateAPIKey_FullMethodName    = "/api.apimgmt.v1.ConsoleAPIMgmt/UpdateAPIKey"
-	ConsoleAPIMgmt_DeleteAPIKey_FullMethodName    = "/api.apimgmt.v1.ConsoleAPIMgmt/DeleteAPIKey"
-	ConsoleAPIMgmt_RotateAPIKey_FullMethodName    = "/api.apimgmt.v1.ConsoleAPIMgmt/RotateAPIKey"
-	ConsoleAPIMgmt_ListUsageLogs_FullMethodName   = "/api.apimgmt.v1.ConsoleAPIMgmt/ListUsageLogs"
-	ConsoleAPIMgmt_GetUsageSummary_FullMethodName = "/api.apimgmt.v1.ConsoleAPIMgmt/GetUsageSummary"
-	ConsoleAPIMgmt_ExportUsageLogs_FullMethodName = "/api.apimgmt.v1.ConsoleAPIMgmt/ExportUsageLogs"
+	ConsoleAPIMgmt_CreateAPIKey_FullMethodName           = "/api.apimgmt.v1.ConsoleAPIMgmt/CreateAPIKey"
+	ConsoleAPIMgmt_ListAPIKeys_FullMethodName            = "/api.apimgmt.v1.ConsoleAPIMgmt/ListAPIKeys"
+	ConsoleAPIMgmt_GetAPIKey_FullMethodName              = "/api.apimgmt.v1.ConsoleAPIMgmt/GetAPIKey"
+	ConsoleAPIMgmt_UpdateAPIKey_FullMethodName           = "/api.apimgmt.v1.ConsoleAPIMgmt/UpdateAPIKey"
+	ConsoleAPIMgmt_DeleteAPIKey_FullMethodName           = "/api.apimgmt.v1.ConsoleAPIMgmt/DeleteAPIKey"
+	ConsoleAPIMgmt_RotateAPIKey_FullMethodName           = "/api.apimgmt.v1.ConsoleAPIMgmt/RotateAPIKey"
+	ConsoleAPIMgmt_RegeneratePublicChatID_FullMethodName = "/api.apimgmt.v1.ConsoleAPIMgmt/RegeneratePublicChatID"
+	ConsoleAPIMgmt_ListUsageLogs_FullMethodName          = "/api.apimgmt.v1.ConsoleAPIMgmt/ListUsageLogs"
+	ConsoleAPIMgmt_GetUsageSummary_FullMethodName        = "/api.apimgmt.v1.ConsoleAPIMgmt/GetUsageSummary"
+	ConsoleAPIMgmt_ExportUsageLogs_FullMethodName        = "/api.apimgmt.v1.ConsoleAPIMgmt/ExportUsageLogs"
 )
 
 // ConsoleAPIMgmtClient is the client API for ConsoleAPIMgmt service.
@@ -36,9 +38,11 @@ const (
 type ConsoleAPIMgmtClient interface {
 	CreateAPIKey(ctx context.Context, in *CreateAPIKeyRequest, opts ...grpc.CallOption) (*CreateAPIKeyResponse, error)
 	ListAPIKeys(ctx context.Context, in *ListAPIKeysRequest, opts ...grpc.CallOption) (*ListAPIKeysResponse, error)
+	GetAPIKey(ctx context.Context, in *GetAPIKeyRequest, opts ...grpc.CallOption) (*GetAPIKeyResponse, error)
 	UpdateAPIKey(ctx context.Context, in *UpdateAPIKeyRequest, opts ...grpc.CallOption) (*UpdateAPIKeyResponse, error)
 	DeleteAPIKey(ctx context.Context, in *DeleteAPIKeyRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	RotateAPIKey(ctx context.Context, in *RotateAPIKeyRequest, opts ...grpc.CallOption) (*RotateAPIKeyResponse, error)
+	RegeneratePublicChatID(ctx context.Context, in *RegeneratePublicChatIDRequest, opts ...grpc.CallOption) (*RegeneratePublicChatIDResponse, error)
 	ListUsageLogs(ctx context.Context, in *ListUsageLogsRequest, opts ...grpc.CallOption) (*ListUsageLogsResponse, error)
 	GetUsageSummary(ctx context.Context, in *GetUsageSummaryRequest, opts ...grpc.CallOption) (*GetUsageSummaryResponse, error)
 	ExportUsageLogs(ctx context.Context, in *ExportUsageLogsRequest, opts ...grpc.CallOption) (*ExportUsageLogsResponse, error)
@@ -72,6 +76,16 @@ func (c *consoleAPIMgmtClient) ListAPIKeys(ctx context.Context, in *ListAPIKeysR
 	return out, nil
 }
 
+func (c *consoleAPIMgmtClient) GetAPIKey(ctx context.Context, in *GetAPIKeyRequest, opts ...grpc.CallOption) (*GetAPIKeyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAPIKeyResponse)
+	err := c.cc.Invoke(ctx, ConsoleAPIMgmt_GetAPIKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *consoleAPIMgmtClient) UpdateAPIKey(ctx context.Context, in *UpdateAPIKeyRequest, opts ...grpc.CallOption) (*UpdateAPIKeyResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateAPIKeyResponse)
@@ -96,6 +110,16 @@ func (c *consoleAPIMgmtClient) RotateAPIKey(ctx context.Context, in *RotateAPIKe
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RotateAPIKeyResponse)
 	err := c.cc.Invoke(ctx, ConsoleAPIMgmt_RotateAPIKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *consoleAPIMgmtClient) RegeneratePublicChatID(ctx context.Context, in *RegeneratePublicChatIDRequest, opts ...grpc.CallOption) (*RegeneratePublicChatIDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegeneratePublicChatIDResponse)
+	err := c.cc.Invoke(ctx, ConsoleAPIMgmt_RegeneratePublicChatID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,9 +162,11 @@ func (c *consoleAPIMgmtClient) ExportUsageLogs(ctx context.Context, in *ExportUs
 type ConsoleAPIMgmtServer interface {
 	CreateAPIKey(context.Context, *CreateAPIKeyRequest) (*CreateAPIKeyResponse, error)
 	ListAPIKeys(context.Context, *ListAPIKeysRequest) (*ListAPIKeysResponse, error)
+	GetAPIKey(context.Context, *GetAPIKeyRequest) (*GetAPIKeyResponse, error)
 	UpdateAPIKey(context.Context, *UpdateAPIKeyRequest) (*UpdateAPIKeyResponse, error)
 	DeleteAPIKey(context.Context, *DeleteAPIKeyRequest) (*emptypb.Empty, error)
 	RotateAPIKey(context.Context, *RotateAPIKeyRequest) (*RotateAPIKeyResponse, error)
+	RegeneratePublicChatID(context.Context, *RegeneratePublicChatIDRequest) (*RegeneratePublicChatIDResponse, error)
 	ListUsageLogs(context.Context, *ListUsageLogsRequest) (*ListUsageLogsResponse, error)
 	GetUsageSummary(context.Context, *GetUsageSummaryRequest) (*GetUsageSummaryResponse, error)
 	ExportUsageLogs(context.Context, *ExportUsageLogsRequest) (*ExportUsageLogsResponse, error)
@@ -160,6 +186,9 @@ func (UnimplementedConsoleAPIMgmtServer) CreateAPIKey(context.Context, *CreateAP
 func (UnimplementedConsoleAPIMgmtServer) ListAPIKeys(context.Context, *ListAPIKeysRequest) (*ListAPIKeysResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAPIKeys not implemented")
 }
+func (UnimplementedConsoleAPIMgmtServer) GetAPIKey(context.Context, *GetAPIKeyRequest) (*GetAPIKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAPIKey not implemented")
+}
 func (UnimplementedConsoleAPIMgmtServer) UpdateAPIKey(context.Context, *UpdateAPIKeyRequest) (*UpdateAPIKeyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateAPIKey not implemented")
 }
@@ -168,6 +197,9 @@ func (UnimplementedConsoleAPIMgmtServer) DeleteAPIKey(context.Context, *DeleteAP
 }
 func (UnimplementedConsoleAPIMgmtServer) RotateAPIKey(context.Context, *RotateAPIKeyRequest) (*RotateAPIKeyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RotateAPIKey not implemented")
+}
+func (UnimplementedConsoleAPIMgmtServer) RegeneratePublicChatID(context.Context, *RegeneratePublicChatIDRequest) (*RegeneratePublicChatIDResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RegeneratePublicChatID not implemented")
 }
 func (UnimplementedConsoleAPIMgmtServer) ListUsageLogs(context.Context, *ListUsageLogsRequest) (*ListUsageLogsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListUsageLogs not implemented")
@@ -235,6 +267,24 @@ func _ConsoleAPIMgmt_ListAPIKeys_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ConsoleAPIMgmt_GetAPIKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAPIKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsoleAPIMgmtServer).GetAPIKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConsoleAPIMgmt_GetAPIKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsoleAPIMgmtServer).GetAPIKey(ctx, req.(*GetAPIKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ConsoleAPIMgmt_UpdateAPIKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateAPIKeyRequest)
 	if err := dec(in); err != nil {
@@ -285,6 +335,24 @@ func _ConsoleAPIMgmt_RotateAPIKey_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConsoleAPIMgmtServer).RotateAPIKey(ctx, req.(*RotateAPIKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ConsoleAPIMgmt_RegeneratePublicChatID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegeneratePublicChatIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsoleAPIMgmtServer).RegeneratePublicChatID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ConsoleAPIMgmt_RegeneratePublicChatID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsoleAPIMgmtServer).RegeneratePublicChatID(ctx, req.(*RegeneratePublicChatIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -359,6 +427,10 @@ var ConsoleAPIMgmt_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ConsoleAPIMgmt_ListAPIKeys_Handler,
 		},
 		{
+			MethodName: "GetAPIKey",
+			Handler:    _ConsoleAPIMgmt_GetAPIKey_Handler,
+		},
+		{
 			MethodName: "UpdateAPIKey",
 			Handler:    _ConsoleAPIMgmt_UpdateAPIKey_Handler,
 		},
@@ -369,6 +441,10 @@ var ConsoleAPIMgmt_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RotateAPIKey",
 			Handler:    _ConsoleAPIMgmt_RotateAPIKey_Handler,
+		},
+		{
+			MethodName: "RegeneratePublicChatID",
+			Handler:    _ConsoleAPIMgmt_RegeneratePublicChatID_Handler,
 		},
 		{
 			MethodName: "ListUsageLogs",

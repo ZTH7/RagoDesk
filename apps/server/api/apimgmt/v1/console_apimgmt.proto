@@ -21,6 +21,11 @@ service ConsoleAPIMgmt {
       get: "/console/v1/api_keys"
     };
   }
+  rpc GetAPIKey(GetAPIKeyRequest) returns (GetAPIKeyResponse) {
+    option (google.api.http) = {
+      get: "/console/v1/api_keys/{id}"
+    };
+  }
   rpc UpdateAPIKey(UpdateAPIKeyRequest) returns (UpdateAPIKeyResponse) {
     option (google.api.http) = {
       patch: "/console/v1/api_keys/{id}"
@@ -35,6 +40,12 @@ service ConsoleAPIMgmt {
   rpc RotateAPIKey(RotateAPIKeyRequest) returns (RotateAPIKeyResponse) {
     option (google.api.http) = {
       post: "/console/v1/api_keys/{id}/rotate"
+      body: "*"
+    };
+  }
+  rpc RegeneratePublicChatID(RegeneratePublicChatIDRequest) returns (RegeneratePublicChatIDResponse) {
+    option (google.api.http) = {
+      post: "/console/v1/api_keys/{id}/public_chat/regenerate"
       body: "*"
     };
   }
@@ -68,6 +79,8 @@ message APIKey {
   int32 qps_limit = 9;
   google.protobuf.Timestamp created_at = 10;
   google.protobuf.Timestamp last_used_at = 11;
+  string public_chat_id = 12;
+  bool public_chat_enabled = 13;
 }
 
 message UsageLog {
@@ -103,6 +116,7 @@ message CreateAPIKeyRequest {
   repeated string api_versions = 4;
   int32 quota_daily = 5;
   int32 qps_limit = 6;
+  google.protobuf.BoolValue public_chat_enabled = 7;
 }
 
 message CreateAPIKeyResponse {
@@ -120,6 +134,14 @@ message ListAPIKeysResponse {
   repeated APIKey items = 1;
 }
 
+message GetAPIKeyRequest {
+  string id = 1;
+}
+
+message GetAPIKeyResponse {
+  APIKey api_key = 1;
+}
+
 message UpdateAPIKeyRequest {
   string id = 1;
   string name = 2;
@@ -128,6 +150,7 @@ message UpdateAPIKeyRequest {
   repeated string api_versions = 5;
   google.protobuf.Int32Value quota_daily = 6;
   google.protobuf.Int32Value qps_limit = 7;
+  google.protobuf.BoolValue public_chat_enabled = 8;
 }
 
 message UpdateAPIKeyResponse {
@@ -145,6 +168,14 @@ message RotateAPIKeyRequest {
 message RotateAPIKeyResponse {
   APIKey api_key = 1;
   string raw_key = 2;
+}
+
+message RegeneratePublicChatIDRequest {
+  string id = 1;
+}
+
+message RegeneratePublicChatIDResponse {
+  APIKey api_key = 1;
 }
 
 message ListUsageLogsRequest {

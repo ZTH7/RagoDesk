@@ -34,6 +34,37 @@ const statusLabels: Record<string, string> = {
   disabled: '停用',
 }
 
+type KeyResponseShape = {
+  api_key?: {
+    id?: string
+    public_chat_id?: string
+    publicChatId?: string
+  }
+  apiKey?: {
+    id?: string
+    public_chat_id?: string
+    publicChatId?: string
+  }
+  raw_key?: string
+  rawKey?: string
+}
+
+function parseRawKeyAndChatID(input: KeyResponseShape, fallbackKeyID = '') {
+  const raw = input.raw_key ?? input.rawKey ?? ''
+  const keyID = input.api_key?.id ?? input.apiKey?.id ?? fallbackKeyID
+  const chatID =
+    input.api_key?.public_chat_id ??
+    input.apiKey?.public_chat_id ??
+    input.api_key?.publicChatId ??
+    input.apiKey?.publicChatId ??
+    ''
+  return {
+    rawKey: raw,
+    keyID,
+    publicChatID: chatID || keyID,
+  }
+}
+
 export function ApiKeys() {
   const [status, setStatus] = useState<string>('all')
   const [keyword, setKeyword] = useState('')
@@ -41,6 +72,7 @@ export function ApiKeys() {
   const [editOpen, setEditOpen] = useState(false)
   const [rawKeyOpen, setRawKeyOpen] = useState(false)
   const [rawKey, setRawKey] = useState('')
+  const [publicChatID, setPublicChatID] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [createForm] = Form.useForm()
@@ -77,8 +109,9 @@ export function ApiKeys() {
       const values = await createForm.validateFields()
       const res = await consoleApi.createApiKey(values)
       uiMessage.success('已创建 API Key')
-      const raw = (res as any).raw_key ?? (res as any).rawKey ?? ''
-      setRawKey(raw)
+      const parsed = parseRawKeyAndChatID(res)
+      setRawKey(parsed.rawKey)
+      setPublicChatID(parsed.publicChatID)
       setRawKeyOpen(true)
       setCreateOpen(false)
       createForm.resetFields()
@@ -115,9 +148,25 @@ export function ApiKeys() {
     try {
       const res = await consoleApi.rotateApiKey(id)
       uiMessage.success('已轮换 API Key')
-      const raw = (res as any).raw_key ?? (res as any).rawKey ?? ''
-      setRawKey(raw)
+      const parsed = parseRawKeyAndChatID(res, id)
+      setRawKey(parsed.rawKey)
+      setPublicChatID(parsed.publicChatID)
       setRawKeyOpen(true)
+      reload()
+    } catch (err) {
+      if (err instanceof Error) uiMessage.error(err.message)
+    }
+  }
+
+  const handleRegenerateChatLink = async (id: string) => {
+    try {
+      const res = await consoleApi.regenerateApiKeyPublicChatID(id)
+      const nextChatID =
+        res.api_key?.public_chat_id ?? (res.api_key as any)?.publicChatId ?? ''
+      uiMessage.success('已重置公开聊天链接')
+      if (nextChatID) {
+        await handleCopyChatLink(nextChatID)
+      }
       reload()
     } catch (err) {
       if (err instanceof Error) uiMessage.error(err.message)
@@ -133,6 +182,25 @@ export function ApiKeys() {
       if (err instanceof Error) uiMessage.error(err.message)
     }
   }
+
+  const buildChatLink = (chatID?: string) =>
+    chatID ? `${window.location.origin}/chat/${encodeURIComponent(chatID)}` : ''
+
+  const handleCopyChatLink = async (chatID?: string) => {
+    const link = buildChatLink(chatID)
+    if (!link) {
+      uiMessage.error('当前 Key 未配置公开聊天链接')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(link)
+      uiMessage.success('已复制聊天链接')
+    } catch {
+      uiMessage.error('复制失败，请手动复制')
+    }
+  }
+
+  const chatLink = buildChatLink(publicChatID)
 
   return (
     <div className="page">
@@ -205,6 +273,25 @@ export function ApiKeys() {
               ),
             },
             {
+              title: '公开聊天',
+              dataIndex: 'public_chat_enabled',
+              render: (_: boolean, record) => (
+                <Switch
+                  size="small"
+                  checked={record.public_chat_enabled !== false}
+                  onChange={async (checked) => {
+                    try {
+                      await consoleApi.updateApiKey(record.id, { public_chat_enabled: checked })
+                      uiMessage.success(checked ? '已启用公开聊天' : '已关闭公开聊天')
+                      reload()
+                    } catch (err) {
+                      if (err instanceof Error) uiMessage.error(err.message)
+                    }
+                  }}
+                />
+              ),
+            },
+            {
               title: '权限范围',
               dataIndex: 'scopes',
               render: (scopes: string[]) => (Array.isArray(scopes) ? scopes.join(', ') : '-'),
@@ -229,6 +316,7 @@ export function ApiKeys() {
                       editForm.setFieldsValue({
                         name: record.name,
                         status: record.status,
+                        public_chat_enabled: record.public_chat_enabled !== false,
                         scopes: record.scopes,
                         api_versions: record.api_versions,
                         quota_daily: record.quota_daily,
@@ -241,6 +329,12 @@ export function ApiKeys() {
                   </Button>
                   <Button size="small" onClick={() => handleRotate(record.id)}>
                     轮换
+                  </Button>
+                  <Button size="small" onClick={() => handleRegenerateChatLink(record.id)}>
+                    重置链接
+                  </Button>
+                  <Button size="small" onClick={() => handleCopyChatLink(record.public_chat_id)}>
+                    复制聊天链接
                   </Button>
                   <Button
                     size="small"
@@ -269,7 +363,11 @@ export function ApiKeys() {
         onOk={handleCreate}
         okText="创建"
       >
-        <Form form={createForm} layout="vertical" initialValues={{ scopes: [], api_versions: [] }}>
+        <Form
+          form={createForm}
+          layout="vertical"
+          initialValues={{ scopes: [], api_versions: [], public_chat_enabled: true }}
+        >
           <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
             <Input placeholder="例如：客服 API Key" />
           </Form.Item>
@@ -293,6 +391,9 @@ export function ApiKeys() {
           <Form.Item label="QPS Limit" name="qps_limit" rules={[{ required: true, message: '请输入 QPS' }]}>
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
+          <Form.Item label="公开聊天链接" name="public_chat_enabled" valuePropName="checked">
+            <Switch />
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -309,6 +410,9 @@ export function ApiKeys() {
           </Form.Item>
           <Form.Item label="状态" name="status" rules={[{ required: true, message: '请选择状态' }]}>
             <Select options={[{ value: 'active', label: '启用' }, { value: 'disabled', label: '停用' }]} />
+          </Form.Item>
+          <Form.Item label="公开聊天链接" name="public_chat_enabled" valuePropName="checked">
+            <Switch />
           </Form.Item>
           <Form.Item label="权限范围" name="scopes">
             <Select mode="tags" />
@@ -333,6 +437,16 @@ export function ApiKeys() {
       >
         <p>这是唯一一次展示原始 Key，请妥善保存。</p>
         <Input.TextArea value={rawKey} readOnly rows={3} />
+        <p style={{ marginTop: 12, marginBottom: 8 }}>面向客户的聊天链接：</p>
+        <Input.Group compact>
+          <Input value={chatLink} readOnly style={{ width: 'calc(100% - 84px)' }} />
+          <Button onClick={() => handleCopyChatLink(publicChatID)}>
+            复制链接
+          </Button>
+        </Input.Group>
+        <Typography.Text className="muted" style={{ display: 'block', marginTop: 8 }}>
+          建议仅用于公开客服场景，并配置合理的 QPS 与日配额。
+        </Typography.Text>
       </Modal>
     </div>
   )

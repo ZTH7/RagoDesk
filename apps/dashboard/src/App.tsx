@@ -11,11 +11,14 @@ import { RequirePermission } from './components/RequirePermission'
 import { PermissionProvider } from './auth/PermissionContext'
 import { RequireAuth } from './components/RequireAuth'
 import { Home } from './pages/Home'
+import { PublicChat } from './pages/public/PublicChat'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/chat/:chatId" element={<PublicChat />} />
+      <Route path="/chat/:chatId/:sessionId" element={<PublicChat />} />
       <Route path="/console/login" element={<ConsoleLogin />} />
       <Route path="/console/register" element={<ConsoleRegister />} />
       <Route path="/platform/login" element={<PlatformLogin />} />

@@ -6,6 +6,7 @@ import { TechnicalMeta } from '../../components/TechnicalMeta'
 import { RequestBanner } from '../../components/RequestBanner'
 import { useRequest } from '../../hooks/useRequest'
 import { consoleApi } from '../../services/console'
+import type { ApiKeyItem } from '../../services/console'
 import { formatDateTime } from '../../utils/datetime'
 
 import { uiMessage } from '../../services/uiMessage'
@@ -15,8 +16,15 @@ export function ApiKeyDetail() {
   const [rawKey, setRawKey] = useState('')
   const [rawKeyOpen, setRawKeyOpen] = useState(false)
 
-  const { data, loading, error, reload } = useRequest(() => consoleApi.listApiKeys(), { items: [] })
-  const key = data.items.find((item) => item.id === keyId)
+  const { data, loading, error, reload } = useRequest<{ api_key: ApiKeyItem | null }>(
+    () =>
+      keyId
+        ? consoleApi.getApiKey(keyId).then((res) => ({ api_key: res.api_key ?? null }))
+        : Promise.resolve({ api_key: null }),
+    { api_key: null },
+    { deps: [keyId] },
+  )
+  const key = data.api_key ?? undefined
 
   const handleToggle = async () => {
     if (!key) return
@@ -34,11 +42,39 @@ export function ApiKeyDetail() {
     try {
       const res = await consoleApi.rotateApiKey(keyId)
       uiMessage.success('已触发轮换')
-      setRawKey(res.raw_key)
+      setRawKey((res as any).raw_key ?? (res as any).rawKey ?? '')
       setRawKeyOpen(true)
       reload()
     } catch (err) {
       if (err instanceof Error) uiMessage.error(err.message)
+    }
+  }
+
+  const handleRegenerateChatLink = async () => {
+    if (!key) return
+    try {
+      await consoleApi.regenerateApiKeyPublicChatID(key.id)
+      uiMessage.success('已重置公开聊天链接')
+      reload()
+    } catch (err) {
+      if (err instanceof Error) uiMessage.error(err.message)
+    }
+  }
+
+  const chatLink = key?.public_chat_id
+    ? `${window.location.origin}/chat/${encodeURIComponent(key.public_chat_id)}`
+    : ''
+
+  const handleCopyChatLink = async () => {
+    if (!chatLink) {
+      uiMessage.error('当前 Key 未配置公开聊天链接')
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(chatLink)
+      uiMessage.success('已复制聊天链接')
+    } catch {
+      uiMessage.error('复制失败，请手动复制')
     }
   }
 
@@ -55,6 +91,10 @@ export function ApiKeyDetail() {
             <Popconfirm title="确认轮换该 Key？" onConfirm={handleRotate}>
               <Button type="primary">轮换</Button>
             </Popconfirm>
+            <Popconfirm title="确认重置公开聊天链接？旧链接将失效" onConfirm={handleRegenerateChatLink}>
+              <Button>重置聊天链接</Button>
+            </Popconfirm>
+            <Button onClick={handleCopyChatLink}>复制聊天链接</Button>
           </Space>
         }
       />
@@ -75,6 +115,12 @@ export function ApiKeyDetail() {
             <Descriptions.Item label="接口版本">{key.api_versions?.join(', ') || '-'}</Descriptions.Item>
             <Descriptions.Item label="日配额">{key.quota_daily ?? '-'}</Descriptions.Item>
             <Descriptions.Item label="QPS 限制">{key.qps_limit ?? '-'}</Descriptions.Item>
+            <Descriptions.Item label="公开聊天">
+              <Tag color={key.public_chat_enabled === false ? 'red' : 'green'}>
+                {key.public_chat_enabled === false ? '关闭' : '开启'}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="聊天链接">{chatLink || '-'}</Descriptions.Item>
             <Descriptions.Item label="创建时间">{formatDateTime(key.created_at)}</Descriptions.Item>
             <Descriptions.Item label="最近使用">{formatDateTime(key.last_used_at)}</Descriptions.Item>
           </Descriptions>
